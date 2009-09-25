@@ -3,7 +3,7 @@
 WorkQueue::WorkQueue()
 {
     stop = false;
-    __list_init(&works); /* head, works->data is always NULL */
+    works = NULL;
 
     pthread_mutex_init(&wlock, NULL);
     pthread_cond_init(&wcond, NULL);
@@ -12,6 +12,11 @@ WorkQueue::WorkQueue()
 WorkQueue::~WorkQueue()
 {
     StopWork();
+
+    pthread_mutex_lock(&wlock);
+    while (works)
+        works = __list_delete(works, works);
+    pthread_mutex_unlock(&wlock);
 
     pthread_cond_destroy(&wcond);
     pthread_mutex_destroy(&wlock);
@@ -37,21 +42,20 @@ void WorkQueue::StopWork(void)
 void WorkQueue::Run(void)
 {
     while (!stop) {
-        struct list *entry, *temp;
-
         pthread_mutex_lock(&wlock);
         /*
          * sleeps until works're available.
          * wokeup by ScheduleWork() or FlushWork() or ~WorkQueue()
          */
-        if (!works.next)
+        if (works)
             pthread_cond_wait(&wcond, &wlock);
 
-        list_foreach_safe(works.next, entry, temp) {
+        while (works) {
+            struct list *entry = works;
             WorkableInterface *wi =
                 static_cast<WorkableInterface *>(entry->data);
 
-            __list_delete(works.next, entry);
+            works = __list_delete(works, entry);
             pthread_mutex_unlock(&wlock);
             DoWork(wi);
             pthread_mutex_lock(&wlock);
@@ -62,7 +66,8 @@ void WorkQueue::Run(void)
 
 void WorkQueue::DoWork(WorkableInterface *wi)
 {
-    wi->Work();
+    if (wi)
+        wi->Work();
 }
 
 void WorkQueue::Work(void)
@@ -73,7 +78,7 @@ void WorkQueue::Work(void)
 void WorkQueue::ScheduleWork(void)
 {
     pthread_mutex_lock(&wlock);
-    list_add_tail(&works, static_cast<WorkableInterface *>(this));
+    works = list_add_tail(works, static_cast<WorkableInterface *>(this));
     pthread_cond_signal(&wcond); /* wakeup Run() if it's sleeping */
     pthread_mutex_unlock(&wlock);
 }
@@ -82,9 +87,9 @@ void WorkQueue::ScheduleWork(WorkableInterface *wi)
 {
     pthread_mutex_lock(&wlock);
     if (wi)
-        list_add_tail(&works, wi);
+        works = list_add_tail(works, wi);
     else
-        list_add_tail(&works, static_cast<WorkableInterface *>(this));
+        works = list_add_tail(works, static_cast<WorkableInterface *>(this));
     pthread_cond_signal(&wcond); /* wakeup Run() if it's sleeping */
     pthread_mutex_unlock(&wlock);
 }
@@ -95,8 +100,8 @@ void WorkQueue::FlushWork(void)
     bool needtowait = false;
 
     pthread_mutex_lock(&wlock);
-    if (works.next) {
-        list_add_tail(&works, &fb);
+    if (works) {
+        list_add_tail(works, &fb);
         pthread_cond_signal(&wcond); /* wakeup Run() if it's sleeping */
 
         needtowait = true;

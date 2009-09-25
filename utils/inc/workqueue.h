@@ -76,7 +76,7 @@ private:
      */
     void DoWork(WorkableInterface *wi);
 
-    struct list works;
+    struct list *works;
     pthread_mutex_t wlock;
     pthread_cond_t wcond;
 
