@@ -11,8 +11,46 @@
 #include <cmodule.h>
 
 #include <queue.h>
+#include <workqueue.h>
 
-class ComponentBase
+/* ProcessCmdWork */
+struct cmd_s {
+    OMX_COMMANDTYPE cmd;
+    OMX_U32 param1;
+    OMX_PTR cmddata;
+};
+
+class CmdHandlerInterface
+{
+public:
+    virtual ~CmdHandlerInterface() {};
+    virtual void CmdHandler(struct cmd_s *cmd) = 0;
+};
+
+class CmdProcessWork : public WorkableInterface
+{
+public:
+    CmdProcessWork(CmdHandlerInterface *ci);
+    ~CmdProcessWork();
+
+    OMX_ERRORTYPE PushCmdQueue(struct cmd_s *cmd);
+
+private:
+    struct cmd_s *PopCmdQueue(void);
+
+    virtual void Work(void); /* call ci->CmdHandler() */
+
+    void ScheduleIfAvailable(void);
+
+    WorkQueue *workq;
+
+    struct queue q;
+    pthread_mutex_t lock;
+
+    CmdHandlerInterface *ci; /* to run ComponentBase::CmdHandler() */
+};
+
+class ComponentBase : public CmdHandlerInterface
 {
 public:
     /*
@@ -253,6 +291,16 @@ private:
     virtual OMX_ERRORTYPE ExitComponent(void) = 0;
 
     /* end of core methods & helpers */
+
+    /*
+     * component methods & helpers
+     */
+    /* SendCommand */
+    /* implement CmdHandlerInterface */
+    virtual void CmdHandler(struct cmd_s *cmd);
+
+    /* process component's commands work */
+    CmdProcessWork *cmdwork;
 
     /* roles */
     OMX_U8 **roles;

@@ -5,13 +5,95 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <pthread.h>
+
 #include <OMX_Core.h>
 #include <OMX_Component.h>
 
 #include <componentbase.h>
 
+#include <queue.h>
+#include <workqueue.h>
+
 #define LOG_TAG "componentbase"
 #include <log.h>
+
+/*
+ * CmdProcessWork
+ */
+CmdProcessWork::CmdProcessWork(CmdHandlerInterface *ci)
+{
+    this->ci = ci;
+
+    workq = new WorkQueue;
+
+    __queue_init(&q);
+    pthread_mutex_init(&lock, NULL);
+}
+
+CmdProcessWork::~CmdProcessWork()
+{
+    workq->FlushWork();
+    delete workq;
+
+    pthread_mutex_lock(&lock);
+    queue_free_all(&q);
+    pthread_mutex_unlock(&lock);
+
+    pthread_mutex_destroy(&lock);
+}
+
+OMX_ERRORTYPE CmdProcessWork::PushCmdQueue(struct cmd_s *cmd)
+{
+    int ret;
+
+    pthread_mutex_lock(&lock);
+    ret = queue_push_tail(&q, cmd);
+    if (ret) {
+        pthread_mutex_unlock(&lock);
+        return OMX_ErrorInsufficientResources;
+    }
+
+    workq->ScheduleWork(this);
+    pthread_mutex_unlock(&lock);
+
+    return OMX_ErrorNone;
+}
+
+struct cmd_s *CmdProcessWork::PopCmdQueue(void)
+{
+    struct cmd_s *cmd;
+
+    pthread_mutex_lock(&lock);
+    cmd = (struct cmd_s *)queue_pop_head(&q);
+    pthread_mutex_unlock(&lock);
+
+    return cmd;
+}
+
+void CmdProcessWork::ScheduleIfAvailable(void)
+{
+    bool avail;
+
+    pthread_mutex_lock(&lock);
+    avail = queue_length(&q) ? true : false;
+    pthread_mutex_unlock(&lock);
+
+    if (avail)
+        workq->ScheduleWork(this);
+}
+
+void CmdProcessWork::Work(void)
+{
+    struct cmd_s *cmd;
+
+    cmd = PopCmdQueue();
+    if (cmd) {
+        ci->CmdHandler(cmd);
+        free(cmd);
+    }
+    ScheduleIfAvailable();
+}
 
 /*
  * ComponentBase
@@ -27,6 +109,8 @@ void ComponentBase::__ComponentBase(void)
 
     roles = NULL;
     nr_roles = 0;
+
+    cmdwork = new CmdProcessWork(this);
 }
 
 ComponentBase::ComponentBase()
@@ -42,6 +126,8 @@ ComponentBase::ComponentBase(const OMX_STRING name)
 
 ComponentBase::~ComponentBase()
 {
+    delete cmdwork;
+
     if (roles) {
         OMX_U32 i;
 
@@ -310,11 +396,52 @@ OMX_ERRORTYPE ComponentBase::CBaseSendCommand(
     OMX_IN  OMX_U32 nParam1,
     OMX_IN  OMX_PTR pCmdData)
 {
-    /*
-     * Todo
-     */
+    struct cmd_s *cmd;
 
-    return OMX_ErrorNotImplemented;
+    if (hComponent != handle)
+        return OMX_ErrorInvalidComponent;
+
+    /* basic error check */
+    switch (Cmd) {
+    case OMX_CommandStateSet:
+        /*
+         * Todo
+         */
+        break;
+    case OMX_CommandFlush:
+        /*
+         * Todo
+         */
+        break;
+    case OMX_CommandPortDisable:
+        /*
+         * Todo
+         */
+        break;
+    case OMX_CommandPortEnable:
+        /*
+         * Todo
+         */
+        break;
+    case OMX_CommandMarkBuffer:
+        /*
+         * Todo
+         */
+        break;
+    default:
+        LOGE("command %d not supported\n", Cmd);
+        return OMX_ErrorUnsupportedIndex;
+    }
+
+    cmd = (struct cmd_s *)malloc(sizeof(*cmd));
+    if (!cmd)
+        return OMX_ErrorInsufficientResources;
+
+    cmd->cmd = Cmd;
+    cmd->param1 = nParam1;
+    cmd->cmddata = pCmdData;
+
+    return cmdwork->PushCmdQueue(cmd);
 }
 
 OMX_ERRORTYPE ComponentBase::GetParameter(
@@ -819,6 +946,45 @@ OMX_ERRORTYPE ComponentBase::CBaseComponentRoleEnum(
     strncpy((char *)cRole, (const char *)roles[nIndex],
             OMX_MAX_STRINGNAME_SIZE);
     return OMX_ErrorNone;
+}
+
+/* implement CmdHandlerInterface */
+void ComponentBase::CmdHandler(struct cmd_s *cmd)
+{
+    OMX_EVENTTYPE event = OMX_EventCmdComplete;
+    OMX_U32 data1 = cmd->cmd, data2 = cmd->param1;
+    OMX_PTR eventdata = NULL;
+
+    switch (cmd->cmd) {
+    case OMX_CommandStateSet:
+        /*
+         * Todo
+         */
+        break;
+    case OMX_CommandFlush:
+        /*
+         * Todo
+         */
+        break;
+    case OMX_CommandPortDisable:
+        /*
+         * Todo
+         */
+        break;
+    case OMX_CommandPortEnable:
+        /*
+         * Todo
+         */
+        break;
+    case OMX_CommandMarkBuffer:
+        /*
+         * Todo
+         */
+        break;
+    }
+
+    callbacks->EventHandler(handle, appdata,
+                            event, data1, data2, eventdata);
 }
 
 /* end of component methods & helpers */
