@@ -101,6 +101,11 @@ OMX_ERRORTYPE PortBase::UseBuffer(OMX_BUFFERHEADERTYPE **ppBufferHdr,
 {
     OMX_BUFFERHEADERTYPE *buffer_hdr;
     struct list *entry;
+    OMX_STATETYPE state;
+
+    state = GetOwnerState();
+    if (state != OMX_StateLoaded)
+        return OMX_ErrorIncorrectStateOperation;
 
     pthread_mutex_lock(&hdrs_lock);
 
@@ -161,6 +166,11 @@ OMX_ERRORTYPE PortBase::AllocateBuffer(OMX_BUFFERHEADERTYPE **ppBuffer,
 {
     OMX_BUFFERHEADERTYPE *buffer_hdr;
     struct list *entry;
+    OMX_STATETYPE state;
+
+    state = GetOwnerState();
+    if (state != OMX_StateLoaded)
+        return OMX_ErrorIncorrectStateOperation;
 
     pthread_mutex_lock(&hdrs_lock);
     if (portparam.bPopulated == OMX_TRUE) {
@@ -218,7 +228,12 @@ OMX_ERRORTYPE PortBase::FreeBuffer(OMX_U32 nPortIndex,
                                    OMX_BUFFERHEADERTYPE *pBuffer)
 {
     struct list *entry;
+    OMX_STATETYPE state;
     OMX_ERRORTYPE ret;
+
+    state = GetOwnerState();
+    if (state != OMX_StateLoaded)
+        return OMX_ErrorIncorrectStateOperation;
 
     pthread_mutex_lock(&hdrs_lock);
     entry = list_find(buffer_hdrs, pBuffer);
