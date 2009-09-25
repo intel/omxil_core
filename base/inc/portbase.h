@@ -5,8 +5,12 @@
 #ifndef __PORTBASE_H
 #define __PORTBASE_H
 
+#include <pthread.h>
+
 #include <OMX_Core.h>
 #include <OMX_Component.h>
+
+#include <list.h>
 
 class PortBase
 {
@@ -50,6 +54,13 @@ public:
 private:
     /* common routines for constructor */
     void __PortBase(void);
+
+    /* buffer headers */
+    struct list *buffer_hdrs;
+    OMX_U32 nr_buffer_hdrs;
+    bool buffer_hdrs_completion; /* Use/Allocate/FreeBuffer completion flag */
+    pthread_mutex_t hdrs_lock;
+    pthread_cond_t hdrs_wait;
 
     /* parameter */
     OMX_PARAM_PORTDEFINITIONTYPE portparam;
