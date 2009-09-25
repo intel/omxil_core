@@ -14,9 +14,8 @@
  */
 void PortBase::__PortBase(void)
 {
-    /*
-     * Todo
-     */
+    memset(&portparam, 0, sizeof(portparam));
+    memset(&audioparam, 0, sizeof(audioparam));
 }
 
 PortBase::PortBase()
@@ -32,3 +31,32 @@ PortBase::~PortBase()
 }
 
 /* end of constructor & destructor */
+
+/*
+ * component methods & helpers
+ */
+/* Get/SetParameter */
+void PortBase::SetPortParam(
+    const OMX_PARAM_PORTDEFINITIONTYPE *pComponentParameterStructure)
+{
+    memcpy(&portparam, pComponentParameterStructure, sizeof(portparam));
+}
+
+OMX_PARAM_PORTDEFINITIONTYPE *PortBase::GetPortParam(void)
+{
+    return &portparam;
+}
+
+/* audio parameter */
+void PortBase::SetAudioPortParam(
+    const OMX_AUDIO_PARAM_PORTFORMATTYPE *pComponentParameterStructure)
+{
+    memcpy(&audioparam, pComponentParameterStructure, sizeof(audioparam));
+}
+
+OMX_AUDIO_PARAM_PORTFORMATTYPE *PortBase::GetAudioPortParam(void)
+{
+    return &audioparam;
+}
+
+/* end of component methods & helpers */
