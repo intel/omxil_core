@@ -24,6 +24,10 @@ public:
      */
     ~WorkQueue();
 
+    /* start & stop work thread */
+    int StartWork(void);
+    void StopWork(void);
+
     /* the class inheriting WorkQueue uses this method */
     void ScheduleWork(void);
     /* the class implementing WorkableInterface uses this method */

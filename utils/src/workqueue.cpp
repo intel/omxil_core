@@ -7,29 +7,31 @@ WorkQueue::WorkQueue()
 
     pthread_mutex_init(&wlock, NULL);
     pthread_cond_init(&wcond, NULL);
-
-    Start();
 }
 
 WorkQueue::~WorkQueue()
 {
-    struct list *entry, *temp;
+    StopWork();
 
-    stop = true;
+    pthread_cond_destroy(&wcond);
+    pthread_mutex_destroy(&wlock);
+}
+
+int WorkQueue::StartWork(void)
+{
+    return Start();
+}
+
+void WorkQueue::StopWork(void)
+{
+    FlushWork();
 
     pthread_mutex_lock(&wlock);
-    /* race condition against Run() */
-    /*
-    list_foreach_safe(works.next, entry, temp)
-        __list_delete(works.next, entry);
-    */
+    stop = true;
     pthread_cond_signal(&wcond); /* wakeup Run() if it's sleeping */
     pthread_mutex_unlock(&wlock);
 
     Join();
-
-    pthread_cond_destroy(&wcond);
-    pthread_mutex_destroy(&wlock);
 }
 
 void WorkQueue::Run(void)
