@@ -4,7 +4,9 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := \
 	list.c \
 	queue.c \
-	module.c
+	module.c \
+	thread.cpp \
+	workqueue.cpp
 
 LOCAL_MODULE := libwrs_omxil_utils
 
