@@ -3,6 +3,7 @@ include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES := \
 	cmodule.cpp \
+	portbase.cpp \
 	componentbase.cpp
 
 LOCAL_MODULE := libwrs_omxil_base
