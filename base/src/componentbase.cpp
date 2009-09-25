@@ -1096,6 +1096,23 @@ void ComponentBase::CmdHandler(struct cmd_s *cmd)
  *   for now, we never notify OMX_ErrorInsufficientResources,
  *   so IL client doesn't try to set component' state OMX_StateWaitForResources
  */
+static const char *state_name[OMX_StateWaitForResources + 1] = {
+    "OMX_StateInvalid",
+    "OMX_StateLoaded",
+    "OMX_StateIdle",
+    "OMX_StateExecuting",
+    "OMX_StatePause",
+    "OMX_StateWaitForResources",
+};
+
+static inline const char *GetStateName(OMX_STATETYPE state)
+{
+    if (state > OMX_StateWaitForResources)
+        return "UnKnown";
+
+    return state_name[state];
+}
+
 void ComponentBase::TransState(OMX_STATETYPE transition)
 {
     OMX_STATETYPE current = this->state;
@@ -1103,7 +1120,8 @@ void ComponentBase::TransState(OMX_STATETYPE transition)
     OMX_U32 data1;
     OMX_ERRORTYPE ret;
 
-    LOGD("current state = %d, transition state = %d\n", current, transition);
+    LOGD("current state = %s, transition state = %s\n",
+         GetStateName(current), GetStateName(transition));
 
     /* same state */
     if (current == transition) {
@@ -1138,7 +1156,8 @@ notify_event:
         data1 = transition;
 
         state = transition;
-        LOGD("transition from %d to %d completed\n", current, transition);
+        LOGD("transition from %s to %s completed\n",
+             GetStateName(current), GetStateName(transition));
     }
     else {
         event = OMX_EventError;
@@ -1146,7 +1165,8 @@ notify_event:
 
         if (transition == OMX_StateInvalid) {
             state = transition;
-            LOGD("transition from %d to %d completed\n", current, transition);
+            LOGD("transition from %s to %s completed\n",
+                 GetStateName(current), GetStateName(transition));
         }
     }
 
