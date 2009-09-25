@@ -240,6 +240,15 @@ OMX_ERRORTYPE PortBase::FreeBuffer(OMX_U32 nPortIndex,
     return OMX_ErrorNone;
 }
 
+void PortBase::WaitPortBufferCompletion(void)
+{
+    pthread_mutex_lock(&hdrs_lock);
+    if (!buffer_hdrs_completion)
+        pthread_cond_wait(&hdrs_wait, &hdrs_lock);
+    buffer_hdrs_completion = !buffer_hdrs_completion;
+    pthread_mutex_unlock(&hdrs_lock);
+}
+
 /* end of component methods & helpers */
 
 /* end of PortBase */

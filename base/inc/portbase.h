@@ -49,6 +49,13 @@ public:
     OMX_ERRORTYPE FreeBuffer(OMX_U32 nPortIndex,
                              OMX_BUFFERHEADERTYPE *pBuffer);
 
+    /*
+     * called in ComponentBase::TransStateToLoaded(OMX_StateIdle) or
+     * in ComponentBase::TransStateToIdle(OMX_StateLoaded)
+     * wokeup by Use/Allocate/FreeBuffer
+     */
+    void WaitPortBufferCompletion(void);
+
     /* end of component methods & helpers */
 
 private:
