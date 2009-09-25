@@ -280,6 +280,10 @@ public:
     /* end of omx header manipuation */
 
 protected:
+    /* omx standard handle */
+    /* allocated at GetHandle, freed at FreeHandle */
+    OMX_COMPONENTTYPE *handle;
+
     /* ports */
     /*
      * allocated with derived port classes by derived component classes
@@ -345,10 +349,6 @@ private:
 
     /* component module */
     CModule *cmodule;
-
-    /* omx standard handle */
-    /* allocated at GetHandle, freed at FreeHandle */
-    OMX_COMPONENTTYPE *handle;
 
     OMX_STATETYPE state;
 
