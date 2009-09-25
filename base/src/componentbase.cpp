@@ -804,7 +804,7 @@ OMX_ERRORTYPE ComponentBase::CBaseUseBuffer(
         return OMX_ErrorBadParameter;
 
     if (ports)
-        if (nPortIndex <= nr_ports-1)
+        if (nPortIndex < nr_ports)
             port = ports[nPortIndex];
 
     if (!port)
@@ -849,7 +849,7 @@ OMX_ERRORTYPE ComponentBase::CBaseAllocateBuffer(
         return OMX_ErrorBadParameter;
 
     if (ports)
-        if (nPortIndex <= nr_ports)
+        if (nPortIndex < nr_ports)
             port = ports[nPortIndex];
 
     if (!port)
@@ -888,7 +888,7 @@ OMX_ERRORTYPE ComponentBase::CBaseFreeBuffer(
         return OMX_ErrorBadParameter;
 
     if (ports)
-        if (nPortIndex <= nr_ports)
+        if (nPortIndex < nr_ports)
             port = ports[nPortIndex];
 
     if (!port)
