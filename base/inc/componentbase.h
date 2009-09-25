@@ -1,0 +1,255 @@
+/*
+ * Copyright (C) 2009 Wind River Systems.
+ */
+
+#ifndef __COMPONENTBASE_H
+#define __COMPONENTBASE_H
+
+#include <OMX_Core.h>
+#include <OMX_Component.h>
+
+#include <cmodule.h>
+
+#include <queue.h>
+
+class ComponentBase
+{
+public:
+    /*
+     * constructor & destructor
+     */
+    ComponentBase();
+    ComponentBase(const OMX_STRING name);
+    virtual ~ComponentBase();
+
+    /*
+     * accessor
+     */
+    /* name */
+    void SetName(const OMX_STRING name);
+    const OMX_STRING GetName(void);
+
+    /* cmodule */
+    void SetCModule(CModule *cmodule);
+    CModule *GetCModule(void);
+
+    /* end of accessor */
+
+    /*
+     * component methods & helpers
+     */
+    static OMX_ERRORTYPE GetComponentVersion(
+        OMX_IN  OMX_HANDLETYPE hComponent,
+        OMX_OUT OMX_STRING pComponentName,
+        OMX_OUT OMX_VERSIONTYPE* pComponentVersion,
+        OMX_OUT OMX_VERSIONTYPE* pSpecVersion,
+        OMX_OUT OMX_UUIDTYPE* pComponentUUID);
+    OMX_ERRORTYPE CBaseGetComponentVersion(
+        OMX_IN  OMX_HANDLETYPE hComponent,
+        OMX_OUT OMX_STRING pComponentName,
+        OMX_OUT OMX_VERSIONTYPE* pComponentVersion,
+        OMX_OUT OMX_VERSIONTYPE* pSpecVersion,
+        OMX_OUT OMX_UUIDTYPE* pComponentUUID);
+
+    static OMX_ERRORTYPE SendCommand(
+        OMX_IN  OMX_HANDLETYPE hComponent,
+        OMX_IN  OMX_COMMANDTYPE Cmd,
+        OMX_IN  OMX_U32 nParam1,
+        OMX_IN  OMX_PTR pCmdData);
+    OMX_ERRORTYPE CBaseSendCommand(
+        OMX_IN  OMX_HANDLETYPE hComponent,
+        OMX_IN  OMX_COMMANDTYPE Cmd,
+        OMX_IN  OMX_U32 nParam1,
+        OMX_IN  OMX_PTR pCmdData);
+
+    static OMX_ERRORTYPE GetParameter(
+        OMX_IN  OMX_HANDLETYPE hComponent,
+        OMX_IN  OMX_INDEXTYPE nParamIndex,
+        OMX_INOUT OMX_PTR pComponentParameterStructure);
+    OMX_ERRORTYPE CBaseGetParameter(
+        OMX_IN  OMX_HANDLETYPE hComponent,
+        OMX_IN  OMX_INDEXTYPE nParamIndex,
+        OMX_INOUT OMX_PTR pComponentParameterStructure);
+
+    static OMX_ERRORTYPE SetParameter(
+        OMX_IN  OMX_HANDLETYPE hComponent,
+        OMX_IN  OMX_INDEXTYPE nIndex,
+        OMX_IN  OMX_PTR pComponentParameterStructure);
+    OMX_ERRORTYPE CBaseSetParameter(
+        OMX_IN  OMX_HANDLETYPE hComponent,
+        OMX_IN  OMX_INDEXTYPE nIndex,
+        OMX_IN  OMX_PTR pComponentParameterStructure);
+
+    static OMX_ERRORTYPE GetConfig(
+        OMX_IN  OMX_HANDLETYPE hComponent,
+        OMX_IN  OMX_INDEXTYPE nIndex,
+        OMX_INOUT OMX_PTR pComponentConfigStructure);
+    OMX_ERRORTYPE CBaseGetConfig(
+        OMX_IN  OMX_HANDLETYPE hComponent,
+        OMX_IN  OMX_INDEXTYPE nIndex,
+        OMX_INOUT OMX_PTR pComponentConfigStructure);
+
+    static OMX_ERRORTYPE SetConfig(
+        OMX_IN  OMX_HANDLETYPE hComponent,
+        OMX_IN  OMX_INDEXTYPE nIndex,
+        OMX_IN  OMX_PTR pComponentConfigStructure);
+    OMX_ERRORTYPE CBaseSetConfig(
+        OMX_IN  OMX_HANDLETYPE hComponent,
+        OMX_IN  OMX_INDEXTYPE nIndex,
+        OMX_IN  OMX_PTR pComponentConfigStructure);
+
+    static OMX_ERRORTYPE GetExtensionIndex(
+        OMX_IN  OMX_HANDLETYPE hComponent,
+        OMX_IN  OMX_STRING cParameterName,
+        OMX_OUT OMX_INDEXTYPE* pIndexType);
+    OMX_ERRORTYPE CBaseGetExtensionIndex(
+        OMX_IN  OMX_HANDLETYPE hComponent,
+        OMX_IN  OMX_STRING cParameterName,
+        OMX_OUT OMX_INDEXTYPE* pIndexType);
+
+    static OMX_ERRORTYPE GetState(
+        OMX_IN  OMX_HANDLETYPE hComponent,
+        OMX_OUT OMX_STATETYPE* pState);
+    OMX_ERRORTYPE CBaseGetState(
+        OMX_IN  OMX_HANDLETYPE hComponent,
+        OMX_OUT OMX_STATETYPE* pState);
+
+    static OMX_ERRORTYPE ComponentTunnelRequest(
+        OMX_IN  OMX_HANDLETYPE hComp,
+        OMX_IN  OMX_U32 nPort,
+        OMX_IN  OMX_HANDLETYPE hTunneledComp,
+        OMX_IN  OMX_U32 nTunneledPort,
+        OMX_INOUT  OMX_TUNNELSETUPTYPE* pTunnelSetup);
+    OMX_ERRORTYPE CBaseComponentTunnelRequest(
+        OMX_IN  OMX_HANDLETYPE hComp,
+        OMX_IN  OMX_U32 nPort,
+        OMX_IN  OMX_HANDLETYPE hTunneledComp,
+        OMX_IN  OMX_U32 nTunneledPort,
+        OMX_INOUT  OMX_TUNNELSETUPTYPE* pTunnelSetup);
+
+    static OMX_ERRORTYPE UseBuffer(
+        OMX_IN OMX_HANDLETYPE hComponent,
+        OMX_INOUT OMX_BUFFERHEADERTYPE** ppBufferHdr,
+        OMX_IN OMX_U32 nPortIndex,
+        OMX_IN OMX_PTR pAppPrivate,
+        OMX_IN OMX_U32 nSizeBytes,
+        OMX_IN OMX_U8* pBuffer);
+    OMX_ERRORTYPE CBaseUseBuffer(
+        OMX_IN OMX_HANDLETYPE hComponent,
+        OMX_INOUT OMX_BUFFERHEADERTYPE** ppBufferHdr,
+        OMX_IN OMX_U32 nPortIndex,
+        OMX_IN OMX_PTR pAppPrivate,
+        OMX_IN OMX_U32 nSizeBytes,
+        OMX_IN OMX_U8* pBuffer);
+
+    static OMX_ERRORTYPE AllocateBuffer(
+        OMX_IN OMX_HANDLETYPE hComponent,
+        OMX_INOUT OMX_BUFFERHEADERTYPE** ppBuffer,
+        OMX_IN OMX_U32 nPortIndex,
+        OMX_IN OMX_PTR pAppPrivate,
+        OMX_IN OMX_U32 nSizeBytes);
+    OMX_ERRORTYPE CBaseAllocateBuffer(
+        OMX_IN OMX_HANDLETYPE hComponent,
+        OMX_INOUT OMX_BUFFERHEADERTYPE** ppBuffer,
+        OMX_IN OMX_U32 nPortIndex,
+        OMX_IN OMX_PTR pAppPrivate,
+        OMX_IN OMX_U32 nSizeBytes);
+
+    static OMX_ERRORTYPE FreeBuffer(
+        OMX_IN  OMX_HANDLETYPE hComponent,
+        OMX_IN  OMX_U32 nPortIndex,
+        OMX_IN  OMX_BUFFERHEADERTYPE* pBuffer);
+    OMX_ERRORTYPE CBaseFreeBuffer(
+        OMX_IN  OMX_HANDLETYPE hComponent,
+        OMX_IN  OMX_U32 nPortIndex,
+        OMX_IN  OMX_BUFFERHEADERTYPE* pBuffer);
+
+    static OMX_ERRORTYPE EmptyThisBuffer(
+        OMX_IN  OMX_HANDLETYPE hComponent,
+        OMX_IN  OMX_BUFFERHEADERTYPE* pBuffer);
+    OMX_ERRORTYPE CBaseEmptyThisBuffer(
+        OMX_IN  OMX_HANDLETYPE hComponent,
+        OMX_IN  OMX_BUFFERHEADERTYPE* pBuffer);
+
+    static OMX_ERRORTYPE FillThisBuffer(
+        OMX_IN  OMX_HANDLETYPE hComponent,
+        OMX_IN  OMX_BUFFERHEADERTYPE* pBuffer);
+    OMX_ERRORTYPE CBaseFillThisBuffer(
+        OMX_IN  OMX_HANDLETYPE hComponent,
+        OMX_IN  OMX_BUFFERHEADERTYPE* pBuffer);
+
+    static OMX_ERRORTYPE SetCallbacks(
+        OMX_IN  OMX_HANDLETYPE hComponent,
+        OMX_IN  OMX_CALLBACKTYPE* pCallbacks,
+        OMX_IN  OMX_PTR pAppData);
+    OMX_ERRORTYPE CBaseSetCallbacks(
+        OMX_IN  OMX_HANDLETYPE hComponent,
+        OMX_IN  OMX_CALLBACKTYPE* pCallbacks,
+        OMX_IN  OMX_PTR pAppData);
+
+    static OMX_ERRORTYPE ComponentDeInit(
+        OMX_IN  OMX_HANDLETYPE hComponent);
+    OMX_ERRORTYPE CBaseComponentDeInit(
+        OMX_IN  OMX_HANDLETYPE hComponent);
+
+    static OMX_ERRORTYPE UseEGLImage(
+        OMX_IN OMX_HANDLETYPE hComponent,
+        OMX_INOUT OMX_BUFFERHEADERTYPE** ppBufferHdr,
+        OMX_IN OMX_U32 nPortIndex,
+        OMX_IN OMX_PTR pAppPrivate,
+        OMX_IN void* eglImage);
+    OMX_ERRORTYPE CBaseUseEGLImage(
+        OMX_IN OMX_HANDLETYPE hComponent,
+        OMX_INOUT OMX_BUFFERHEADERTYPE** ppBufferHdr,
+        OMX_IN OMX_U32 nPortIndex,
+        OMX_IN OMX_PTR pAppPrivate,
+        OMX_IN void* eglImage);
+
+    static OMX_ERRORTYPE ComponentRoleEnum(
+        OMX_IN OMX_HANDLETYPE hComponent,
+        OMX_OUT OMX_U8 *cRole,
+        OMX_IN OMX_U32 nIndex);
+    OMX_ERRORTYPE CBaseComponentRoleEnum(
+        OMX_IN OMX_HANDLETYPE hComponent,
+        OMX_OUT OMX_U8 *cRole,
+        OMX_IN OMX_U32 nIndex);
+
+    /* end of component methods & helpers */
+
+protected:
+
+    /*
+     * omx header manipuation
+     */
+    void SetTypeHeader(OMX_PTR type, OMX_U32 size);
+    OMX_BOOL CheckTypeHeader(OMX_PTR type, OMX_U32 size);
+
+    /* end of omx header manipuation */
+
+private:
+    /* common routines for constructor */
+    void __ComponentBase(void);
+
+    /* roles */
+    OMX_U8 **roles;
+    OMX_U32 nr_roles;
+
+    /* component module */
+    CModule *cmodule;
+
+    /* component name */
+    char name[OMX_MAX_STRINGNAME_SIZE];
+
+    /* omx specification version */
+    const static OMX_U8 OMX_SPEC_VERSION_MAJOR = 1;
+    const static OMX_U8 OMX_SPEC_VERSION_MINOR = 1;
+    const static OMX_U8 OMX_SPEC_VERSION_REVISION = 0;
+    const static OMX_U8 OMX_SPEC_VERSION_STEP = 0;
+
+    const static OMX_U32 OMX_SPEC_VERSION = 0
+        | (OMX_SPEC_VERSION_MAJOR << 24)
+        | (OMX_SPEC_VERSION_MINOR << 16)
+        | (OMX_SPEC_VERSION_REVISION << 8)
+        | (OMX_SPEC_VERSION_STEP << 0);
+};
+#endif

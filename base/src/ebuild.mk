@@ -2,7 +2,8 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES := \
-	cmodule.cpp
+	cmodule.cpp \
+	componentbase.cpp
 
 LOCAL_MODULE := libwrs_omxil_base
 
