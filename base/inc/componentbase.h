@@ -271,15 +271,15 @@ public:
 
     /* end of component methods & helpers */
 
-protected:
     /*
      * omx header manipuation
      */
-    void SetTypeHeader(OMX_PTR type, OMX_U32 size);
-    OMX_BOOL CheckTypeHeader(OMX_PTR type, OMX_U32 size);
+    static void SetTypeHeader(OMX_PTR type, OMX_U32 size);
+    static OMX_ERRORTYPE CheckTypeHeader(OMX_PTR type, OMX_U32 size);
 
     /* end of omx header manipuation */
 
+protected:
     /* ports */
     /*
      * allocated with derived port classes by derived component classes

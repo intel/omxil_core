@@ -1374,29 +1374,28 @@ void ComponentBase::SetTypeHeader(OMX_PTR type, OMX_U32 size)
     nsize = (OMX_U32 *)type;
     nversion = (OMX_VERSIONTYPE *)((OMX_U8 *)type + sizeof(OMX_U32));
 
-    *nsize = sizeof(size);
+    *nsize = size;
     nversion->nVersion = OMX_SPEC_VERSION;
 }
 
-OMX_BOOL ComponentBase::CheckTypeHeader(OMX_PTR type, OMX_U32 size)
+OMX_ERRORTYPE ComponentBase::CheckTypeHeader(OMX_PTR type, OMX_U32 size)
 {
     OMX_U32 *nsize;
     OMX_VERSIONTYPE *nversion;
-    OMX_U8 mismatch = 0;
 
     if (!type)
-        return OMX_FALSE;
+        return OMX_ErrorBadParameter;
 
     nsize = (OMX_U32 *)type;
     nversion = (OMX_VERSIONTYPE *)((OMX_U8 *)type + sizeof(OMX_U32));
 
-    mismatch = (*nsize != sizeof(size)) ? 1 : 0;
-    mismatch |= (nversion->nVersion != OMX_SPEC_VERSION) ? 1 : 0;
+    if (*nsize != size)
+        return OMX_ErrorBadParameter;
 
-    if (mismatch)
-        return OMX_TRUE;
-    else
-        return OMX_FALSE;
+    if (nversion->nVersion != OMX_SPEC_VERSION)
+        return OMX_ErrorVersionMismatch;
+
+    return OMX_ErrorNone;
 }
 
 /* end of ComponentBase */
