@@ -32,6 +32,12 @@ public:
     void SetOwner(OMX_COMPONENTTYPE *handle);
     OMX_COMPONENTTYPE *GetOwner(void);
 
+    /* for ReturnThisBuffer() */
+    OMX_ERRORTYPE SetCallbacks(OMX_HANDLETYPE hComponent,
+                               OMX_CALLBACKTYPE *pCallbacks,
+                               OMX_PTR pAppData);
+    /* end of accessor */
+
     /*
      * component methods & helpers
      */
@@ -100,6 +106,10 @@ private:
 
     /* owner handle */
     OMX_COMPONENTTYPE *owner;
+
+    /* omx standard callbacks */
+    OMX_PTR appdata;
+    OMX_CALLBACKTYPE *callbacks;
 };
 
 #endif /* __PORTBASE_H */

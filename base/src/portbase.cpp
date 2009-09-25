@@ -31,6 +31,9 @@ void PortBase::__PortBase(void)
 
     memset(&portparam, 0, sizeof(portparam));
     memset(&audioparam, 0, sizeof(audioparam));
+
+    appdata = NULL;
+    callbacks = NULL;
 }
 
 PortBase::PortBase()
@@ -71,6 +74,21 @@ OMX_COMPONENTTYPE *PortBase::GetOwner(void)
 {
     return owner;
 }
+
+OMX_ERRORTYPE PortBase::SetCallbacks(OMX_HANDLETYPE hComponent,
+                                     OMX_CALLBACKTYPE *pCallbacks,
+                                     OMX_PTR pAppData)
+{
+    if (owner != hComponent)
+        return OMX_ErrorBadParameter;
+
+    appdata = pAppData;
+    callbacks = pCallbacks;
+
+    return OMX_ErrorNone;
+}
+
+/* end of accessor */
 
 /*
  * component methods & helpers
