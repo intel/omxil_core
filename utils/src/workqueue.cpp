@@ -47,7 +47,7 @@ void WorkQueue::Run(void)
          * sleeps until works're available.
          * wokeup by ScheduleWork() or FlushWork() or ~WorkQueue()
          */
-        if (works)
+        if (!works)
             pthread_cond_wait(&wcond, &wlock);
 
         while (works) {
