@@ -25,6 +25,13 @@ public:
     /* end of constructor & destructor */
 
     /*
+     * accessor
+     */
+    /* owner */
+    void SetOwner(OMX_COMPONENTTYPE *handle);
+    OMX_COMPONENTTYPE *GetOwner(void);
+
+    /*
      * component methods & helpers
      */
     /* Get/SetParameter */
@@ -72,6 +79,9 @@ private:
     /* parameter */
     OMX_PARAM_PORTDEFINITIONTYPE portparam;
     OMX_AUDIO_PARAM_PORTFORMATTYPE audioparam;
+
+    /* owner handle */
+    OMX_COMPONENTTYPE *owner;
 };
 
 #endif /* __PORTBASE_H */

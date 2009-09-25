@@ -52,6 +52,20 @@ PortBase::~PortBase()
 /* end of constructor & destructor */
 
 /*
+ * accessor
+ */
+/* owner */
+void PortBase::SetOwner(OMX_COMPONENTTYPE *handle)
+{
+    owner = handle;
+}
+
+OMX_COMPONENTTYPE *PortBase::GetOwner(void)
+{
+    return owner;
+}
+
+/*
  * component methods & helpers
  */
 /* Get/SetParameter */
