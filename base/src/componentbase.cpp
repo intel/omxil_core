@@ -958,7 +958,11 @@ OMX_ERRORTYPE ComponentBase::CBaseEmptyThisBuffer(
     if (!port)
         return OMX_ErrorBadParameter;
 
-    return port->PushThisBuffer(pBuffer);
+    ret = port->PushThisBuffer(pBuffer);
+    if (ret == OMX_ErrorNone)
+        bufferwork->ScheduleWork(this);
+
+    return ret;
 }
 
 OMX_ERRORTYPE ComponentBase::FillThisBuffer(
@@ -1000,7 +1004,11 @@ OMX_ERRORTYPE ComponentBase::CBaseFillThisBuffer(
     if (!port)
         return OMX_ErrorBadParameter;
 
-    return port->PushThisBuffer(pBuffer);
+    ret = port->PushThisBuffer(pBuffer);
+    if (ret == OMX_ErrorNone)
+        bufferwork->ScheduleWork(this);
+
+    return ret;
 }
 
 OMX_ERRORTYPE ComponentBase::SetCallbacks(
@@ -1317,15 +1325,26 @@ inline OMX_ERRORTYPE ComponentBase::TransStateToIdle(OMX_STATETYPE current)
         /*
          * Todo
          *   1. returns all buffers to thier suppliers.
-         *      call Fill/EmptyThisBuffer() for all ports
-         *   2. stop buffer process work
+         *      call Fill/EmptyBufferDone() for all ports
+         *   2. stop buffer process work                        !
          *   3. stop component's internal processor
          */
+
+        bufferwork->StopWork();
+
         ret = OMX_ErrorNone;
     }
     else if (current == OMX_StatePause) {
+        /*
+         * Todo
+         *   1. returns all buffers to thier suppliers.
+         *      call Fill/EmptyBufferDone() for all ports
+         *   2. discard queued work, stop buffer process work   !
+         *   3. stop component's internal processor
+         */
 
-        /* same as Executing to Idle */
+        bufferwork->CancelScheduledWork(this);
+        bufferwork->StopWork();
 
         ret = OMX_ErrorNone;
     }
@@ -1351,16 +1370,28 @@ ComponentBase::TransStateToExecuting(OMX_STATETYPE current)
         /*
          * Todo
          *   1. start component's internal processor
-         *   2. start processing buffers on each port
+         *   2. start processing buffers on each port   !
          */
+
+        pthread_mutex_lock(&executing_lock);
+        executing = true;
+        pthread_mutex_unlock(&executing_lock);
+
+        bufferwork->StartWork();
         ret = OMX_ErrorNone;
     }
     else if (current == OMX_StatePause) {
         /*
          * Todo
-         *   1. resume buffer process woraek
-         *   2. resume component's internal processor
+         *   1. resume component's internal processor
+         *   2. resume buffer process work              !
          */
+
+        pthread_mutex_lock(&executing_lock);
+        executing = true;
+        pthread_cond_signal(&executing_wait);
+        pthread_mutex_unlock(&executing_lock);
+
         ret = OMX_ErrorNone;
     }
     else
@@ -1375,17 +1406,31 @@ inline OMX_ERRORTYPE ComponentBase::TransStateToPause(OMX_STATETYPE current)
 
     if (current == OMX_StateIdle) {
         /*
-         * same as Idle to Executing,
-         * except for not starting buffer processing and internal processor
+         * Todo
+         *   1. start(paused) component's internal processor
+         *   2. start(paused) processing buffers on each port   !
          */
+
+        /* turn off executing flag */
+        pthread_mutex_lock(&executing_lock);
+        executing = false;
+        pthread_mutex_unlock(&executing_lock);
+
+        bufferwork->StartWork();
+
         ret = OMX_ErrorNone;
     }
     else if (current == OMX_StateExecuting) {
         /*
          * Todo
-         *   1. pause buffer process work
+         *   1. pause buffer process work               !
          *   2. pause component's internal processor
          */
+
+        pthread_mutex_lock(&executing_lock);
+        executing = false;
+        pthread_mutex_unlock(&executing_lock);
+
         ret = OMX_ErrorNone;
     }
     else
