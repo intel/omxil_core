@@ -26,6 +26,9 @@ void PortBase::__PortBase(void)
     pthread_mutex_init(&hdrs_lock, NULL);
     pthread_cond_init(&hdrs_wait, NULL);
 
+    __queue_init(&bufferq);
+    pthread_mutex_init(&bufferq_lock, NULL);
+
     memset(&portparam, 0, sizeof(portparam));
     memset(&audioparam, 0, sizeof(audioparam));
 }
@@ -47,6 +50,10 @@ PortBase::~PortBase()
 
     pthread_cond_destroy(&hdrs_wait);
     pthread_mutex_destroy(&hdrs_lock);
+
+    /* should've been already freed at buffer processing */
+    queue_free_all(&bufferq);
+    pthread_mutex_destroy(&bufferq_lock);
 }
 
 /* end of constructor & destructor */
@@ -276,6 +283,53 @@ void PortBase::WaitPortBufferCompletion(void)
         pthread_cond_wait(&hdrs_wait, &hdrs_lock);
     buffer_hdrs_completion = !buffer_hdrs_completion;
     pthread_mutex_unlock(&hdrs_lock);
+}
+
+    /* Empty/FillThisBuffer */
+OMX_ERRORTYPE PortBase::PushThisBuffer(OMX_BUFFERHEADERTYPE *pBuffer)
+{
+    int ret;
+
+    pthread_mutex_lock(&bufferq_lock);
+    ret = queue_push_tail(&bufferq, pBuffer);
+    pthread_mutex_unlock(&bufferq_lock);
+
+    if (ret)
+        return OMX_ErrorInsufficientResources;
+
+    return OMX_ErrorNone;
+}
+
+OMX_BUFFERHEADERTYPE *PortBase::PopBuffer(void)
+{
+    OMX_BUFFERHEADERTYPE *buffer;
+
+    pthread_mutex_lock(&bufferq_lock);
+    buffer = (OMX_BUFFERHEADERTYPE *)queue_pop_head(&bufferq);
+    pthread_mutex_unlock(&bufferq_lock);
+
+    return buffer;
+}
+
+OMX_U32 PortBase::BufferQueueLength(void)
+{
+    OMX_U32 length;
+
+    pthread_mutex_lock(&bufferq_lock);
+    length = queue_length(&bufferq);
+    pthread_mutex_unlock(&bufferq_lock);
+
+    return length;
+}
+
+OMX_ERRORTYPE PortBase::ReturnThisBuffer(OMX_BUFFERHEADERTYPE *pBuffer)
+{
+    /*
+     * Todo
+     *   Empty/FillThisBufferDone event
+     */
+
+    return OMX_ErrorNone;
 }
 
 OMX_STATETYPE PortBase::GetOwnerState(void)

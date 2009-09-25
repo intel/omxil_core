@@ -11,6 +11,7 @@
 #include <OMX_Component.h>
 
 #include <list.h>
+#include <queue.h>
 
 class PortBase
 {
@@ -63,6 +64,13 @@ public:
      */
     void WaitPortBufferCompletion(void);
 
+    /* Empty/FillThisBuffer */
+    OMX_ERRORTYPE PushThisBuffer(OMX_BUFFERHEADERTYPE *pBuffer);
+    OMX_BUFFERHEADERTYPE *PopBuffer(void);
+    OMX_U32 BufferQueueLength(void);
+
+    OMX_ERRORTYPE ReturnThisBuffer(OMX_BUFFERHEADERTYPE *pBuffer);
+
     /* end of component methods & helpers */
 
 private:
@@ -82,6 +90,9 @@ private:
     bool buffer_hdrs_completion; /* Use/Allocate/FreeBuffer completion flag */
     pthread_mutex_t hdrs_lock;
     pthread_cond_t hdrs_wait;
+
+    struct queue bufferq;
+    pthread_mutex_t bufferq_lock;
 
     /* parameter */
     OMX_PARAM_PORTDEFINITIONTYPE portparam;
