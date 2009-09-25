@@ -29,11 +29,13 @@ CmdProcessWork::CmdProcessWork(CmdHandlerInterface *ci)
 
     __queue_init(&q);
     pthread_mutex_init(&lock, NULL);
+
+    workq->StartWork();
 }
 
 CmdProcessWork::~CmdProcessWork()
 {
-    workq->FlushWork();
+    workq->StopWork();
     delete workq;
 
     pthread_mutex_lock(&lock);
