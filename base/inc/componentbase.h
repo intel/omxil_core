@@ -316,6 +316,14 @@ private:
         ComponentSetParameter(OMX_INDEXTYPE nIndex,
                               OMX_PTR pComponentParameterStructure) = 0;
 
+    /* Get/SetConfig */
+    virtual OMX_ERRORTYPE
+        ComponentGetConfig(OMX_INDEXTYPE nIndex,
+                           OMX_PTR pComponentConfigStructure) = 0;
+    virtual OMX_ERRORTYPE
+        ComponentSetConfig(OMX_INDEXTYPE nIndex,
+                           OMX_PTR pComponentConfigStructure) = 0;
+
     /* end of component methods & helpers */
 
     /* process component's commands work */

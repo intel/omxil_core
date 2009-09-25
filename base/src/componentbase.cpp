@@ -609,11 +609,17 @@ OMX_ERRORTYPE ComponentBase::CBaseGetConfig(
     OMX_IN  OMX_INDEXTYPE nIndex,
     OMX_INOUT OMX_PTR pComponentConfigStructure)
 {
-    /*
-     * Todo
-     */
+    OMX_ERRORTYPE ret;
 
-    return OMX_ErrorNotImplemented;
+    if (hComponent != handle)
+        return OMX_ErrorBadParameter;
+
+    switch (nIndex) {
+    default:
+        ret = ComponentGetConfig(nIndex, pComponentConfigStructure);
+    }
+
+    return ret;
 }
 
 OMX_ERRORTYPE ComponentBase::SetConfig(
@@ -640,11 +646,17 @@ OMX_ERRORTYPE ComponentBase::CBaseSetConfig(
     OMX_IN  OMX_INDEXTYPE nIndex,
     OMX_IN  OMX_PTR pComponentConfigStructure)
 {
-    /*
-     * Todo
-     */
+    OMX_ERRORTYPE ret;
 
-    return OMX_ErrorNotImplemented;
+    if (hComponent != handle)
+        return OMX_ErrorBadParameter;
+
+    switch (nIndex) {
+    default:
+        ret = ComponentSetConfig(nIndex, pComponentConfigStructure);
+    }
+
+    return ret;
 }
 
 OMX_ERRORTYPE ComponentBase::GetExtensionIndex(
