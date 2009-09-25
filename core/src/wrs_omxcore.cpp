@@ -205,13 +205,42 @@ OMX_API OMX_ERRORTYPE OMX_APIENTRY OMX_GetHandle(
     OMX_IN OMX_PTR pAppData,
     OMX_IN OMX_CALLBACKTYPE *pCallBacks)
 {
-    return OMX_ErrorNotImplemented;
+    struct list *entry;
+
+    pthread_mutex_lock(&g_module_lock);
+    list_foreach(g_module_list, entry) {
+        CModule *cmodule;
+        ComponentBase *cbase;
+        OMX_STRING name;
+
+        cmodule = static_cast<CModule *>(entry->data);
+        cbase = static_cast<ComponentBase *>(cmodule->GetPrivData());
+
+        name = cbase->GetName();
+        if (!strcmp(cComponentName, name)) {
+            pthread_mutex_unlock(&g_module_lock);
+            return cbase->GetHandle(pHandle, pAppData, pCallBacks);
+        }
+    }
+    pthread_mutex_unlock(&g_module_lock);
+
+    return OMX_ErrorInvalidComponent;
 }
 
 OMX_API OMX_ERRORTYPE OMX_APIENTRY OMX_FreeHandle(
     OMX_IN OMX_HANDLETYPE hComponent)
 {
-    return OMX_ErrorNotImplemented;
+    ComponentBase *cbase;
+
+    if (!hComponent)
+        return OMX_ErrorBadParameter;
+
+    cbase = static_cast<ComponentBase *>
+        (((OMX_COMPONENTTYPE *)hComponent)->pComponentPrivate);
+    if (!cbase)
+        return OMX_ErrorBadParameter;
+
+    return cbase->FreeHandle(hComponent);
 }
 
 OMX_API OMX_ERRORTYPE OMX_APIENTRY OMX_SetupTunnel(
