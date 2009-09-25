@@ -32,6 +32,19 @@ public:
         const OMX_AUDIO_PARAM_PORTFORMATTYPE *pComponentParameterStructure);
     const OMX_AUDIO_PARAM_PORTFORMATTYPE *GetAudioPortParam(void);
 
+    /* Use/Allocate/FreeBuffer */
+    OMX_ERRORTYPE UseBuffer(OMX_BUFFERHEADERTYPE **ppBufferHdr,
+                            OMX_U32 nPortIndex,
+                            OMX_PTR pAppPrivate,
+                            OMX_U32 nSizeBytes,
+                            OMX_U8 *pBuffer);
+    OMX_ERRORTYPE AllocateBuffer(OMX_BUFFERHEADERTYPE **ppBuffer,
+                                 OMX_U32 nPortIndex,
+                                 OMX_PTR pAppPrivate,
+                                 OMX_U32 nSizeBytes);
+    OMX_ERRORTYPE FreeBuffer(OMX_U32 nPortIndex,
+                             OMX_BUFFERHEADERTYPE *pBuffer);
+
     /* end of component methods & helpers */
 
 private:

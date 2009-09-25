@@ -59,4 +59,42 @@ const OMX_AUDIO_PARAM_PORTFORMATTYPE *PortBase::GetAudioPortParam(void)
     return &audioparam;
 }
 
+/* Use/Allocate/FreeBuffer */
+OMX_ERRORTYPE PortBase::UseBuffer(OMX_BUFFERHEADERTYPE **ppBufferHdr,
+                                  OMX_U32 nPortIndex,
+                                  OMX_PTR pAppPrivate,
+                                  OMX_U32 nSizeBytes,
+                                  OMX_U8 *pBuffer)
+{
+    /*
+     * Todo
+     */
+
+    return OMX_ErrorNotImplemented;
+}
+
+OMX_ERRORTYPE PortBase::AllocateBuffer(OMX_BUFFERHEADERTYPE **ppBuffer,
+                                       OMX_U32 nPortIndex,
+                                       OMX_PTR pAppPrivate,
+                                       OMX_U32 nSizeBytes)
+{
+    /*
+     * Todo
+     */
+
+    return OMX_ErrorNotImplemented;
+}
+
+OMX_ERRORTYPE PortBase::FreeBuffer(OMX_U32 nPortIndex,
+                                   OMX_BUFFERHEADERTYPE *pBuffer)
+{
+    /*
+     * Todo
+     */
+
+    return OMX_ErrorNotImplemented;
+}
+
 /* end of component methods & helpers */
+
+/* end of PortBase */
