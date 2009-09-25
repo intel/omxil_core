@@ -9,6 +9,7 @@
 #include <OMX_Component.h>
 
 #include <cmodule.h>
+#include <portbase.h>
 
 #include <queue.h>
 #include <workqueue.h>
@@ -278,6 +279,14 @@ protected:
     OMX_BOOL CheckTypeHeader(OMX_PTR type, OMX_U32 size);
 
     /* end of omx header manipuation */
+
+    /* ports */
+    /*
+     * allocated with derived port classes by derived component classes
+     */
+    PortBase **ports;
+    OMX_U32 nr_ports;
+    OMX_PORT_PARAM_TYPE portparam;
 
 private:
     /* common routines for constructor */

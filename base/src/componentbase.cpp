@@ -95,6 +95,8 @@ void CmdProcessWork::Work(void)
     ScheduleIfAvailable();
 }
 
+/* end of CmdProcessWork */
+
 /*
  * ComponentBase
  */
@@ -109,6 +111,10 @@ void ComponentBase::__ComponentBase(void)
 
     roles = NULL;
     nr_roles = 0;
+
+    ports = NULL;
+    nr_ports = 0;
+    memset(&portparam, 0, sizeof(portparam));
 
     cmdwork = new CmdProcessWork(this);
 }
@@ -1027,3 +1033,5 @@ OMX_BOOL ComponentBase::CheckTypeHeader(OMX_PTR type, OMX_U32 size)
     else
         return OMX_FALSE;
 }
+
+/* end of ComponentBase */
