@@ -32,6 +32,7 @@ void PortBase::__PortBase(void)
     memset(&portparam, 0, sizeof(portparam));
     memset(&audioparam, 0, sizeof(audioparam));
 
+    owner = NULL;
     appdata = NULL;
     callbacks = NULL;
 }
