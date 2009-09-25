@@ -263,6 +263,22 @@ void PortBase::WaitPortBufferCompletion(void)
     pthread_mutex_unlock(&hdrs_lock);
 }
 
+OMX_STATETYPE PortBase::GetOwnerState(void)
+{
+    OMX_STATETYPE state = OMX_StateInvalid;
+
+    if (owner) {
+        ComponentBase *cbase;
+        cbase = static_cast<ComponentBase *>(owner->pComponentPrivate);
+        if (!cbase)
+            return state;
+
+        cbase->CBaseGetState((void *)owner, &state);
+    }
+
+    return state;
+}
+
 /* end of component methods & helpers */
 
 /* end of PortBase */

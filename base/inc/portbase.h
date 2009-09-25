@@ -69,6 +69,13 @@ private:
     /* common routines for constructor */
     void __PortBase(void);
 
+    /*
+     * component methods & helpers
+     */
+    OMX_STATETYPE GetOwnerState(void);
+
+    /* end of component methods & helpers */
+
     /* buffer headers */
     struct list *buffer_hdrs;
     OMX_U32 nr_buffer_hdrs;
