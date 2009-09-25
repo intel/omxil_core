@@ -13,6 +13,7 @@
 
 #include <list.h>
 #include <cmodule.h>
+#include <componentbase.h>
 
 #define LOG_TAG "wrs_omxcore"
 #include <log.h>
@@ -176,7 +177,26 @@ OMX_API OMX_ERRORTYPE OMX_APIENTRY OMX_ComponentNameEnum(
     OMX_IN OMX_U32 nNameLength,
     OMX_IN OMX_U32 nIndex)
 {
-    return OMX_ErrorNotImplemented;
+    CModule *cmodule;
+    ComponentBase *cbase;
+    struct list *entry;
+    OMX_STRING cname;
+
+    pthread_mutex_lock(&g_module_lock);
+    entry = __list_entry(g_module_list, nIndex);
+    if (!entry) {
+        pthread_mutex_unlock(&g_module_lock);
+        return OMX_ErrorNoMore;
+    }
+    pthread_mutex_unlock(&g_module_lock);
+
+    cmodule = static_cast<CModule *>(entry->data);
+    cbase = static_cast<ComponentBase *>(cmodule->GetPrivData());
+
+    cname = cbase->GetName();
+    strncpy(cComponentName, cname, nNameLength);
+
+    return OMX_ErrorNone;
 }
 
 OMX_API OMX_ERRORTYPE OMX_APIENTRY OMX_GetHandle(
@@ -215,7 +235,40 @@ OMX_API OMX_ERRORTYPE OMX_GetComponentsOfRole (
     OMX_INOUT OMX_U32 *pNumComps,
     OMX_INOUT OMX_U8  **compNames)
 {
-    return OMX_ErrorNotImplemented;
+    struct list *entry;
+    OMX_U32 nr_comps = 0, copied_nr_comps = 0;
+
+    pthread_mutex_lock(&g_module_lock);
+    list_foreach(g_module_list, entry) {
+        CModule *cmodule;
+        ComponentBase *cbase;
+        OMX_STRING cname;
+        bool having_role;
+
+        cmodule = static_cast<CModule *>(entry->data);
+        cbase = static_cast<ComponentBase *>(cmodule->GetPrivData());
+
+        having_role = cbase->QueryHavingThisRole(role);
+        if (having_role) {
+            if (compNames && compNames[nr_comps]) {
+                cname = cbase->GetName();
+                strncpy((OMX_STRING)&compNames[nr_comps][0], cname,
+                        OMX_MAX_STRINGNAME_SIZE);
+                copied_nr_comps++;
+            }
+            nr_comps++;
+        }
+    }
+    pthread_mutex_unlock(&g_module_lock);
+
+    if (!copied_nr_comps)
+        *pNumComps = nr_comps;
+    else {
+        if (copied_nr_comps != *pNumComps)
+            return OMX_ErrorBadParameter;
+    }
+
+    return OMX_ErrorNone;
 }
 
 OMX_API OMX_ERRORTYPE OMX_GetRolesOfComponent (
@@ -223,5 +276,24 @@ OMX_API OMX_ERRORTYPE OMX_GetRolesOfComponent (
     OMX_INOUT OMX_U32 *pNumRoles,
     OMX_OUT OMX_U8 **roles)
 {
-    return OMX_ErrorNotImplemented;
+    struct list *entry;
+
+    pthread_mutex_lock(&g_module_lock);
+    list_foreach(g_module_list, entry) {
+        CModule *cmodule;
+        ComponentBase *cbase;
+        OMX_STRING cname;
+
+        cmodule = static_cast<CModule *>(entry->data);
+        cbase = static_cast<ComponentBase *>(cmodule->GetPrivData());
+
+        cname = cbase->GetName();
+        if (!strcmp(compName, cname)) {
+            pthread_mutex_unlock(&g_module_lock);
+            return cbase->GetRolesOfComponent(pNumRoles, roles);
+        }
+    }
+    pthread_mutex_unlock(&g_module_lock);
+
+    return OMX_ErrorInvalidComponent;
 }

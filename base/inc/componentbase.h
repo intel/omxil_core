@@ -36,6 +36,17 @@ public:
     /* end of accessor */
 
     /*
+     * core methods & helpers
+     */
+    /* roles */
+    /* core methods & helpers */
+    OMX_ERRORTYPE SetRolesOfComponent(OMX_U32 nr_roles, const OMX_U8 **roles);
+    OMX_ERRORTYPE GetRolesOfComponent(OMX_U32 *nr_roles, OMX_U8 **roles);
+    bool QueryHavingThisRole(const OMX_STRING role);
+
+    /* end of core methods & helpers */
+
+    /*
      * component methods & helpers
      */
     static OMX_ERRORTYPE GetComponentVersion(
@@ -236,6 +247,10 @@ private:
 
     /* component module */
     CModule *cmodule;
+
+    /* omx standard handle */
+    /* allocated at GetHandle, freed at FreeHandle */
+    OMX_COMPONENTTYPE *handle;
 
     /* component name */
     char name[OMX_MAX_STRINGNAME_SIZE];

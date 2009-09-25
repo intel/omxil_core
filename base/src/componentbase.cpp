@@ -20,6 +20,7 @@ void ComponentBase::__ComponentBase(void)
 {
     memset(name, 0, OMX_MAX_STRINGNAME_SIZE);
     cmodule = NULL;
+    handle = NULL;
 
     roles = NULL;
     nr_roles = 0;
@@ -48,6 +49,8 @@ ComponentBase::~ComponentBase()
     }
 }
 
+/* end of constructor & destructor */
+
 /*
  * accessor
  */
@@ -73,6 +76,90 @@ CModule *ComponentBase::GetCModule(void)
 {
     return cmodule;
 }
+
+/* end of accessor */
+
+/*
+ * core methods & helpers
+ */
+/* roles */
+OMX_ERRORTYPE ComponentBase::SetRolesOfComponent(OMX_U32 nr_roles,
+                                                 const OMX_U8 **roles)
+{
+    OMX_U32 i;
+
+    this->roles = (OMX_U8 **)malloc(sizeof(OMX_STRING) * nr_roles);
+    if (!this->roles)
+        return OMX_ErrorInsufficientResources;
+
+    for (i = 0; i < nr_roles; i++) {
+        this->roles[i] = (OMX_U8 *)malloc(OMX_MAX_STRINGNAME_SIZE);
+        if (!this->roles[i]) {
+            int j;
+
+            for (j = (int )i-1; j >= 0; j--)
+                free(this->roles[j]);
+            free(this->roles);
+
+            return OMX_ErrorInsufficientResources;
+        }
+
+        strncpy((OMX_STRING)&this->roles[i][0],
+                (const OMX_STRING)&roles[i][0],
+                OMX_MAX_STRINGNAME_SIZE);
+    }
+
+    this->nr_roles = nr_roles;
+    return OMX_ErrorNone;
+}
+
+OMX_ERRORTYPE ComponentBase::GetRolesOfComponent(OMX_U32 *nr_roles,
+                                                 OMX_U8 **roles)
+{
+    OMX_U32 i;
+    OMX_U32 this_nr_roles = this->nr_roles;
+
+    if (!roles) {
+        *nr_roles = this_nr_roles;
+        return OMX_ErrorNone;
+    }
+
+    if (!nr_roles || (*nr_roles != this_nr_roles))
+        return OMX_ErrorBadParameter;
+
+    for (i = 0; i < this_nr_roles; i++) {
+        if (!roles[i])
+            break;
+
+        if (roles && roles[i])
+            strncpy((OMX_STRING)&roles[i][0],
+                    (const OMX_STRING)&this->roles[i][0],
+                    OMX_MAX_STRINGNAME_SIZE);
+    }
+
+    if (i != this_nr_roles)
+        return OMX_ErrorBadParameter;
+
+    *nr_roles = this_nr_roles;
+    return OMX_ErrorNone;
+}
+
+bool ComponentBase::QueryHavingThisRole(const OMX_STRING role)
+{
+    OMX_U32 i;
+
+    if (!roles || !role)
+        return false;
+
+    for (i = 0; i < nr_roles; i++) {
+        if (!strcmp((OMX_STRING)&roles[i][0], role))
+            return true;
+    }
+
+    return false;
+}
+
+/* end of core methods & helpers */
 
 /*
  * component methods & helpers
@@ -638,11 +725,15 @@ OMX_ERRORTYPE ComponentBase::CBaseComponentRoleEnum(
     OMX_OUT OMX_U8 *cRole,
     OMX_IN OMX_U32 nIndex)
 {
-    /*
-     * Todo
-     */
+    if (hComponent != (OMX_HANDLETYPE *)this->handle)
+        return OMX_ErrorBadParameter;
 
-    return OMX_ErrorNotImplemented;
+    if (nIndex > nr_roles)
+        return OMX_ErrorBadParameter;
+
+    strncpy((char *)cRole, (const char *)roles[nIndex],
+            OMX_MAX_STRINGNAME_SIZE);
+    return OMX_ErrorNone;
 }
 
 /* end of component methods & helpers */
