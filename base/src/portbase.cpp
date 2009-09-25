@@ -42,7 +42,7 @@ void PortBase::SetPortParam(
     memcpy(&portparam, pComponentParameterStructure, sizeof(portparam));
 }
 
-OMX_PARAM_PORTDEFINITIONTYPE *PortBase::GetPortParam(void)
+const OMX_PARAM_PORTDEFINITIONTYPE *PortBase::GetPortParam(void)
 {
     return &portparam;
 }
@@ -54,7 +54,7 @@ void PortBase::SetAudioPortParam(
     memcpy(&audioparam, pComponentParameterStructure, sizeof(audioparam));
 }
 
-OMX_AUDIO_PARAM_PORTFORMATTYPE *PortBase::GetAudioPortParam(void)
+const OMX_AUDIO_PARAM_PORTFORMATTYPE *PortBase::GetAudioPortParam(void)
 {
     return &audioparam;
 }
