@@ -1324,11 +1324,18 @@ inline OMX_ERRORTYPE ComponentBase::TransStateToIdle(OMX_STATETYPE current)
     else if (current == OMX_StateExecuting) {
         /*
          * Todo
-         *   1. returns all buffers to thier suppliers.
+         *   1. returns all buffers to thier suppliers.         !
          *      call Fill/EmptyBufferDone() for all ports
          *   2. stop buffer process work                        !
          *   3. stop component's internal processor
          */
+        OMX_U32 i;
+
+        pthread_mutex_lock(&ports_block);
+        for (i = 0; i < nr_ports; i++) {
+            ports[i]->FlushPort();
+        }
+        pthread_mutex_unlock(&ports_block);
 
         bufferwork->StopWork();
 
@@ -1337,11 +1344,18 @@ inline OMX_ERRORTYPE ComponentBase::TransStateToIdle(OMX_STATETYPE current)
     else if (current == OMX_StatePause) {
         /*
          * Todo
-         *   1. returns all buffers to thier suppliers.
+         *   1. returns all buffers to thier suppliers.         !
          *      call Fill/EmptyBufferDone() for all ports
          *   2. discard queued work, stop buffer process work   !
          *   3. stop component's internal processor
          */
+        OMX_U32 i;
+
+        pthread_mutex_lock(&ports_block);
+        for (i = 0; i < nr_ports; i++) {
+            ports[i]->FlushPort();
+        }
+        pthread_mutex_unlock(&ports_block);
 
         bufferwork->CancelScheduledWork(this);
         bufferwork->StopWork();
