@@ -476,6 +476,9 @@ OMX_ERRORTYPE ComponentBase::CBaseGetParameter(
 {
     OMX_ERRORTYPE ret = OMX_ErrorNone;
 
+    if (hComponent != handle)
+        return OMX_ErrorBadParameter;
+
     switch (nParamIndex) {
     case OMX_IndexParamAudioInit:
     case OMX_IndexParamVideoInit:
@@ -544,6 +547,9 @@ OMX_ERRORTYPE ComponentBase::CBaseSetParameter(
     OMX_IN  OMX_PTR pComponentParameterStructure)
 {
     OMX_ERRORTYPE ret = OMX_ErrorNone;
+
+    if (hComponent != handle)
+        return OMX_ErrorBadParameter;
 
     switch (nIndex) {
     case OMX_IndexParamAudioInit:
