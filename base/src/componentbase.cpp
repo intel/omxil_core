@@ -574,12 +574,15 @@ OMX_ERRORTYPE ComponentBase::CBaseSetParameter(
         port->SetAudioPortParam(p);
         break;
     }
-    /* FIXME */
     case OMX_IndexParamCompBufferSupplier:
+        /*
+         * Todo
+         */
+
         ret = OMX_ErrorUnsupportedIndex;
         break;
     default:
-        ret = ComponentGetParameter(nIndex, pComponentParameterStructure);
+        ret = ComponentSetParameter(nIndex, pComponentParameterStructure);
     } /* switch */
 
     return ret;
