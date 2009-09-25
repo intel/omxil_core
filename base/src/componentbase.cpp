@@ -116,6 +116,8 @@ void ComponentBase::__ComponentBase(void)
     nr_ports = 0;
     memset(&portparam, 0, sizeof(portparam));
 
+    state = OMX_StateUnloaded;
+
     cmdwork = new CmdProcessWork(this);
 }
 
@@ -305,6 +307,7 @@ OMX_ERRORTYPE ComponentBase::GetHandle(OMX_HANDLETYPE *pHandle,
     callbacks = pCallBacks;
     *pHandle = (OMX_HANDLETYPE *)handle;
 
+    state = OMX_StateLoaded;
     return OMX_ErrorNone;
 
 free_handle:
@@ -331,6 +334,7 @@ OMX_ERRORTYPE ComponentBase::FreeHandle(OMX_HANDLETYPE hComponent)
     appdata = NULL;
     callbacks = NULL;
 
+    state = OMX_StateUnloaded;
     return OMX_ErrorNone;
 }
 
@@ -418,22 +422,22 @@ OMX_ERRORTYPE ComponentBase::CBaseSendCommand(
         /*
          * Todo
          */
-        break;
+        //break;
     case OMX_CommandPortDisable:
         /*
          * Todo
          */
-        break;
+        //break;
     case OMX_CommandPortEnable:
         /*
          * Todo
          */
-        break;
+        //break;
     case OMX_CommandMarkBuffer:
         /*
          * Todo
          */
-        break;
+        //break;
     default:
         LOGE("command %d not supported\n", Cmd);
         return OMX_ErrorUnsupportedIndex;
@@ -1051,16 +1055,13 @@ OMX_ERRORTYPE ComponentBase::CBaseComponentRoleEnum(
 /* implement CmdHandlerInterface */
 void ComponentBase::CmdHandler(struct cmd_s *cmd)
 {
-    OMX_EVENTTYPE event = OMX_EventCmdComplete;
-    OMX_U32 data1 = cmd->cmd, data2 = cmd->param1;
-    OMX_PTR eventdata = NULL;
-
     switch (cmd->cmd) {
-    case OMX_CommandStateSet:
-        /*
-         * Todo
-         */
+    case OMX_CommandStateSet: {
+        OMX_STATETYPE transition = (OMX_STATETYPE)cmd->param1;
+
+        TransState(transition);
         break;
+    }
     case OMX_CommandFlush:
         /*
          * Todo
@@ -1081,10 +1082,235 @@ void ComponentBase::CmdHandler(struct cmd_s *cmd)
          * Todo
          */
         break;
+    } /* switch */
+}
+
+/*
+ * SendCommand:OMX_CommandStateSet
+ * called in CmdHandler or called in other parts of component for reporting
+ * internal error (OMX_StateInvalid).
+ */
+/*
+ * Todo
+ *   Resource Management (OMX_StateWaitForResources)
+ *   for now, we never notify OMX_ErrorInsufficientResources,
+ *   so IL client doesn't try to set component' state OMX_StateWaitForResources
+ */
+void ComponentBase::TransState(OMX_STATETYPE transition)
+{
+    OMX_STATETYPE current = this->state;
+    OMX_EVENTTYPE event;
+    OMX_U32 data1;
+    OMX_ERRORTYPE ret;
+
+    LOGD("current state = %d, transition state = %d\n", current, transition);
+
+    /* same state */
+    if (current == transition) {
+        ret = OMX_ErrorSameState;
+        goto notify_event;
     }
 
-    callbacks->EventHandler(handle, appdata,
-                            event, data1, data2, eventdata);
+    /* invalid state */
+    if (current == OMX_StateInvalid) {
+        ret = OMX_ErrorInvalidState;
+        goto notify_event;
+    }
+
+    if (transition == OMX_StateLoaded)
+        ret = TransStateToLoaded(current);
+    else if (transition == OMX_StateIdle)
+        ret = TransStateToIdle(current);
+    else if (transition == OMX_StateExecuting)
+        ret = TransStateToExecuting(current);
+    else if (transition == OMX_StatePause)
+        ret = TransStateToPause(current);
+    else if (transition == OMX_StateInvalid)
+        ret = TransStateToInvalid(current);
+    else if (transition == OMX_StateWaitForResources)
+        ret = TransStateToWaitForResources(current);
+    else
+        ret = OMX_ErrorIncorrectStateTransition;
+
+notify_event:
+    if (ret == OMX_ErrorNone) {
+        event = OMX_EventCmdComplete;
+        data1 = transition;
+
+        state = transition;
+        LOGD("transition from %d to %d completed\n", current, transition);
+    }
+    else {
+        event = OMX_EventError;
+        data1 = ret;
+
+        if (transition == OMX_StateInvalid) {
+            state = transition;
+            LOGD("transition from %d to %d completed\n", current, transition);
+        }
+    }
+
+    callbacks->EventHandler(handle, appdata, event, data1, 0, NULL);
+
+    /* WaitForResources workaround */
+    if (ret == OMX_ErrorNone && transition == OMX_StateWaitForResources)
+        callbacks->EventHandler(handle, appdata,
+                                OMX_EventResourcesAcquired, 0, 0, NULL);
+}
+
+inline OMX_ERRORTYPE ComponentBase::TransStateToLoaded(OMX_STATETYPE current)
+{
+    OMX_ERRORTYPE ret;
+
+    if (current == OMX_StateIdle) {
+        /*
+         * Todo
+         *   1. waits for completion of deallocation on each port
+         *      wokeup by FreeBuffer()
+         *   2. deinitialize buffer process work
+         *   3. deinitialize component's internal processor
+         *      (ex. deinitialize sw/hw codec)
+         */
+        ret = OMX_ErrorNone;
+    }
+    else if (current == OMX_StateWaitForResources) {
+        LOGE("state transition's requested from WaitForResources to "
+             "Loaded\n");
+
+        /*
+         * from WaitForResources to Loaded considered from Loaded to Loaded.
+         * do nothing
+         */
+
+        ret = OMX_ErrorNone;
+    }
+    else
+        ret = OMX_ErrorIncorrectStateOperation;
+
+    return ret;
+}
+
+inline OMX_ERRORTYPE ComponentBase::TransStateToIdle(OMX_STATETYPE current)
+{
+    OMX_ERRORTYPE ret;
+
+    if (current == OMX_StateLoaded) {
+        /*
+         * Todo
+         *   1. waits for completion of allocation on each port.
+         *      wokeup by Allocate/UseBuffer()
+         *   2. initialize buffer process work.
+         *   3. initialize component's internal processor.
+         *      (ex. initialize sw/hw codec)
+         */
+        ret = OMX_ErrorNone;
+    }
+    else if (current == OMX_StateExecuting) {
+        /*
+         * Todo
+         *   1. returns all buffers to thier suppliers.
+         *      call Fill/EmptyThisBuffer() for all ports
+         *   2. stop buffer process work
+         *   3. stop component's internal processor
+         */
+        ret = OMX_ErrorNone;
+    }
+    else if (current == OMX_StatePause) {
+
+        /* same as Executing to Idle */
+
+        ret = OMX_ErrorNone;
+    }
+    else if (current == OMX_StateWaitForResources) {
+        LOGE("state transition's requested from WaitForResources to Idle\n");
+
+        /* same as Loaded to Idle BUT DO NOTHING for now */
+
+        ret = OMX_ErrorNone;
+    }
+    else
+        ret = OMX_ErrorIncorrectStateOperation;
+
+    return ret;
+}
+
+inline OMX_ERRORTYPE
+ComponentBase::TransStateToExecuting(OMX_STATETYPE current)
+{
+    OMX_ERRORTYPE ret;
+
+    if (current == OMX_StateIdle) {
+        /*
+         * Todo
+         *   1. start component's internal processor
+         *   2. start processing buffers on each port
+         */
+        ret = OMX_ErrorNone;
+    }
+    else if (current == OMX_StatePause) {
+        /*
+         * Todo
+         *   1. resume buffer process woraek
+         *   2. resume component's internal processor
+         */
+        ret = OMX_ErrorNone;
+    }
+    else
+        ret = OMX_ErrorIncorrectStateOperation;
+
+    return ret;
+}
+
+inline OMX_ERRORTYPE ComponentBase::TransStateToPause(OMX_STATETYPE current)
+{
+    OMX_ERRORTYPE ret;
+
+    if (current == OMX_StateIdle) {
+        /*
+         * same as Idle to Executing,
+         * except for not starting buffer processing and internal processor
+         */
+        ret = OMX_ErrorNone;
+    }
+    else if (current == OMX_StateExecuting) {
+        /*
+         * Todo
+         *   1. pause buffer process work
+         *   2. pause component's internal processor
+         */
+        ret = OMX_ErrorNone;
+    }
+    else
+        ret = OMX_ErrorIncorrectStateOperation;
+
+    return ret;
+}
+
+inline OMX_ERRORTYPE ComponentBase::TransStateToInvalid(OMX_STATETYPE current)
+{
+    OMX_ERRORTYPE ret = OMX_ErrorInvalidState;
+
+    /*
+     * Todo
+     *   graceful escape
+     */
+
+    return ret;
+}
+
+inline OMX_ERRORTYPE
+ComponentBase::TransStateToWaitForResources(OMX_STATETYPE current)
+{
+    OMX_ERRORTYPE ret;
+
+    if (current == OMX_StateLoaded) {
+        LOGE("state transition's requested from Loaded to WaitForResources\n");
+        ret = OMX_ErrorNone;
+    }
+    else
+        ret = OMX_ErrorIncorrectStateOperation;
+
+    return ret;
 }
 
 /* end of component methods & helpers */

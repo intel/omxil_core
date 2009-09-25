@@ -308,6 +308,16 @@ private:
     /* implement CmdHandlerInterface */
     virtual void CmdHandler(struct cmd_s *cmd);
 
+    /* SendCommand:OMX_CommandStateSet */
+    /* called in CmdHandler() thread context or by component itself */
+    void TransState(OMX_STATETYPE transition);
+    inline OMX_ERRORTYPE TransStateToLoaded(OMX_STATETYPE current);
+    inline OMX_ERRORTYPE TransStateToIdle(OMX_STATETYPE current);
+    inline OMX_ERRORTYPE TransStateToExecuting(OMX_STATETYPE current);
+    inline OMX_ERRORTYPE TransStateToPause(OMX_STATETYPE current);
+    inline OMX_ERRORTYPE TransStateToWaitForResources(OMX_STATETYPE current);
+    inline OMX_ERRORTYPE TransStateToInvalid(OMX_STATETYPE current);
+
     /* Get/SetParameter */
     virtual OMX_ERRORTYPE
         ComponentGetParameter(OMX_INDEXTYPE nParamIndex,
@@ -339,6 +349,10 @@ private:
     /* omx standard handle */
     /* allocated at GetHandle, freed at FreeHandle */
     OMX_COMPONENTTYPE *handle;
+
+    OMX_STATETYPE state;
+
+    const static OMX_STATETYPE OMX_StateUnloaded = OMX_StateVendorStartUnused;
 
     /* omx standard callbacks */
     OMX_PTR appdata;
