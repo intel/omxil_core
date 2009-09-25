@@ -308,6 +308,16 @@ private:
     /* implement CmdHandlerInterface */
     virtual void CmdHandler(struct cmd_s *cmd);
 
+    /* Get/SetParameter */
+    virtual OMX_ERRORTYPE
+        ComponentGetParameter(OMX_INDEXTYPE nParamIndex,
+                              OMX_PTR pComponentParameterStructure) = 0;
+    virtual OMX_ERRORTYPE
+        ComponentSetParameter(OMX_INDEXTYPE nIndex,
+                              OMX_PTR pComponentParameterStructure) = 0;
+
+    /* end of component methods & helpers */
+
     /* process component's commands work */
     CmdProcessWork *cmdwork;
 

@@ -474,11 +474,49 @@ OMX_ERRORTYPE ComponentBase::CBaseGetParameter(
     OMX_IN  OMX_INDEXTYPE nParamIndex,
     OMX_INOUT OMX_PTR pComponentParameterStructure)
 {
-    /*
-     * Todo
-     */
+    OMX_ERRORTYPE ret = OMX_ErrorNone;
 
-    return OMX_ErrorNotImplemented;
+    switch (nParamIndex) {
+    case OMX_IndexParamAudioInit:
+    case OMX_IndexParamVideoInit:
+    case OMX_IndexParamImageInit:
+    case OMX_IndexParamOtherInit: {
+        OMX_PORT_PARAM_TYPE *p =
+            (OMX_PORT_PARAM_TYPE *)pComponentParameterStructure;
+
+        memcpy(p, &portparam, sizeof(*p));
+        break;
+    }
+    case OMX_IndexParamPortDefinition: {
+        OMX_PARAM_PORTDEFINITIONTYPE *p =
+            (OMX_PARAM_PORTDEFINITIONTYPE *)pComponentParameterStructure;
+        OMX_U32 index = p->nPortIndex;
+        PortBase *port = ports[index];
+
+        memcpy(p, port->GetPortParam(), sizeof(*p));
+        break;
+    }
+    case OMX_IndexParamAudioPortFormat: {
+        OMX_AUDIO_PARAM_PORTFORMATTYPE *p =
+            (OMX_AUDIO_PARAM_PORTFORMATTYPE *)pComponentParameterStructure;
+        OMX_U32 index = p->nPortIndex;
+        PortBase *port = ports[index];
+
+        memcpy(p, port->GetAudioPortParam(), sizeof(*p));
+        break;
+    }
+    case OMX_IndexParamCompBufferSupplier:
+        /*
+         * Todo
+         */
+
+        ret = OMX_ErrorUnsupportedIndex;
+        break;
+    default:
+        ret = ComponentGetParameter(nParamIndex, pComponentParameterStructure);
+    } /* switch */
+
+    return ret;
 }
 
 OMX_ERRORTYPE ComponentBase::SetParameter(
@@ -505,11 +543,46 @@ OMX_ERRORTYPE ComponentBase::CBaseSetParameter(
     OMX_IN  OMX_INDEXTYPE nIndex,
     OMX_IN  OMX_PTR pComponentParameterStructure)
 {
-    /*
-     * Todo
-     */
+    OMX_ERRORTYPE ret = OMX_ErrorNone;
 
-    return OMX_ErrorNotImplemented;
+    switch (nIndex) {
+    case OMX_IndexParamAudioInit:
+    case OMX_IndexParamVideoInit:
+    case OMX_IndexParamImageInit:
+    case OMX_IndexParamOtherInit: {
+        OMX_PORT_PARAM_TYPE *p = (OMX_PORT_PARAM_TYPE *)
+            pComponentParameterStructure;
+
+        memcpy(&portparam, p, sizeof(*p));
+        break;
+    }
+    case OMX_IndexParamPortDefinition: {
+        OMX_PARAM_PORTDEFINITIONTYPE *p =
+            (OMX_PARAM_PORTDEFINITIONTYPE *)pComponentParameterStructure;
+        OMX_U32 index = p->nPortIndex;
+        PortBase *port = ports[index];
+
+        port->SetPortParam(p);
+        break;
+    }
+    case OMX_IndexParamAudioPortFormat: {
+        OMX_AUDIO_PARAM_PORTFORMATTYPE *p =
+            (OMX_AUDIO_PARAM_PORTFORMATTYPE *)pComponentParameterStructure;
+        OMX_U32 index = p->nPortIndex;
+        PortBase *port = ports[index];
+
+        port->SetAudioPortParam(p);
+        break;
+    }
+    /* FIXME */
+    case OMX_IndexParamCompBufferSupplier:
+        ret = OMX_ErrorUnsupportedIndex;
+        break;
+    default:
+        ret = ComponentGetParameter(nIndex, pComponentParameterStructure);
+    } /* switch */
+
+    return ret;
 }
 
 OMX_ERRORTYPE ComponentBase::GetConfig(
