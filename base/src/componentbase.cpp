@@ -1216,6 +1216,11 @@ inline OMX_ERRORTYPE ComponentBase::TransStateToLoaded(OMX_STATETYPE current)
          *   3. deinitialize component's internal processor
          *      (ex. deinitialize sw/hw codec)
          */
+        OMX_U32 i;
+
+        for (i = 0; i < nr_ports; i++)
+            ports[i]->WaitPortBufferCompletion();
+
         ret = OMX_ErrorNone;
     }
     else if (current == OMX_StateWaitForResources) {
@@ -1248,6 +1253,11 @@ inline OMX_ERRORTYPE ComponentBase::TransStateToIdle(OMX_STATETYPE current)
          *   3. initialize component's internal processor.
          *      (ex. initialize sw/hw codec)
          */
+        OMX_U32 i;
+
+        for (i = 0; i < nr_ports; i++)
+            ports[i]->WaitPortBufferCompletion();
+
         ret = OMX_ErrorNone;
     }
     else if (current == OMX_StateExecuting) {
