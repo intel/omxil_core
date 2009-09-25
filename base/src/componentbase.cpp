@@ -724,6 +724,9 @@ OMX_ERRORTYPE ComponentBase::CBaseGetState(
     OMX_IN  OMX_HANDLETYPE hComponent,
     OMX_OUT OMX_STATETYPE* pState)
 {
+    if (hComponent != handle)
+        return OMX_ErrorBadParameter;
+
     *pState = state;
     return OMX_ErrorNone;
 }
