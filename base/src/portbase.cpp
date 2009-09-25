@@ -343,12 +343,30 @@ OMX_U32 PortBase::BufferQueueLength(void)
 
 OMX_ERRORTYPE PortBase::ReturnThisBuffer(OMX_BUFFERHEADERTYPE *pBuffer)
 {
-    /*
-     * Todo
-     *   Empty/FillThisBufferDone event
-     */
+    OMX_DIRTYPE direction = portparam.eDir;
+    OMX_U32 port_index;
+    OMX_ERRORTYPE (*bufferdone_callback)(OMX_HANDLETYPE,
+                                         OMX_PTR,
+                                         OMX_BUFFERHEADERTYPE *);
 
-    return OMX_ErrorNone;
+    if (!pBuffer)
+        return OMX_ErrorBadParameter;
+
+    if (direction == OMX_DirInput) {
+        port_index = pBuffer->nInputPortIndex;
+        bufferdone_callback = callbacks->EmptyBufferDone;
+    }
+    else if (direction == OMX_DirOutput) {
+        port_index = pBuffer->nOutputPortIndex;
+        bufferdone_callback = callbacks->FillBufferDone;
+    }
+    else
+        return OMX_ErrorBadParameter;
+
+    if (port_index != portparam.nPortIndex)
+        return OMX_ErrorBadParameter;
+
+    return bufferdone_callback(owner, appdata, pBuffer);
 }
 
 OMX_STATETYPE PortBase::GetOwnerState(void)
