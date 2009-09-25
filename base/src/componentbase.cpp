@@ -10,6 +10,9 @@
 
 #include <componentbase.h>
 
+#define LOG_TAG "componentbase"
+#include <log.h>
+
 /*
  * ComponentBase
  */
@@ -157,6 +160,86 @@ bool ComponentBase::QueryHavingThisRole(const OMX_STRING role)
     }
 
     return false;
+}
+
+/* GetHandle & FreeHandle */
+OMX_ERRORTYPE ComponentBase::GetHandle(OMX_HANDLETYPE *pHandle,
+                                       OMX_PTR pAppData,
+                                       OMX_CALLBACKTYPE *pCallBacks)
+{
+    OMX_ERRORTYPE ret;
+
+    if (handle)
+        return OMX_ErrorUndefined;
+
+    handle = (OMX_COMPONENTTYPE *)calloc(1, sizeof(*handle));
+    if (!handle)
+        return OMX_ErrorInsufficientResources;
+
+    /* handle initialization */
+    SetTypeHeader(handle, sizeof(*handle));
+    handle->pComponentPrivate = static_cast<OMX_PTR>(this);
+    handle->pApplicationPrivate = pAppData;
+
+    /* virtual - see derived class */
+    ret = InitComponent();
+    if (ret != OMX_ErrorNone) {
+        LOGE("failed to %s::InitComponent(), ret = 0x%08x\n",
+             name, ret);
+        goto free_handle;
+    }
+
+    /* connect handle's functions */
+    handle->GetComponentVersion = GetComponentVersion;
+    handle->SendCommand = SendCommand;
+    handle->GetParameter = GetParameter;
+    handle->SetParameter = SetParameter;
+    handle->GetConfig = GetConfig;
+    handle->SetConfig = SetConfig;
+    handle->GetExtensionIndex = GetExtensionIndex;
+    handle->GetState = GetState;
+    handle->ComponentTunnelRequest = ComponentTunnelRequest;
+    handle->UseBuffer = UseBuffer;
+    handle->AllocateBuffer = AllocateBuffer;
+    handle->FreeBuffer = FreeBuffer;
+    handle->EmptyThisBuffer = EmptyThisBuffer;
+    handle->FillThisBuffer = FillThisBuffer;
+    handle->SetCallbacks = SetCallbacks;
+    handle->ComponentDeInit = ComponentDeInit;
+    handle->UseEGLImage = UseEGLImage;
+    handle->ComponentRoleEnum = ComponentRoleEnum;
+
+    appdata = pAppData;
+    callbacks = pCallBacks;
+    *pHandle = (OMX_HANDLETYPE *)handle;
+
+    return OMX_ErrorNone;
+
+free_handle:
+    free(this->handle);
+    this->handle = NULL;
+
+    return ret;
+}
+
+OMX_ERRORTYPE ComponentBase::FreeHandle(OMX_HANDLETYPE hComponent)
+{
+    OMX_ERRORTYPE ret;
+
+    if (hComponent != handle)
+        return OMX_ErrorBadParameter;
+
+    /* virtual - see derived class */
+    ret = ExitComponent();
+    if (ret != OMX_ErrorNone)
+        return ret;
+
+    free(handle);
+
+    appdata = NULL;
+    callbacks = NULL;
+
+    return OMX_ErrorNone;
 }
 
 /* end of core methods & helpers */
@@ -631,14 +714,16 @@ OMX_ERRORTYPE ComponentBase::SetCallbacks(
 
 OMX_ERRORTYPE ComponentBase::CBaseSetCallbacks(
     OMX_IN  OMX_HANDLETYPE hComponent,
-    OMX_IN  OMX_CALLBACKTYPE* pCallbacks,
+    OMX_IN  OMX_CALLBACKTYPE *pCallbacks,
     OMX_IN  OMX_PTR pAppData)
 {
-    /*
-     * Todo
-     */
+    if (hComponent != handle)
+        return OMX_ErrorBadParameter;
 
-    return OMX_ErrorNotImplemented;
+    appdata = pAppData;
+    callbacks = pCallbacks;
+
+    return OMX_ErrorNone;
 }
 
 OMX_ERRORTYPE ComponentBase::ComponentDeInit(

@@ -39,10 +39,15 @@ public:
      * core methods & helpers
      */
     /* roles */
-    /* core methods & helpers */
     OMX_ERRORTYPE SetRolesOfComponent(OMX_U32 nr_roles, const OMX_U8 **roles);
     OMX_ERRORTYPE GetRolesOfComponent(OMX_U32 *nr_roles, OMX_U8 **roles);
     bool QueryHavingThisRole(const OMX_STRING role);
+
+    /* GetHandle & FreeHandle */
+    OMX_ERRORTYPE GetHandle(OMX_HANDLETYPE* pHandle,
+                            OMX_PTR pAppData,
+                            OMX_CALLBACKTYPE *pCallBacks);
+    OMX_ERRORTYPE FreeHandle(OMX_HANDLETYPE hComponent);
 
     /* end of core methods & helpers */
 
@@ -228,7 +233,6 @@ public:
     /* end of component methods & helpers */
 
 protected:
-
     /*
      * omx header manipuation
      */
@@ -241,6 +245,15 @@ private:
     /* common routines for constructor */
     void __ComponentBase(void);
 
+    /*
+     * core methods & helpers
+     */
+    /* called in Get/FreeHandle() */
+    virtual OMX_ERRORTYPE InitComponent(void) = 0;
+    virtual OMX_ERRORTYPE ExitComponent(void) = 0;
+
+    /* end of core methods & helpers */
+
     /* roles */
     OMX_U8 **roles;
     OMX_U32 nr_roles;
@@ -251,6 +264,10 @@ private:
     /* omx standard handle */
     /* allocated at GetHandle, freed at FreeHandle */
     OMX_COMPONENTTYPE *handle;
+
+    /* omx standard callbacks */
+    OMX_PTR appdata;
+    OMX_CALLBACKTYPE *callbacks;
 
     /* component name */
     char name[OMX_MAX_STRINGNAME_SIZE];
