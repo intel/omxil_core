@@ -4,6 +4,7 @@
 Thread::Thread()
 {
     r = NULL;
+    created = false;
 }
 
 Thread::Thread(RunnableInterface *r)
@@ -18,12 +19,27 @@ Thread::~Thread()
 
 int Thread::Start(void)
 {
-    return pthread_create(&id, NULL, Instance, this);
+    int ret = 0;
+
+    if (!created) {
+        ret = pthread_create(&id, NULL, Instance, this);
+        if (!ret)
+            created = true;
+    }
+
+    return ret;
 }
 
 int Thread::Join(void)
 {
-    return pthread_join(id, NULL);
+    int ret = 0;
+
+    if (created) {
+        ret = pthread_join(id, NULL);
+        created = false;
+    }
+
+    return ret;
 }
 
 void *Thread::Instance(void *p)

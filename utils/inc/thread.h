@@ -32,6 +32,7 @@ private:
 
     RunnableInterface *r;
     pthread_t id;
+    bool created;
 };
 
 #endif /* __THREAD_H */
