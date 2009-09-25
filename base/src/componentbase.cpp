@@ -724,11 +724,8 @@ OMX_ERRORTYPE ComponentBase::CBaseGetState(
     OMX_IN  OMX_HANDLETYPE hComponent,
     OMX_OUT OMX_STATETYPE* pState)
 {
-    /*
-     * Todo
-     */
-
-    return OMX_ErrorNotImplemented;
+    *pState = state;
+    return OMX_ErrorNone;
 }
 
 OMX_ERRORTYPE ComponentBase::ComponentTunnelRequest(
