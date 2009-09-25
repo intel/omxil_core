@@ -40,7 +40,8 @@ public:
      *  the class.
      */
     void FlushWork(void);
-    //void CancelWork(WorkableInterface *wi);
+    /* remove all scheduled works matched with wi from workqueue list */
+    void CancelScheduledWork(WorkableInterface *wi);
 
 private:
     /* inner class for flushing */

@@ -94,6 +94,13 @@ void WorkQueue::ScheduleWork(WorkableInterface *wi)
     pthread_mutex_unlock(&wlock);
 }
 
+void WorkQueue::CancelScheduledWork(WorkableInterface *wi)
+{
+    pthread_mutex_lock(&wlock);
+    works = list_delete_all(works, wi);
+    pthread_mutex_unlock(&wlock);
+}
+
 void WorkQueue::FlushWork(void)
 {
     FlushBarrier fb;
