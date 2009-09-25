@@ -916,18 +916,32 @@ OMX_ERRORTYPE ComponentBase::EmptyThisBuffer(
 
 OMX_ERRORTYPE ComponentBase::CBaseEmptyThisBuffer(
     OMX_IN  OMX_HANDLETYPE hComponent,
-    OMX_IN  OMX_BUFFERHEADERTYPE* pBuffer)
+    OMX_IN  OMX_BUFFERHEADERTYPE *pBuffer)
 {
-    /*
-     * Todo
-     */
+    PortBase *port = NULL;
+    OMX_U32 port_index;
+    OMX_ERRORTYPE ret;
 
-    return OMX_ErrorNotImplemented;
+    if ((hComponent != handle) || !pBuffer)
+        return OMX_ErrorBadParameter;
+
+    port_index = pBuffer->nInputPortIndex;
+    if (port_index == (OMX_U32)-1)
+        return OMX_ErrorBadParameter;
+
+    if (ports)
+        if (port_index < nr_ports)
+            port = ports[port_index];
+
+    if (!port)
+        return OMX_ErrorBadParameter;
+
+    return port->PushThisBuffer(pBuffer);
 }
 
 OMX_ERRORTYPE ComponentBase::FillThisBuffer(
     OMX_IN  OMX_HANDLETYPE hComponent,
-    OMX_IN  OMX_BUFFERHEADERTYPE* pBuffer)
+    OMX_IN  OMX_BUFFERHEADERTYPE *pBuffer)
 {
     ComponentBase *cbase;
 
@@ -944,13 +958,27 @@ OMX_ERRORTYPE ComponentBase::FillThisBuffer(
 
 OMX_ERRORTYPE ComponentBase::CBaseFillThisBuffer(
     OMX_IN  OMX_HANDLETYPE hComponent,
-    OMX_IN  OMX_BUFFERHEADERTYPE* pBuffer)
+    OMX_IN  OMX_BUFFERHEADERTYPE *pBuffer)
 {
-    /*
-     * Todo
-     */
+    PortBase *port = NULL;
+    OMX_U32 port_index;
+    OMX_ERRORTYPE ret;
 
-    return OMX_ErrorNotImplemented;
+    if ((hComponent != handle) || !pBuffer)
+        return OMX_ErrorBadParameter;
+
+    port_index = pBuffer->nOutputPortIndex;
+    if (port_index == (OMX_U32)-1)
+        return OMX_ErrorBadParameter;
+
+    if (ports)
+        if (port_index < nr_ports)
+            port = ports[port_index];
+
+    if (!port)
+        return OMX_ErrorBadParameter;
+
+    return port->PushThisBuffer(pBuffer);
 }
 
 OMX_ERRORTYPE ComponentBase::SetCallbacks(
