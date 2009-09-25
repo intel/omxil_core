@@ -121,6 +121,14 @@ void ComponentBase::__ComponentBase(void)
     state = OMX_StateUnloaded;
 
     cmdwork = new CmdProcessWork(this);
+
+    executing = false;
+    pthread_mutex_init(&executing_lock, NULL);
+    pthread_cond_init(&executing_wait, NULL);
+
+    bufferwork = new WorkQueue();
+
+    pthread_mutex_init(&ports_block, NULL);
 }
 
 ComponentBase::ComponentBase()
@@ -137,6 +145,12 @@ ComponentBase::ComponentBase(const OMX_STRING name)
 ComponentBase::~ComponentBase()
 {
     delete cmdwork;
+
+    delete bufferwork;
+    pthread_mutex_destroy(&executing_lock);
+    pthread_cond_destroy(&executing_wait);
+
+    pthread_mutex_destroy(&ports_block);
 
     if (roles) {
         OMX_U32 i;
@@ -1405,6 +1419,73 @@ ComponentBase::TransStateToWaitForResources(OMX_STATETYPE current)
         ret = OMX_ErrorIncorrectStateOperation;
 
     return ret;
+}
+
+/* buffer processing */
+/* implement WorkableInterface */
+void ComponentBase::Work(void)
+{
+    OMX_BUFFERHEADERTYPE **buffers = NULL;
+    OMX_U32 i;
+    bool avail = false;
+
+    pthread_mutex_lock(&executing_lock);
+    if (!executing)
+        pthread_cond_wait(&executing_wait, &executing_lock);
+    pthread_mutex_unlock(&executing_lock);
+
+    pthread_mutex_lock(&ports_block);
+
+    avail = IsAllBufferAvailable();
+    if (avail) {
+        buffers = (OMX_BUFFERHEADERTYPE **)
+            calloc(nr_ports, sizeof(OMX_BUFFERHEADERTYPE *));
+        if (!buffers) {
+            bufferwork->ScheduleWork(this);
+            return;
+        }
+
+        for (i = 0; i < nr_ports; i++)
+            buffers[i] = ports[i]->PopBuffer();
+    }
+    ScheduleIfAllBufferAvailable();
+
+    pthread_mutex_unlock(&ports_block);
+
+    if (buffers) {
+        ComponentProcessBuffers(buffers, nr_ports);
+
+        free(buffers);
+        buffers = NULL;
+    }
+}
+
+bool ComponentBase::IsAllBufferAvailable(void)
+{
+    OMX_U32 i;
+    OMX_U32 nr_avail = 0;
+
+    for (i = 0; i < nr_ports; i++) {
+        OMX_U32 length;
+
+        length = ports[i]->BufferQueueLength();
+        if (length)
+            nr_avail++;
+    }
+
+    if (nr_avail == nr_ports)
+        return true;
+    else
+        return false;
+}
+
+void ComponentBase::ScheduleIfAllBufferAvailable(void)
+{
+    bool avail;
+
+    avail = IsAllBufferAvailable();
+    if (avail)
+        bufferwork->ScheduleWork(this);
 }
 
 /* end of component methods & helpers */

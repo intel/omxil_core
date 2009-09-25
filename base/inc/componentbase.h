@@ -51,7 +51,7 @@ private:
     CmdHandlerInterface *ci; /* to run ComponentBase::CmdHandler() */
 };
 
-class ComponentBase : public CmdHandlerInterface
+class ComponentBase : public CmdHandlerInterface, public WorkableInterface
 {
 public:
     /*
@@ -269,6 +269,18 @@ public:
         OMX_OUT OMX_U8 *cRole,
         OMX_IN OMX_U32 nIndex);
 
+    /* buffer processing */
+    /* implement WorkableInterface */
+    virtual void Work(void); /* handle this->ports, hold ports_block */
+    /* check if all port has own pending buffer */
+    bool IsAllBufferAvailable(void);
+    /* bufferwork->ScheduleWork() if IsAllBufferAvailable is true */
+    void ScheduleIfAllBufferAvailable(void);
+
+    /* component's processor */
+    virtual void ComponentProcessBuffers(OMX_BUFFERHEADERTYPE **buffers,
+                                         OMX_U32 nr_buffers) = 0;
+
     /* end of component methods & helpers */
 
     /*
@@ -291,6 +303,9 @@ protected:
     PortBase **ports;
     OMX_U32 nr_ports;
     OMX_PORT_PARAM_TYPE portparam;
+
+    /* ports big lock, must be held when accessing all ports at one time */
+    pthread_mutex_t ports_block;
 
 private:
     /* common routines for constructor */
@@ -343,6 +358,14 @@ private:
     /* process component's commands work */
     CmdProcessWork *cmdwork;
 
+    /* buffer processing work */
+    WorkQueue *bufferwork;
+
+    /* StatePause <-> StateExecuting */
+    bool executing;
+    pthread_mutex_t executing_lock;
+    pthread_cond_t executing_wait;
+
     /* roles */
     OMX_U8 **roles;
     OMX_U32 nr_roles;
@@ -373,4 +396,5 @@ private:
         | (OMX_SPEC_VERSION_REVISION << 8)
         | (OMX_SPEC_VERSION_STEP << 0);
 };
-#endif
+
+#endif /* __COMPONENTBASE_H */
