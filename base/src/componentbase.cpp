@@ -263,6 +263,7 @@ OMX_ERRORTYPE ComponentBase::GetHandle(OMX_HANDLETYPE *pHandle,
                                        OMX_PTR pAppData,
                                        OMX_CALLBACKTYPE *pCallBacks)
 {
+    OMX_U32 i;
     OMX_ERRORTYPE ret;
 
     if (handle)
@@ -283,6 +284,11 @@ OMX_ERRORTYPE ComponentBase::GetHandle(OMX_HANDLETYPE *pHandle,
         LOGE("failed to %s::InitComponent(), ret = 0x%08x\n",
              name, ret);
         goto free_handle;
+    }
+
+    for (i = 0; i < nr_ports; i++) {
+        ports[i]->SetOwner(handle);
+        ports[i]->SetCallbacks(handle, pCallBacks, pAppData);
     }
 
     /* connect handle's functions */
