@@ -75,7 +75,11 @@ public:
     OMX_BUFFERHEADERTYPE *PopBuffer(void);
     OMX_U32 BufferQueueLength(void);
 
+    /* Empty/FillBufferDone */
     OMX_ERRORTYPE ReturnThisBuffer(OMX_BUFFERHEADERTYPE *pBuffer);
+
+    /* flush all buffers not under processing */
+    OMX_ERRORTYPE FlushPort(void);
 
     /* end of component methods & helpers */
 

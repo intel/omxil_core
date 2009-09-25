@@ -369,6 +369,18 @@ OMX_ERRORTYPE PortBase::ReturnThisBuffer(OMX_BUFFERHEADERTYPE *pBuffer)
     return bufferdone_callback(owner, appdata, pBuffer);
 }
 
+/* SendCommand:Flush/PortEnable/Disable */
+/* must be held ComponentBase::ports_block */
+OMX_ERRORTYPE PortBase::FlushPort(void)
+{
+    OMX_BUFFERHEADERTYPE *buffer;
+
+    while ((buffer = PopBuffer()))
+        ReturnThisBuffer(buffer);
+
+    return OMX_ErrorNone;
+}
+
 OMX_STATETYPE PortBase::GetOwnerState(void)
 {
     OMX_STATETYPE state = OMX_StateInvalid;
