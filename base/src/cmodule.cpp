@@ -213,7 +213,7 @@ OMX_ERRORTYPE CModule::QueryComponentRoles(OMX_U32 *nr_roles, OMX_U8 **roles)
     return ret;
 }
 
-OMX_ERRORTYPE CModule::InstantiateComponent(void **instance)
+OMX_ERRORTYPE CModule::InstantiateComponent(ComponentBase **instance)
 {
     OMX_ERRORTYPE ret = OMX_ErrorUndefined;
 
@@ -222,7 +222,7 @@ OMX_ERRORTYPE CModule::InstantiateComponent(void **instance)
     *instance = NULL;
 
     if (instantiate) {
-        ret = instantiate(instance);
+        ret = instantiate((void **)instance);
         if (ret != OMX_ErrorNone) {
             instance = NULL;
             return ret;

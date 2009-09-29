@@ -8,6 +8,7 @@
 #include <module.h>
 
 class CModule;
+class ComponentBase;
 
 typedef OMX_ERRORTYPE (*cmodule_instantiate_t)(OMX_PTR *);
 typedef OMX_ERRORTYPE (*cmodule_query_name_t)(OMX_STRING);
@@ -40,7 +41,7 @@ class CModule {
     OMX_ERRORTYPE QueryComponentName(OMX_STRING cname);
     OMX_ERRORTYPE QueryComponentRoles(void);
     OMX_ERRORTYPE QueryComponentRoles(OMX_U32 *nr_roles, OMX_U8 **roles);
-    OMX_ERRORTYPE InstantiateComponent(void **instance);
+    OMX_ERRORTYPE InstantiateComponent(ComponentBase **instance);
 
     /* end of library symbol method and helpers */
 
