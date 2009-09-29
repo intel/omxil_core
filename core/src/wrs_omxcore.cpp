@@ -66,7 +66,7 @@ static struct list *construct_components(const char *config_file_name)
                 entry->data = cmodule;
                 head = __list_add_tail(head, entry);
                 LOGV("module %s added to component list\n",
-                     cmodule->GetName());
+                     cmodule->GetLibraryName());
             }
             else {
                 cmodule->Unload();
