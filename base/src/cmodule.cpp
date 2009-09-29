@@ -33,50 +33,59 @@ CModule::~CModule()
 
 OMX_ERRORTYPE CModule::Load()
 {
+    struct module *m;
     OMX_ERRORTYPE init_ret;
 
-    if (module)
-        return OMX_ErrorNotReady;
-
-    module = module_open(lname, MODULE_NOW);
-    if (!module) {
+    m = module_open(lname, MODULE_NOW);
+    if (!m) {
         LOGE("module not founded (%s)\n", lname);
         return OMX_ErrorComponentNotFound;
     }
     LOGV("module founded (%s)\n", lname);
 
-    init = (cmodule_init_t)module_symbol(module, "omx_component_module_init");
+    init = (cmodule_init_t)module_symbol(m, "omx_component_module_init");
     if (!init) {
         LOGE("module init symbol not founded (%s)\n", lname);
-        module_close(module);
+        module_close(m);
         return OMX_ErrorInvalidComponent;
     }
 
-    exit = (cmodule_exit_t)module_symbol(module, "omx_component_module_exit");
+    exit = (cmodule_exit_t)module_symbol(m, "omx_component_module_exit");
     if (!exit) {
         LOGE("module exit symbol not founded (%s)\n", lname);
-        module_close(module);
+        module_close(m);
         return OMX_ErrorInvalidComponent;
     }
 
     init_ret = init(this);
     if (init_ret != OMX_ErrorNone) {
         LOGE("module init returned (%d)\n", init_ret);
-        module_close(module);
-        module = NULL;
+        module_close(m);
         return init_ret;
     }
 
-    LOGV("module %s successfully loaded\n", lname);
+    if (!module) {
+        module = m;
+        LOGV("module %s successfully loaded\n", lname);
+    }
+    else {
+        if (module != m) {
+            LOGE("module fatal error, module != m (%p != %p)\n", module, m);
+            module_close(m);
+            return OMX_ErrorUndefined;
+        }
+    }
+
     return OMX_ErrorNone;
 }
 
 OMX_ERRORTYPE CModule::Unload(void)
 {
     OMX_ERRORTYPE exit_ret;
+    OMX_U32 ref_count;
 
     if (!module)
-        return OMX_ErrorInvalidComponent;
+        return OMX_ErrorNone;
 
     exit_ret = exit(this);
     if (exit_ret) {
@@ -84,10 +93,12 @@ OMX_ERRORTYPE CModule::Unload(void)
         return exit_ret;
     }
 
-    module_close(module);
-    module = NULL;
+    ref_count = module_close(module);
+    if (!ref_count) {
+        module = NULL;
+        LOGV("module %s successfully unloaded\n", lname);
+    }
 
-    LOGV("module %s successfully unloaded\n", lname);
     return OMX_ErrorNone;
 }
 
