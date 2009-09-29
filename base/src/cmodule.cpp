@@ -18,7 +18,6 @@ CModule::CModule(const OMX_STRING lname)
     memset(lname, 0, OMX_MAX_STRINGNAME_SIZE);
 
     module = NULL;
-    privdata = NULL;
 
     instantiate = NULL;
     query_name = NULL;
@@ -112,14 +111,4 @@ OMX_ERRORTYPE CModule::Unload(void)
 const OMX_STRING CModule::GetLibraryName(void)
 {
     return lname;
-}
-
-void CModule::SetPrivData(OMX_PTR privdata)
-{
-    this->privdata = privdata;
-}
-
-OMX_PTR CModule::GetPrivData(void)
-{
-    return privdata;
 }

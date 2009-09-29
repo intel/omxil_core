@@ -23,9 +23,6 @@ class CModule {
 
     const OMX_STRING GetLibraryName(void);
 
-    void SetPrivData(OMX_PTR privdata);
-    OMX_PTR GetPrivData(void);
-
  private:
     cmodule_instantiate_t instantiate;
     cmodule_query_name_t query_name;
@@ -33,8 +30,6 @@ class CModule {
 
     char lname[OMX_MAX_STRINGNAME_SIZE];
     struct module *module;
-
-    OMX_PTR privdata;
 };
 
 #endif /* __CMODULE_H */
