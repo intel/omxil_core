@@ -20,6 +20,10 @@ CModule::CModule(const OMX_STRING lname)
     module = NULL;
     privdata = NULL;
 
+    instantiate = NULL;
+    query_name = NULL;
+    query_roles = NULL;
+
     strncpy(this->lname, lname, OMX_MAX_STRINGNAME_SIZE);
     lname[OMX_MAX_STRINGNAME_SIZE-1] = '\0';
 }
@@ -42,6 +46,35 @@ OMX_ERRORTYPE CModule::Load()
 
     if (!module) {
         module = m;
+
+        instantiate = (cmodule_instantiate_t)
+            module_symbol(m, "omx_component_module_instantiate");
+        if (!instantiate) {
+            LOGE("module instantiate() symbol not founded (%s)\n", lname);
+            module_close(m);
+            return OMX_ErrorInvalidComponent;
+        }
+
+        query_name = (cmodule_query_name_t)
+            module_symbol(m, "omx_component_module_query_name");
+        if (!query_name) {
+            LOGE("module query_name() symbol not founded (%s)\n", lname);
+
+            instantiate = NULL;
+            module_close(m);
+            return OMX_ErrorInvalidComponent;
+        }
+
+        query_roles = (cmodule_query_roles_t)
+            module_symbol(m, "omx_component_module_query_roles");
+        if (!query_roles) {
+            LOGE("module query_roles() symbol not founded (%s)\n", lname);
+
+            query_name = NULL;
+            instantiate = NULL;
+            module_close(m);
+            return OMX_ErrorInvalidComponent;
+        }
 
         LOGV("module %s successfully loaded\n", lname);
     }
@@ -66,6 +99,10 @@ OMX_ERRORTYPE CModule::Unload(void)
     ref_count = module_close(module);
     if (!ref_count) {
         module = NULL;
+        instantiate = NULL;
+        query_name = NULL;
+        query_roles = NULL;
+
         LOGV("module %s successfully unloaded\n", lname);
     }
 
