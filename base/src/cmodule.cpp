@@ -13,7 +13,7 @@
 #define LOG_TAG "cmodule"
 #include <log.h>
 
-CModule::CModule()
+CModule::CModule(const OMX_STRING name)
 {
     memset(name, 0, OMX_MAX_STRINGNAME_SIZE);
 
@@ -21,12 +21,9 @@ CModule::CModule()
     privdata = NULL;
     init = NULL;
     exit = NULL;
-}
 
-CModule::CModule(const OMX_STRING name)
-{
-    CModule();
-    SetName(name);
+    strncpy(this->name, name, OMX_MAX_STRINGNAME_SIZE);
+    name[OMX_MAX_STRINGNAME_SIZE-1] = '\0';
 }
 
 CModule::~CModule()
@@ -92,12 +89,6 @@ OMX_ERRORTYPE CModule::Unload(void)
 
     LOGV("module %s successfully unloaded\n", name);
     return OMX_ErrorNone;
-}
-
-void CModule::SetName(const OMX_STRING name)
-{
-    strncpy(this->name, name, OMX_MAX_STRINGNAME_SIZE);
-    name[OMX_MAX_STRINGNAME_SIZE-1] = '\0';
 }
 
 const OMX_STRING CModule::GetName(void)

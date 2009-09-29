@@ -14,7 +14,6 @@ typedef OMX_ERRORTYPE (*cmodule_exit_t)(CModule *);
 
 class CModule {
  public:
-    CModule();
     CModule(const OMX_STRING name);
     ~CModule();
 
