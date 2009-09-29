@@ -13,6 +13,9 @@
 #define LOG_TAG "cmodule"
 #include <log.h>
 
+/*
+ * constructor / deconstructor
+ */
 CModule::CModule(const OMX_STRING lname)
 {
     memset(lname, 0, OMX_MAX_STRINGNAME_SIZE);
@@ -32,6 +35,11 @@ CModule::~CModule()
     Unload();
 }
 
+/* end of constructor / deconstructor */
+
+/*
+ * library loading / unloading
+ */
 OMX_ERRORTYPE CModule::Load()
 {
     struct module *m;
@@ -108,7 +116,14 @@ OMX_ERRORTYPE CModule::Unload(void)
     return OMX_ErrorNone;
 }
 
+/* end of library loading / unloading */
+
+/*
+ * accessor
+ */
 const OMX_STRING CModule::GetLibraryName(void)
 {
     return lname;
 }
+
+/* end of accessor */
