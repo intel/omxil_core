@@ -127,3 +127,109 @@ const OMX_STRING CModule::GetLibraryName(void)
 }
 
 /* end of accessor */
+
+/*
+ * library symbol method and helpers
+ */
+/* call instance / query_name /query_roles */
+OMX_ERRORTYPE CModule::QueryComponentName(void)
+{
+    OMX_ERRORTYPE ret = OMX_ErrorUndefined;
+
+    if (query_name)
+        ret = query_name(&cname[0]);
+
+    return ret;
+}
+
+OMX_ERRORTYPE CModule::QueryComponentName(OMX_STRING cname)
+{
+    OMX_ERRORTYPE ret = OMX_ErrorUndefined;
+
+    if (query_name)
+        ret = query_name(cname);
+
+    return ret;
+}
+
+OMX_ERRORTYPE CModule::QueryComponentRoles(void)
+{
+    OMX_ERRORTYPE ret;
+
+    if (!query_roles)
+        return OMX_ErrorUndefined;
+
+    if (nr_roles && roles)
+        return OMX_ErrorNone;
+
+    roles = NULL;
+    ret = query_roles(&nr_roles, roles);
+    if (ret != OMX_ErrorNone) {
+        nr_roles = 0;
+        roles = NULL;
+    }
+
+    roles = (OMX_U8 **)malloc(sizeof(OMX_STRING) * nr_roles);
+    if (roles) {
+        roles[0] = (OMX_U8 *)malloc(OMX_MAX_STRINGNAME_SIZE * nr_roles);
+        if (roles[0]) {
+            OMX_U32 i;
+
+            for (i = 0; i < nr_roles-1; i++)
+                roles[i+1] = roles[i] + OMX_MAX_STRINGNAME_SIZE;
+        }
+        else {
+            free(roles);
+            roles = NULL;
+            nr_roles = 0;
+            return OMX_ErrorInsufficientResources;
+        }
+    }
+    else  {
+        nr_roles = 0;
+        roles = NULL;
+        return OMX_ErrorInsufficientResources;
+    }
+
+    ret = query_roles(&nr_roles, roles);
+    if (ret != OMX_ErrorNone) {
+        nr_roles = 0;
+        free(roles[0]);
+        free(roles);
+        roles = NULL;
+        return ret;
+    }
+
+    return OMX_ErrorNone;
+}
+
+OMX_ERRORTYPE CModule::QueryComponentRoles(OMX_U32 *nr_roles, OMX_U8 **roles)
+{
+    OMX_ERRORTYPE ret = OMX_ErrorUndefined;
+
+    if (query_roles)
+        ret = query_roles(nr_roles, roles);
+
+    return ret;
+}
+
+OMX_ERRORTYPE CModule::InstantiateComponent(void **instance)
+{
+    OMX_ERRORTYPE ret = OMX_ErrorUndefined;
+
+    if (!instance || *instance)
+        return OMX_ErrorBadParameter;
+    *instance = NULL;
+
+    if (instantiate) {
+        ret = instantiate(instance);
+        if (ret != OMX_ErrorNone) {
+            instance = NULL;
+            return ret;
+        }
+    }
+
+    return ret;
+}
+
+/* end of library symbol method and helpers */
