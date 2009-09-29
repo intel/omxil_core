@@ -9,9 +9,6 @@
 
 class CModule;
 
-typedef OMX_ERRORTYPE (*cmodule_init_t)(CModule *);
-typedef OMX_ERRORTYPE (*cmodule_exit_t)(CModule *);
-
 class CModule {
  public:
     CModule(const OMX_STRING lname);
@@ -26,9 +23,6 @@ class CModule {
     OMX_PTR GetPrivData(void);
 
  private:
-    cmodule_init_t init;
-    cmodule_exit_t exit;
-
     char lname[OMX_MAX_STRINGNAME_SIZE];
     struct module *module;
 
