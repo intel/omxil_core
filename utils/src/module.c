@@ -145,7 +145,8 @@ struct module *module_open(const char *file, int flag)
     if (existing) {
         LOGE("found opened module %s\n", existing->name);
         existing->ref_count++;
-        module_close(new);
+
+        free(new);
         pthread_mutex_unlock(&g_lock);
         return existing;
     }
