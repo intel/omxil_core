@@ -36,6 +36,8 @@ CModule::CModule(const OMX_STRING lname)
 
 CModule::~CModule()
 {
+    while (Unload()) ;
+
     if (roles) {
         if (roles[0])
             free(roles[0]);
