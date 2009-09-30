@@ -473,11 +473,17 @@ OMX_ERRORTYPE ComponentBase::CBaseGetParameter(
         OMX_PARAM_PORTDEFINITIONTYPE *p =
             (OMX_PARAM_PORTDEFINITIONTYPE *)pComponentParameterStructure;
         OMX_U32 index = p->nPortIndex;
-        PortBase *port = ports[index];
+        PortBase *port = NULL;
 
         ret = CheckTypeHeader(p, sizeof(*p));
         if (ret != OMX_ErrorNone)
             return ret;
+
+        if (index < nr_ports)
+            port = ports[index];
+
+        if (!port)
+            return OMX_ErrorBadParameter;
 
         memcpy(p, port->GetPortParam(), sizeof(*p));
         break;
@@ -486,11 +492,17 @@ OMX_ERRORTYPE ComponentBase::CBaseGetParameter(
         OMX_AUDIO_PARAM_PORTFORMATTYPE *p =
             (OMX_AUDIO_PARAM_PORTFORMATTYPE *)pComponentParameterStructure;
         OMX_U32 index = p->nPortIndex;
-        PortBase *port = ports[index];
+        PortBase *port = NULL;
 
         ret = CheckTypeHeader(p, sizeof(*p));
         if (ret != OMX_ErrorNone)
             return ret;
+
+        if (index < nr_ports)
+            port = ports[index];
+
+        if (!port)
+            return OMX_ErrorBadParameter;
 
         memcpy(p, port->GetAudioPortParam(), sizeof(*p));
         break;
@@ -557,11 +569,17 @@ OMX_ERRORTYPE ComponentBase::CBaseSetParameter(
         OMX_PARAM_PORTDEFINITIONTYPE *p =
             (OMX_PARAM_PORTDEFINITIONTYPE *)pComponentParameterStructure;
         OMX_U32 index = p->nPortIndex;
-        PortBase *port = ports[index];
+        PortBase *port = NULL;
 
         ret = CheckTypeHeader(p, sizeof(*p));
         if (ret != OMX_ErrorNone)
             return ret;
+
+        if (index < nr_ports)
+            port = ports[index];
+
+        if (!port)
+            return OMX_ErrorBadParameter;
 
         port->SetPortParam(p);
         break;
@@ -570,11 +588,17 @@ OMX_ERRORTYPE ComponentBase::CBaseSetParameter(
         OMX_AUDIO_PARAM_PORTFORMATTYPE *p =
             (OMX_AUDIO_PARAM_PORTFORMATTYPE *)pComponentParameterStructure;
         OMX_U32 index = p->nPortIndex;
-        PortBase *port = ports[index];
+        PortBase *port = NULL;
 
         ret = CheckTypeHeader(p, sizeof(*p));
         if (ret != OMX_ErrorNone)
             return ret;
+
+        if (index < nr_ports)
+            port = ports[index];
+
+        if (!port)
+            return OMX_ErrorBadParameter;
 
         port->SetAudioPortParam(p);
         break;
