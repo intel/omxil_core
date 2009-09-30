@@ -1503,11 +1503,64 @@ OMX_ERRORTYPE ComponentBase::SetWorkingRole(const OMX_STRING role)
 /* apply a working role for a component having multiple roles */
 OMX_ERRORTYPE ComponentBase::ApplyWorkingRole(void)
 {
-    /*
-     * Todo
-     */
+    OMX_ERRORTYPE ret;
 
-    return OMX_ErrorNotImplemented;
+    if (!working_role)
+        return OMX_ErrorBadParameter;
+
+    ret = AllocatePorts();
+    if (ret != OMX_ErrorNone) {
+        LOGE("failed to AllocatePorts() (ret = 0x%08x)\n", ret);
+        return ret;
+    }
+
+    return OMX_ErrorNone;
+}
+
+OMX_ERRORTYPE ComponentBase::AllocatePorts(void)
+{
+    OMX_ERRORTYPE ret;
+    OMX_U32 i;
+
+    if (ports)
+        return OMX_ErrorBadParameter;
+
+    if (!callbacks || !appdata)
+        return OMX_ErrorBadParameter;
+
+    ret = ComponentAllocatePorts();
+    if (ret != OMX_ErrorNone) {
+        LOGE("failed to %s::ComponentAllocatePorts(), ret = 0x%08x\n",
+             name, ret);
+        return ret;
+    }
+
+    /* now we can access ports */
+    for (i = 0; i < nr_ports; i++) {
+        ports[i]->SetOwner(handle);
+        ports[i]->SetCallbacks(handle, callbacks, appdata);
+    }
+
+    return OMX_ErrorNone;
+}
+
+/* called int FreeHandle() */
+OMX_ERRORTYPE ComponentBase::FreePorts(void)
+{
+    if (ports) {
+        OMX_U32 i, this_nr_ports = this->nr_ports;
+
+        for (i = 0; i < this_nr_ports; i++) {
+            if (ports[i]) {
+                delete ports[i];
+                ports[i] = NULL;
+            }
+        }
+        delete []ports;
+        ports = NULL;
+    }
+
+    return OMX_ErrorNone;
 }
 
 /* buffer processing */

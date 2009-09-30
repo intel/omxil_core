@@ -323,6 +323,12 @@ private:
     /* called in GetHandle (nr_roles == 1) or TransStateToIdle(Loaded) */
     OMX_ERRORTYPE ApplyWorkingRole(void);
 
+    /* called in ApplyWorkingRole() */
+    OMX_ERRORTYPE AllocatePorts(void);
+    virtual OMX_ERRORTYPE ComponentAllocatePorts(void) = 0;
+    /* called int FreeHandle() */
+    OMX_ERRORTYPE FreePorts(void);
+
     /* end of core methods & helpers */
 
     /*
