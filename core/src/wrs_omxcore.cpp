@@ -29,7 +29,6 @@ static struct list *construct_components(const char *config_file_name)
     char library_name[OMX_MAX_STRINGNAME_SIZE];
     char config_file_path[256];
     struct list *head = NULL;
-    OMX_ERRORTYPE load_ret;
 
     strncpy(config_file_path, "/etc/", 256);
     strncat(config_file_path, config_file_name, 256);
@@ -46,55 +45,61 @@ static struct list *construct_components(const char *config_file_name)
 
     while (fscanf(config_file, "%s", library_name) > 0) {
         CModule *cmodule;
+        struct list *entry;
+        OMX_ERRORTYPE ret;
 
         library_name[OMX_MAX_STRINGNAME_SIZE-1] = '\0';
         cmodule = new CModule(&library_name[0]);
-        if (!cmodule) {
-            list_free_all(head);
-            fclose(config_file);
-            return NULL;
-        }
+        if (!cmodule)
+            continue;
+
         LOGV("found component library %s\n", library_name);
 
-        load_ret = cmodule->Load();
-        if (load_ret == OMX_ErrorNone) {
-            struct list *entry;
+        ret = cmodule->Load();
+        if (ret != OMX_ErrorNone)
+            goto delete_cmodule;
 
-            entry = list_alloc(cmodule);
-            if (entry) {
-                entry->data = cmodule;
-                head = __list_add_tail(head, entry);
-                LOGV("module %s added to component list\n",
-                     cmodule->GetLibraryName());
-            }
-            else {
-                cmodule->Unload();
-                delete cmodule;
-            }
-        }
-        else
-            delete cmodule;
+        ret = cmodule->QueryComponentName();
+        if (ret != OMX_ErrorNone)
+            goto unload_cmodule;
+
+        ret = cmodule->QueryComponentRoles();
+        if (ret != OMX_ErrorNone)
+            goto unload_cmodule;
+
+        entry = list_alloc(cmodule);
+        if (!entry)
+            goto unload_cmodule;
+        head = __list_add_tail(head, entry);
+
+        cmodule->Unload();
+        LOGV("module %s:%s added to component list\n",
+             cmodule->GetLibraryName(), cmodule->GetComponentName());
+
+        continue;
+
+    unload_cmodule:
+        cmodule->Unload();
+    delete_cmodule:
+        delete cmodule;
     }
 
     fclose(config_file);
     return head;
 }
 
-static void destruct_components(struct list *head)
+static struct list *destruct_components(struct list *head)
 {
     struct list *entry, *next;
 
     list_foreach_safe(head, entry, next) {
         CModule *cmodule = static_cast<CModule *>(entry->data);
-        OMX_ERRORTYPE unload_ret;
 
         head = __list_delete(head, entry);
-
-        unload_ret = cmodule->Unload();
         delete cmodule;
     }
 
-    g_module_list = head;
+    return head;
 }
 
 OMX_API OMX_ERRORTYPE OMX_APIENTRY OMX_Init(void)
