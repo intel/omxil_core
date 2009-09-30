@@ -162,18 +162,30 @@ OMX_API OMX_ERRORTYPE OMX_APIENTRY OMX_GetHandle(
     OMX_IN OMX_CALLBACKTYPE *pCallBacks)
 {
     struct list *entry;
+    OMX_ERRORTYPE ret;
 
     pthread_mutex_lock(&g_module_lock);
     list_foreach(g_module_list, entry) {
         CModule *cmodule;
-        ComponentBase *cbase;
-        OMX_STRING name;
+        OMX_STRING cname;
 
         cmodule = static_cast<CModule *>(entry->data);
-        cbase = static_cast<ComponentBase *>(cmodule->GetPrivData());
 
-        name = cbase->GetName();
-        if (!strcmp(cComponentName, name)) {
+        cname = cmodule->GetComponentName();
+        if (!strcmp(cComponentName, cname)) {
+            ComponentBase *cbase = NULL;
+            
+            ret = cmodule->Load();
+            if (ret != OMX_ErrorNone)
+                break;
+
+            ret = cmodule->InstantiateComponent(&cbase);
+            if (ret != OMX_ErrorNone) {
+                cmodule->Unload();
+                break;
+            }
+            cbase->SetCModule(cmodule);
+
             pthread_mutex_unlock(&g_module_lock);
             return cbase->GetHandle(pHandle, pAppData, pCallBacks);
         }
@@ -187,6 +199,8 @@ OMX_API OMX_ERRORTYPE OMX_APIENTRY OMX_FreeHandle(
     OMX_IN OMX_HANDLETYPE hComponent)
 {
     ComponentBase *cbase;
+    CModule *cmodule;
+    OMX_ERRORTYPE ret;
 
     if (!hComponent)
         return OMX_ErrorBadParameter;
@@ -196,7 +210,22 @@ OMX_API OMX_ERRORTYPE OMX_APIENTRY OMX_FreeHandle(
     if (!cbase)
         return OMX_ErrorBadParameter;
 
-    return cbase->FreeHandle(hComponent);
+    ret = cbase->FreeHandle(hComponent);
+    if (ret != OMX_ErrorNone) {
+        LOGE("failed to cbase->FreeHandle() (ret = 0x%08x)\n", ret);
+        return ret;
+    }
+
+    cmodule = cbase->GetCModule();
+    if (!cmodule) {
+        LOGE("fatal error, %s does not have cmodule\n", cbase->GetName());
+        goto out;
+    }
+    cmodule->Unload();
+
+out:
+    delete cbase;
+    return OMX_ErrorNone;
 }
 
 OMX_API OMX_ERRORTYPE OMX_APIENTRY OMX_SetupTunnel(
