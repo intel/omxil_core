@@ -318,6 +318,11 @@ private:
     virtual OMX_ERRORTYPE InitComponent(void) = 0;
     virtual OMX_ERRORTYPE ExitComponent(void) = 0;
 
+    /* called in GetHandle (nr_roles == 1) or SetParameter(ComponentRole) */
+    OMX_ERRORTYPE SetWorkingRole(const OMX_STRING role);
+    /* called in GetHandle (nr_roles == 1) or TransStateToIdle(Loaded) */
+    OMX_ERRORTYPE ApplyWorkingRole(void);
+
     /* end of core methods & helpers */
 
     /*
@@ -369,6 +374,8 @@ private:
     /* roles */
     OMX_U8 **roles;
     OMX_U32 nr_roles;
+
+    OMX_STRING working_role;
 
     /* component module */
     CModule *cmodule;

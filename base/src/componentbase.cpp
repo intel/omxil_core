@@ -114,6 +114,8 @@ void ComponentBase::__ComponentBase(void)
     roles = NULL;
     nr_roles = 0;
 
+    working_role = NULL;
+
     ports = NULL;
     nr_ports = 0;
     memset(&portparam, 0, sizeof(portparam));
@@ -1478,6 +1480,34 @@ ComponentBase::TransStateToWaitForResources(OMX_STATETYPE current)
         ret = OMX_ErrorIncorrectStateOperation;
 
     return ret;
+}
+
+/* set working role */
+OMX_ERRORTYPE ComponentBase::SetWorkingRole(const OMX_STRING role)
+{
+    OMX_U32 i;
+
+    if (!role)
+        return OMX_ErrorBadParameter;
+
+    for (i = 0; i < nr_roles; i++) {
+        if (!strcmp((char *)&roles[i][0], role)) {
+            working_role = (OMX_STRING)&roles[i][0];
+            return OMX_ErrorNone;
+        }
+    }
+
+    return OMX_ErrorBadParameter;
+}
+
+/* apply a working role for a component having multiple roles */
+OMX_ERRORTYPE ComponentBase::ApplyWorkingRole(void)
+{
+    /*
+     * Todo
+     */
+
+    return OMX_ErrorNotImplemented;
 }
 
 /* buffer processing */
