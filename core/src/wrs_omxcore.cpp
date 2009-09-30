@@ -149,11 +149,9 @@ OMX_API OMX_ERRORTYPE OMX_APIENTRY OMX_ComponentNameEnum(
     pthread_mutex_unlock(&g_module_lock);
 
     cmodule = static_cast<CModule *>(entry->data);
-    cbase = static_cast<ComponentBase *>(cmodule->GetPrivData());
+    cname = cmodule->GetComponentName();
 
-    cname = cbase->GetName();
     strncpy(cComponentName, cname, nNameLength);
-
     return OMX_ErrorNone;
 }
 
