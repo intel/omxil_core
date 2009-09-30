@@ -203,25 +203,32 @@ OMX_ERRORTYPE ComponentBase::SetRolesOfComponent(OMX_U32 nr_roles,
 {
     OMX_U32 i;
 
+    if (!roles || !nr_roles)
+        return OMX_ErrorBadParameter;
+
+    if (this->roles) {
+        free(this->roles[0]);
+        free(this->roles);
+        this->roles = NULL;
+    }
+
     this->roles = (OMX_U8 **)malloc(sizeof(OMX_STRING) * nr_roles);
     if (!this->roles)
         return OMX_ErrorInsufficientResources;
 
+    this->roles[0] = (OMX_U8 *)malloc(OMX_MAX_STRINGNAME_SIZE);
+    if (!this->roles) {
+        free(this->roles);
+        this->roles = NULL;
+        return OMX_ErrorInsufficientResources;
+    }
+
     for (i = 0; i < nr_roles; i++) {
-        this->roles[i] = (OMX_U8 *)malloc(OMX_MAX_STRINGNAME_SIZE);
-        if (!this->roles[i]) {
-            int j;
-
-            for (j = (int )i-1; j >= 0; j--)
-                free(this->roles[j]);
-            free(this->roles);
-
-            return OMX_ErrorInsufficientResources;
-        }
+        if (i < nr_roles-1)
+            roles[i+1] = roles[i] + OMX_MAX_STRINGNAME_SIZE;
 
         strncpy((OMX_STRING)&this->roles[i][0],
-                (const OMX_STRING)&roles[i][0],
-                OMX_MAX_STRINGNAME_SIZE);
+                (const OMX_STRING)&roles[i][0], OMX_MAX_STRINGNAME_SIZE);
     }
 
     this->nr_roles = nr_roles;
