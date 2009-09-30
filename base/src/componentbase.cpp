@@ -285,27 +285,19 @@ OMX_ERRORTYPE ComponentBase::GetHandle(OMX_HANDLETYPE *pHandle,
     if (handle)
         return OMX_ErrorUndefined;
 
+    if (nr_roles == 1)
+        SetWorkingRole((OMX_STRING)&roles[0]);
+
     handle = (OMX_COMPONENTTYPE *)calloc(1, sizeof(*handle));
-    if (!handle)
+    if (!handle) {
+        SetWorkingRole(NULL);
         return OMX_ErrorInsufficientResources;
+    }
 
     /* handle initialization */
     SetTypeHeader(handle, sizeof(*handle));
     handle->pComponentPrivate = static_cast<OMX_PTR>(this);
     handle->pApplicationPrivate = pAppData;
-
-    /* virtual - see derived class */
-    ret = InitComponent();
-    if (ret != OMX_ErrorNone) {
-        LOGE("failed to %s::InitComponent(), ret = 0x%08x\n",
-             name, ret);
-        goto free_handle;
-    }
-
-    for (i = 0; i < nr_ports; i++) {
-        ports[i]->SetOwner(handle);
-        ports[i]->SetCallbacks(handle, pCallBacks, pAppData);
-    }
 
     /* connect handle's functions */
     handle->GetComponentVersion = GetComponentVersion;
@@ -333,12 +325,6 @@ OMX_ERRORTYPE ComponentBase::GetHandle(OMX_HANDLETYPE *pHandle,
 
     state = OMX_StateLoaded;
     return OMX_ErrorNone;
-
-free_handle:
-    free(this->handle);
-    this->handle = NULL;
-
-    return ret;
 }
 
 OMX_ERRORTYPE ComponentBase::FreeHandle(OMX_HANDLETYPE hComponent)
@@ -348,10 +334,7 @@ OMX_ERRORTYPE ComponentBase::FreeHandle(OMX_HANDLETYPE hComponent)
     if (hComponent != handle)
         return OMX_ErrorBadParameter;
 
-    /* virtual - see derived class */
-    ret = ExitComponent();
-    if (ret != OMX_ErrorNone)
-        return ret;
+    FreePorts();
 
     free(handle);
 
@@ -1326,6 +1309,10 @@ inline OMX_ERRORTYPE ComponentBase::TransStateToIdle(OMX_STATETYPE current)
          *      (ex. initialize sw/hw codec)
          */
         OMX_U32 i;
+
+        ret = ApplyWorkingRole();
+        if (ret != OMX_ErrorNone)
+            return ret;
 
         for (i = 0; i < nr_ports; i++)
             ports[i]->WaitPortBufferCompletion();
