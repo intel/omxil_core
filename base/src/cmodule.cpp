@@ -24,6 +24,9 @@ CModule::CModule(const OMX_STRING lname)
     query_name = NULL;
     query_roles = NULL;
 
+    roles = NULL;
+    nr_roles = 0;
+
     memset(this->lname, 0, OMX_MAX_STRINGNAME_SIZE);
     strncpy(this->lname, lname, OMX_MAX_STRINGNAME_SIZE);
     this->lname[OMX_MAX_STRINGNAME_SIZE-1] = '\0';
@@ -32,6 +35,12 @@ CModule::CModule(const OMX_STRING lname)
 CModule::~CModule()
 {
     Unload();
+
+    if (roles) {
+        if (roles[0])
+            free(roles[0]);
+        free(roles);
+    }
 }
 
 /* end of constructor / deconstructor */
