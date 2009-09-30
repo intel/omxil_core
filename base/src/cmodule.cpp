@@ -27,6 +27,8 @@ CModule::CModule(const OMX_STRING lname)
     roles = NULL;
     nr_roles = 0;
 
+    memset(cname, 0, OMX_MAX_STRINGNAME_SIZE);
+
     memset(this->lname, 0, OMX_MAX_STRINGNAME_SIZE);
     strncpy(this->lname, lname, OMX_MAX_STRINGNAME_SIZE);
     this->lname[OMX_MAX_STRINGNAME_SIZE-1] = '\0';
@@ -197,6 +199,7 @@ OMX_ERRORTYPE CModule::QueryComponentName(void)
     if (query_name)
         ret = query_name(&cname[0]);
 
+    cname[OMX_MAX_STRINGNAME_SIZE-1] = '\0';
     return ret;
 }
 
