@@ -126,6 +126,41 @@ const OMX_STRING CModule::GetLibraryName(void)
     return lname;
 }
 
+const OMX_STRING CModule::GetComponentName(void)
+{
+    return cname;
+}
+
+OMX_ERRORTYPE CModule::GetComponentRoles(OMX_U32 *nr_roles, OMX_U8 **roles)
+{
+    OMX_U32 i;
+    OMX_U32 this_nr_roles = this->nr_roles;
+
+    if (!roles) {
+        *nr_roles = this_nr_roles;
+        return OMX_ErrorNone;
+    }
+
+    if (!nr_roles || (*nr_roles != this_nr_roles))
+        return OMX_ErrorBadParameter;
+
+    for (i = 0; i < this_nr_roles; i++) {
+        if (!roles[i])
+            break;
+
+        if (roles && roles[i])
+            strncpy((OMX_STRING)&roles[i][0],
+                    (const OMX_STRING)&this->roles[i][0],
+                    OMX_MAX_STRINGNAME_SIZE);
+    }
+
+    if (i != this_nr_roles)
+        return OMX_ErrorBadParameter;
+
+    *nr_roles = this_nr_roles;
+    return OMX_ErrorNone;
+}
+
 /* end of accessor */
 
 /*

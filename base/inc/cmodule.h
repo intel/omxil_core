@@ -33,6 +33,10 @@ class CModule {
     /* library name */
     const OMX_STRING GetLibraryName(void);
 
+    /* component name and roles */
+    const OMX_STRING GetComponentName(void);
+    OMX_ERRORTYPE GetComponentRoles(OMX_U32 *nr_roles, OMX_U8 **roles);
+
     /* end of accessor */
 
     /* library symbol method and helpers */
