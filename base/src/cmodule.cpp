@@ -197,19 +197,20 @@ OMX_ERRORTYPE CModule::QueryComponentName(void)
     OMX_ERRORTYPE ret = OMX_ErrorUndefined;
 
     if (query_name)
-        ret = query_name(&cname[0]);
+        ret = query_name(&cname[0], OMX_MAX_STRINGNAME_SIZE);
 
     cname[OMX_MAX_STRINGNAME_SIZE-1] = '\0';
     return ret;
 }
 
-OMX_ERRORTYPE CModule::QueryComponentName(OMX_STRING cname)
+OMX_ERRORTYPE CModule::QueryComponentName(OMX_STRING cname, OMX_U32 len)
 {
     OMX_ERRORTYPE ret = OMX_ErrorUndefined;
 
     if (query_name)
-        ret = query_name(cname);
+        ret = query_name(cname, len);
 
+    cname[len-1] = '\0';
     return ret;
 }
 

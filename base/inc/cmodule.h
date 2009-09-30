@@ -11,7 +11,7 @@ class CModule;
 class ComponentBase;
 
 typedef OMX_ERRORTYPE (*cmodule_instantiate_t)(OMX_PTR *);
-typedef OMX_ERRORTYPE (*cmodule_query_name_t)(OMX_STRING);
+typedef OMX_ERRORTYPE (*cmodule_query_name_t)(OMX_STRING, OMX_U32);
 typedef OMX_ERRORTYPE (*cmodule_query_roles_t)(OMX_U32 *, OMX_U8 **);
 
 class CModule {
@@ -44,7 +44,7 @@ class CModule {
     /* library symbol method and helpers */
     /* call instantiate / query_name / query_roles */
     OMX_ERRORTYPE QueryComponentName(void);
-    OMX_ERRORTYPE QueryComponentName(OMX_STRING cname);
+    OMX_ERRORTYPE QueryComponentName(OMX_STRING cname, OMX_U32 len);
     OMX_ERRORTYPE QueryComponentRoles(void);
     OMX_ERRORTYPE QueryComponentRoles(OMX_U32 *nr_roles, OMX_U8 **roles);
     OMX_ERRORTYPE InstantiateComponent(ComponentBase **instance);
