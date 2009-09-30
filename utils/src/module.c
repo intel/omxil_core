@@ -32,11 +32,13 @@ static pthread_mutex_t g_lock = PTHREAD_MUTEX_INITIALIZER;
     })
 
 
-static struct module *module_find_with_name(const char *filename)
+static struct module *module_find_with_name(struct module *head,
+                                            const char *filename)
+                                            
 {
     struct module *module;
 
-    for_each_module(module, g_module_head) {
+    for_each_module(module, head) {
         if (!strcmp(module->name, filename))
             return module;
     }
@@ -44,11 +46,13 @@ static struct module *module_find_with_name(const char *filename)
     return NULL;
 }
 
-static struct module *module_find_with_handle(const void *handle)
+static struct module *module_find_with_handle(struct module *head,
+                                              const void *handle)
+                                              
 {
     struct module *module;
 
-    for_each_module(module, g_module_head) {
+    for_each_module(module, head) {
         if (module->handle == handle)
             return module;
     }
@@ -65,9 +69,9 @@ static struct module *module_add_list(struct module *head,
     if (last)
         last->next = add;
     else
-        g_module_head = add;
+        head = add;
 
-    return g_module_head;
+    return head;
 }
 
 static struct module *module_del_list(struct module *head,
@@ -81,11 +85,11 @@ static struct module *module_del_list(struct module *head,
     }
 
     if (!prev)
-        g_module_head = del->next;
+        head = del->next;
     else
         prev->next = del->next;
 
-    return g_module_head;
+    return head;
 }
 
 static inline void module_set_error(const char *dlerr)
@@ -113,7 +117,7 @@ struct module *module_open(const char *file, int flag)
 
     pthread_mutex_lock(&g_lock);
 
-    existing = module_find_with_name(file);
+    existing = module_find_with_name(g_module_head, file);
     if (existing) {
         LOGE("found opened module %s\n", existing->name);
         existing->ref_count++;
@@ -141,7 +145,7 @@ struct module *module_open(const char *file, int flag)
         goto free_new;
     }
 
-    existing = module_find_with_handle(new->handle);
+    existing = module_find_with_handle(g_module_head, new->handle);
     if (existing) {
         LOGE("found opened module %s\n", existing->name);
         existing->ref_count++;
@@ -178,7 +182,7 @@ struct module *module_open(const char *file, int flag)
         goto free_handle;
     }
 
-    module_add_list(g_module_head, new);
+    g_module_head = module_add_list(g_module_head, new);
 
     pthread_mutex_unlock(&g_lock);
     return new;
@@ -220,7 +224,7 @@ int module_close(struct module *module)
             ret = -1;
         }
 
-        module_del_list(g_module_head, module);
+        g_module_head = module_del_list(g_module_head, module);
         free(module->name);
         free(module);
 
