@@ -225,10 +225,11 @@ int module_close(struct module *module)
         }
 
         g_module_head = module_del_list(g_module_head, module);
-        free(module->name);
-        free(module);
 
         LOGV("module %s closed\n", module->name);
+
+        free(module->name);
+        free(module);
     }
 
     pthread_mutex_unlock(&g_lock);
