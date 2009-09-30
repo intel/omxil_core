@@ -62,8 +62,6 @@ OMX_ERRORTYPE CModule::Load()
     LOGV("module founded (%s)\n", lname);
 
     if (!module) {
-        module = m;
-
         instantiate = (cmodule_instantiate_t)
             module_symbol(m, "omx_component_module_instantiate");
         if (!instantiate) {
@@ -93,6 +91,7 @@ OMX_ERRORTYPE CModule::Load()
             return OMX_ErrorInvalidComponent;
         }
 
+        module = m;
         LOGV("module %s successfully loaded\n", lname);
     }
     else {
