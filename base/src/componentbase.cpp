@@ -462,6 +462,10 @@ OMX_ERRORTYPE ComponentBase::CBaseGetParameter(
         OMX_PORT_PARAM_TYPE *p =
             (OMX_PORT_PARAM_TYPE *)pComponentParameterStructure;
 
+        ret = CheckTypeHeader(p, sizeof(*p));
+        if (ret != OMX_ErrorNone)
+            return ret;
+
         memcpy(p, &portparam, sizeof(*p));
         break;
     }
@@ -471,6 +475,10 @@ OMX_ERRORTYPE ComponentBase::CBaseGetParameter(
         OMX_U32 index = p->nPortIndex;
         PortBase *port = ports[index];
 
+        ret = CheckTypeHeader(p, sizeof(*p));
+        if (ret != OMX_ErrorNone)
+            return ret;
+
         memcpy(p, port->GetPortParam(), sizeof(*p));
         break;
     }
@@ -479,6 +487,10 @@ OMX_ERRORTYPE ComponentBase::CBaseGetParameter(
             (OMX_AUDIO_PARAM_PORTFORMATTYPE *)pComponentParameterStructure;
         OMX_U32 index = p->nPortIndex;
         PortBase *port = ports[index];
+
+        ret = CheckTypeHeader(p, sizeof(*p));
+        if (ret != OMX_ErrorNone)
+            return ret;
 
         memcpy(p, port->GetAudioPortParam(), sizeof(*p));
         break;
@@ -534,6 +546,10 @@ OMX_ERRORTYPE ComponentBase::CBaseSetParameter(
         OMX_PORT_PARAM_TYPE *p = (OMX_PORT_PARAM_TYPE *)
             pComponentParameterStructure;
 
+        ret = CheckTypeHeader(p, sizeof(*p));
+        if (ret != OMX_ErrorNone)
+            return ret;
+
         memcpy(&portparam, p, sizeof(*p));
         break;
     }
@@ -543,6 +559,10 @@ OMX_ERRORTYPE ComponentBase::CBaseSetParameter(
         OMX_U32 index = p->nPortIndex;
         PortBase *port = ports[index];
 
+        ret = CheckTypeHeader(p, sizeof(*p));
+        if (ret != OMX_ErrorNone)
+            return ret;
+
         port->SetPortParam(p);
         break;
     }
@@ -551,6 +571,10 @@ OMX_ERRORTYPE ComponentBase::CBaseSetParameter(
             (OMX_AUDIO_PARAM_PORTFORMATTYPE *)pComponentParameterStructure;
         OMX_U32 index = p->nPortIndex;
         PortBase *port = ports[index];
+
+        ret = CheckTypeHeader(p, sizeof(*p));
+        if (ret != OMX_ErrorNone)
+            return ret;
 
         port->SetAudioPortParam(p);
         break;
@@ -565,6 +589,10 @@ OMX_ERRORTYPE ComponentBase::CBaseSetParameter(
     case OMX_IndexParamStandardComponentRole: {
         OMX_PARAM_COMPONENTROLETYPE *p =
             (OMX_PARAM_COMPONENTROLETYPE *)pComponentParameterStructure;
+
+        ret = CheckTypeHeader(p, sizeof(*p));
+        if (ret != OMX_ErrorNone)
+            return ret;
 
         ret = SetWorkingRole((OMX_STRING)p->cRole);
         if (ret != OMX_ErrorNone)
