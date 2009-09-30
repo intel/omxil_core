@@ -615,6 +615,15 @@ OMX_ERRORTYPE ComponentBase::CBaseSetParameter(
 
         ret = OMX_ErrorUnsupportedIndex;
         break;
+    case OMX_IndexParamStandardComponentRole: {
+        OMX_PARAM_COMPONENTROLETYPE *p =
+            (OMX_PARAM_COMPONENTROLETYPE *)pComponentParameterStructure;
+
+        ret = SetWorkingRole((OMX_STRING)p->cRole);
+        if (ret != OMX_ErrorNone)
+            return ret;
+        break;
+    }
     default:
         ret = ComponentSetParameter(nIndex, pComponentParameterStructure);
     } /* switch */
