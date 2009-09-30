@@ -316,12 +316,6 @@ private:
      */
     /* called in GetHandle (nr_roles == 1) or SetParameter(ComponentRole) */
     OMX_ERRORTYPE SetWorkingRole(const OMX_STRING role);
-    /* called in GetHandle (nr_roles == 1) or TransStateToIdle(Loaded) */
-    OMX_ERRORTYPE ApplyWorkingRole(void);
-
-    /* called in ApplyWorkingRole() */
-    OMX_ERRORTYPE AllocatePorts(void);
-    virtual OMX_ERRORTYPE ComponentAllocatePorts(void) = 0;
     /* called int FreeHandle() */
     OMX_ERRORTYPE FreePorts(void);
 
@@ -343,6 +337,13 @@ private:
     inline OMX_ERRORTYPE TransStateToPause(OMX_STATETYPE current);
     inline OMX_ERRORTYPE TransStateToWaitForResources(OMX_STATETYPE current);
     inline OMX_ERRORTYPE TransStateToInvalid(OMX_STATETYPE current);
+
+    /* called in TransStateToIdle(Loaded) */
+    OMX_ERRORTYPE ApplyWorkingRole(void);
+    /* called in ApplyWorkingRole() */
+    OMX_ERRORTYPE AllocatePorts(void);
+    /* allocate specific port type derived from portbase */
+    virtual OMX_ERRORTYPE ComponentAllocatePorts(void) = 0;
 
     /* Get/SetParameter */
     virtual OMX_ERRORTYPE
