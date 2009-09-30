@@ -23,7 +23,6 @@ static unsigned int g_initialized = 0;
 static struct list *g_module_list = NULL;
 static pthread_mutex_t g_module_lock = PTHREAD_MUTEX_INITIALIZER;
 
-#if 1
 static struct list *construct_components(const char *config_file_name)
 {
     FILE *config_file;
@@ -80,52 +79,6 @@ static struct list *construct_components(const char *config_file_name)
     fclose(config_file);
     return head;
 }
-#else
-static const OMX_STRING g_components_list[] = {
-    "libomx_mrst_mp3decoder.so",
-};
-
-#define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
-
-static struct list *construct_components(const char *conf_file)
-{
-    struct list *head = NULL;
-    unsigned int i;
-
-    for (i = 0; i < ARRAY_SIZE(g_components_list); i++) {
-        CModule *cmodule;
-        OMX_ERRORTYPE load_ret;
-
-        cmodule = new CModule(&g_components_list[i][0]);
-        if (!cmodule) {
-            list_free_all(head);
-            return NULL;
-        }
-
-        load_ret = cmodule->Load();
-        if (load_ret == OMX_ErrorNone) {
-            struct list *entry;
-
-            entry = list_alloc(cmodule);
-            if (entry) {
-                entry->data = cmodule;
-                head = __list_add_tail(head, entry);
-                LOGV("module %s added to component list\n",
-                     &g_components_list[i][0]);
-            }
-            else {
-                cmodule->Unload();
-                delete cmodule;
-            }
-        }
-        else {
-            delete cmodule;
-        }
-    }
-
-    return head;
-}
-#endif
 
 static void destruct_components(struct list *head)
 {
