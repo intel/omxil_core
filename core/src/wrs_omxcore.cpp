@@ -19,6 +19,7 @@
 #include <log.h>
 
 static unsigned int g_initialized = 0;
+static unsigned int g_nr_instances = 0;
 
 static struct list *g_module_list = NULL;
 static pthread_mutex_t g_module_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -123,11 +124,16 @@ OMX_API OMX_ERRORTYPE OMX_APIENTRY OMX_Init(void)
 
 OMX_API OMX_ERRORTYPE OMX_APIENTRY OMX_Deinit(void)
 {
+    OMX_ERRORTYPE ret = OMX_ErrorNone;
+
     pthread_mutex_lock(&g_module_lock);
-    destruct_components(g_module_list);
+    if (!g_nr_instances)
+        g_module_list = destruct_components(g_module_list);
+    else
+        ret = OMX_ErrorUndefined;
     pthread_mutex_unlock(&g_module_lock);
 
-    return OMX_ErrorNone;
+    return ret;
 }
 
 OMX_API OMX_ERRORTYPE OMX_APIENTRY OMX_ComponentNameEnum(
@@ -177,17 +183,29 @@ OMX_API OMX_ERRORTYPE OMX_APIENTRY OMX_GetHandle(
             
             ret = cmodule->Load();
             if (ret != OMX_ErrorNone)
-                break;
+                goto unlock_list;
 
             ret = cmodule->InstantiateComponent(&cbase);
-            if (ret != OMX_ErrorNone) {
-                cmodule->Unload();
-                break;
-            }
+            if (ret != OMX_ErrorNone)
+                goto unload_cmodule;
+
+            ret = cbase->GetHandle(pHandle, pAppData, pCallBacks);
+            if (ret != OMX_ErrorNone)
+                goto delete_cbase;
+
             cbase->SetCModule(cmodule);
 
+            g_nr_instances++;
             pthread_mutex_unlock(&g_module_lock);
-            return cbase->GetHandle(pHandle, pAppData, pCallBacks);
+            return OMX_ErrorNone;
+
+        delete_cbase:
+            delete cbase;
+        unload_cmodule:
+            cmodule->Unload();
+        unlock_list:
+            pthread_mutex_unlock(&g_module_lock);
+            return ret;
         }
     }
     pthread_mutex_unlock(&g_module_lock);
@@ -215,6 +233,10 @@ OMX_API OMX_ERRORTYPE OMX_APIENTRY OMX_FreeHandle(
         LOGE("failed to cbase->FreeHandle() (ret = 0x%08x)\n", ret);
         return ret;
     }
+
+    pthread_mutex_lock(&g_module_lock);
+    g_nr_instances--;
+    pthread_mutex_unlock(&g_module_lock);
 
     cmodule = cbase->GetCModule();
     if (!cmodule) {
