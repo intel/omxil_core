@@ -269,18 +269,6 @@ public:
         OMX_OUT OMX_U8 *cRole,
         OMX_IN OMX_U32 nIndex);
 
-    /* buffer processing */
-    /* implement WorkableInterface */
-    virtual void Work(void); /* handle this->ports, hold ports_block */
-    /* check if all port has own pending buffer */
-    bool IsAllBufferAvailable(void);
-    /* bufferwork->ScheduleWork() if IsAllBufferAvailable is true */
-    void ScheduleIfAllBufferAvailable(void);
-
-    /* component's processor */
-    virtual void ComponentProcessBuffers(OMX_BUFFERHEADERTYPE **buffers,
-                                         OMX_U32 nr_buffers) = 0;
-
     /* end of component methods & helpers */
 
     /*
@@ -360,6 +348,18 @@ private:
     virtual OMX_ERRORTYPE
         ComponentSetConfig(OMX_INDEXTYPE nIndex,
                            OMX_PTR pComponentConfigStructure) = 0;
+
+    /* buffer processing */
+    /* implement WorkableInterface */
+    virtual void Work(void); /* handle this->ports, hold ports_block */
+    /* check if all port has own pending buffer */
+    bool IsAllBufferAvailable(void);
+    /* bufferwork->ScheduleWork() if IsAllBufferAvailable is true */
+    void ScheduleIfAllBufferAvailable(void);
+
+    /* component's processor */
+    virtual void ComponentProcessBuffers(OMX_BUFFERHEADERTYPE **buffers,
+                                         OMX_U32 nr_buffers) = 0;
 
     /* end of component methods & helpers */
 
