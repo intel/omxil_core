@@ -9,6 +9,7 @@
 #include <OMX_Core.h>
 
 #include <cmodule.h>
+#include <componentbase.h>
 
 #define LOG_TAG "cmodule"
 #include <log.h>
@@ -283,9 +284,21 @@ OMX_ERRORTYPE CModule::InstantiateComponent(ComponentBase **instance)
     *instance = NULL;
 
     if (instantiate) {
+        ComponentBase *cbase;
+
         ret = instantiate((void **)instance);
         if (ret != OMX_ErrorNone) {
             instance = NULL;
+            return ret;
+        }
+        cbase = *instance;
+
+        cbase->SetCModule(this);
+        cbase->SetName(cname);
+        ret = cbase->SetRolesOfComponent(nr_roles, (const OMX_U8 **)roles);
+        if (ret != OMX_ErrorNone) {
+            delete cbase;
+            *instance = NULL;
             return ret;
         }
     }
