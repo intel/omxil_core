@@ -18,16 +18,15 @@
  */
 CModule::CModule(const OMX_STRING lname)
 {
-    memset(lname, 0, OMX_MAX_STRINGNAME_SIZE);
-
     module = NULL;
 
     instantiate = NULL;
     query_name = NULL;
     query_roles = NULL;
 
+    memset(this->lname, 0, OMX_MAX_STRINGNAME_SIZE);
     strncpy(this->lname, lname, OMX_MAX_STRINGNAME_SIZE);
-    lname[OMX_MAX_STRINGNAME_SIZE-1] = '\0';
+    this->lname[OMX_MAX_STRINGNAME_SIZE-1] = '\0';
 }
 
 CModule::~CModule()
