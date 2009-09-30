@@ -295,6 +295,9 @@ OMX_ERRORTYPE ComponentBase::FreeHandle(OMX_HANDLETYPE hComponent)
     if (hComponent != handle)
         return OMX_ErrorBadParameter;
 
+    if (state != OMX_StateLoaded)
+        return OMX_ErrorIncorrectStateOperation;
+
     FreePorts();
 
     free(handle);
