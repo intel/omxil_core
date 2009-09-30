@@ -1496,8 +1496,10 @@ OMX_ERRORTYPE ComponentBase::SetWorkingRole(const OMX_STRING role)
 {
     OMX_U32 i;
 
-    if (!role)
-        return OMX_ErrorBadParameter;
+    if (!role) {
+        working_role = NULL;
+        return OMX_ErrorNone;
+    }
 
     for (i = 0; i < nr_roles; i++) {
         if (!strcmp((char *)&roles[i][0], role)) {
@@ -1506,6 +1508,7 @@ OMX_ERRORTYPE ComponentBase::SetWorkingRole(const OMX_STRING role)
         }
     }
 
+    LOGE("cannot find %s role in %s\n", role, name);
     return OMX_ErrorBadParameter;
 }
 
