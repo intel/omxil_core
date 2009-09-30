@@ -79,8 +79,6 @@ public:
      */
     /* roles */
     OMX_ERRORTYPE SetRolesOfComponent(OMX_U32 nr_roles, const OMX_U8 **roles);
-    OMX_ERRORTYPE GetRolesOfComponent(OMX_U32 *nr_roles, OMX_U8 **roles);
-    bool QueryHavingThisRole(const OMX_STRING role);
 
     /* GetHandle & FreeHandle */
     OMX_ERRORTYPE GetHandle(OMX_HANDLETYPE* pHandle,
