@@ -161,6 +161,21 @@ OMX_ERRORTYPE CModule::GetComponentRoles(OMX_U32 *nr_roles, OMX_U8 **roles)
     return OMX_ErrorNone;
 }
 
+bool CModule::QueryHavingThisRole(const OMX_STRING role)
+{
+    OMX_U32 i;
+
+    if (!roles || !role)
+        return false;
+
+    for (i = 0; i < nr_roles; i++) {
+        if (!strcmp((OMX_STRING)&roles[i][0], role))
+            return true;
+    }
+
+    return false;
+}
+
 /* end of accessor */
 
 /*

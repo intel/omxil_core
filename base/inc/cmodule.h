@@ -37,6 +37,8 @@ class CModule {
     const OMX_STRING GetComponentName(void);
     OMX_ERRORTYPE GetComponentRoles(OMX_U32 *nr_roles, OMX_U8 **roles);
 
+    bool QueryHavingThisRole(const OMX_STRING role);
+
     /* end of accessor */
 
     /* library symbol method and helpers */
