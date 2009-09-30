@@ -36,8 +36,6 @@ CModule::CModule(const OMX_STRING lname)
 
 CModule::~CModule()
 {
-    Unload();
-
     if (roles) {
         if (roles[0])
             free(roles[0]);
@@ -106,12 +104,12 @@ OMX_ERRORTYPE CModule::Load()
     return OMX_ErrorNone;
 }
 
-OMX_ERRORTYPE CModule::Unload(void)
+OMX_U32 CModule::Unload(void)
 {
     OMX_U32 ref_count;
 
     if (!module)
-        return OMX_ErrorNone;
+        return 0;
 
     ref_count = module_close(module);
     if (!ref_count) {
@@ -123,7 +121,7 @@ OMX_ERRORTYPE CModule::Unload(void)
         LOGV("module %s successfully unloaded\n", lname);
     }
 
-    return OMX_ErrorNone;
+    return ref_count;
 }
 
 /* end of library loading / unloading */

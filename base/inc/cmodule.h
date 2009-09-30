@@ -23,7 +23,7 @@ class CModule {
      * library loading / unloading
      */
     OMX_ERRORTYPE Load(void);
-    OMX_ERRORTYPE Unload(void);
+    OMX_U32 Unload(void);
 
     /* end of library loading / unloading */
 
