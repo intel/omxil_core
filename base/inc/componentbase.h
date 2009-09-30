@@ -314,10 +314,6 @@ private:
     /*
      * core methods & helpers
      */
-    /* called in Get/FreeHandle() */
-    virtual OMX_ERRORTYPE InitComponent(void) = 0;
-    virtual OMX_ERRORTYPE ExitComponent(void) = 0;
-
     /* called in GetHandle (nr_roles == 1) or SetParameter(ComponentRole) */
     OMX_ERRORTYPE SetWorkingRole(const OMX_STRING role);
     /* called in GetHandle (nr_roles == 1) or TransStateToIdle(Loaded) */
