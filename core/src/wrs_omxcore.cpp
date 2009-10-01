@@ -239,14 +239,14 @@ OMX_API OMX_ERRORTYPE OMX_APIENTRY OMX_FreeHandle(
     pthread_mutex_unlock(&g_module_lock);
 
     cmodule = cbase->GetCModule();
-    if (!cmodule) {
+    if (!cmodule)
         LOGE("fatal error, %s does not have cmodule\n", cbase->GetName());
-        goto out;
-    }
-    cmodule->Unload();
 
-out:
     delete cbase;
+
+    if (cmodule)
+        cmodule->Unload();
+
     return OMX_ErrorNone;
 }
 
