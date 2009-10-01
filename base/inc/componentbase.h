@@ -277,6 +277,15 @@ public:
 
     /* end of omx header manipuation */
 
+    /*
+     * helper method for queury_roles()
+     */
+    static OMX_ERRORTYPE QueryRolesHelper(OMX_U32 nr_comp_roles,
+                                          const OMX_U8 **comp_roles,
+                                          OMX_U32 *nr_roles, OMX_U8 **roles);
+
+    /* end of helper method for queury_roles() */
+
 protected:
     /* omx standard handle */
     /* allocated at GetHandle, freed at FreeHandle */

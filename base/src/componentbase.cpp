@@ -1685,4 +1685,37 @@ OMX_ERRORTYPE ComponentBase::CheckTypeHeader(OMX_PTR type, OMX_U32 size)
     return OMX_ErrorNone;
 }
 
+/*
+ * query_roles helper
+ */
+OMX_ERRORTYPE ComponentBase::QueryRolesHelper(
+    OMX_U32 nr_comp_roles,
+    const OMX_U8 **comp_roles,
+    OMX_U32 *nr_roles, OMX_U8 **roles)
+{
+    OMX_U32 i;
+
+    if (!roles) {
+        *nr_roles = nr_comp_roles;
+        return OMX_ErrorNone;
+    }
+
+    if (!nr_roles || (*nr_roles != nr_comp_roles) || !roles)
+        return OMX_ErrorBadParameter;
+
+    for (i = 0; i < nr_comp_roles; i++) {
+        if (!roles[i])
+            break;
+
+        strncpy((OMX_STRING)&roles[i][0],
+                (const OMX_STRING)&comp_roles[i][0], OMX_MAX_STRINGNAME_SIZE);
+    }
+
+    if (i != nr_comp_roles)
+        return OMX_ErrorBadParameter;
+
+    *nr_roles = nr_comp_roles;
+    return OMX_ErrorNone;
+}
+
 /* end of ComponentBase */
