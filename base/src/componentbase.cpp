@@ -247,7 +247,7 @@ OMX_ERRORTYPE ComponentBase::GetHandle(OMX_HANDLETYPE *pHandle,
         return OMX_ErrorUndefined;
 
     if (nr_roles == 1)
-        SetWorkingRole((OMX_STRING)&roles[0]);
+        SetWorkingRole((OMX_STRING)&roles[0][0]);
 
     handle = (OMX_COMPONENTTYPE *)calloc(1, sizeof(*handle));
     if (!handle) {
