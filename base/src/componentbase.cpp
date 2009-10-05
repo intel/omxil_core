@@ -225,7 +225,7 @@ OMX_ERRORTYPE ComponentBase::SetRolesOfComponent(OMX_U32 nr_roles,
 
     for (i = 0; i < nr_roles; i++) {
         if (i < nr_roles-1)
-            roles[i+1] = roles[i] + OMX_MAX_STRINGNAME_SIZE;
+            this->roles[i+1] = this->roles[i] + OMX_MAX_STRINGNAME_SIZE;
 
         strncpy((OMX_STRING)&this->roles[i][0],
                 (const OMX_STRING)&roles[i][0], OMX_MAX_STRINGNAME_SIZE);
