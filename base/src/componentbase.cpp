@@ -246,14 +246,9 @@ OMX_ERRORTYPE ComponentBase::GetHandle(OMX_HANDLETYPE *pHandle,
     if (handle)
         return OMX_ErrorUndefined;
 
-    if (nr_roles == 1)
-        SetWorkingRole((OMX_STRING)&roles[0][0]);
-
     handle = (OMX_COMPONENTTYPE *)calloc(1, sizeof(*handle));
-    if (!handle) {
-        SetWorkingRole(NULL);
+    if (!handle)
         return OMX_ErrorInsufficientResources;
-    }
 
     /* handle initialization */
     SetTypeHeader(handle, sizeof(*handle));
@@ -282,10 +277,28 @@ OMX_ERRORTYPE ComponentBase::GetHandle(OMX_HANDLETYPE *pHandle,
 
     appdata = pAppData;
     callbacks = pCallBacks;
-    *pHandle = (OMX_HANDLETYPE *)handle;
 
+    if (nr_roles == 1) {
+        SetWorkingRole((OMX_STRING)&roles[0][0]);
+        ret = ApplyWorkingRole();
+        if (ret != OMX_ErrorNone) {
+            SetWorkingRole(NULL);
+            goto free_handle;
+        }
+    }
+
+    *pHandle = (OMX_HANDLETYPE *)handle;
     state = OMX_StateLoaded;
     return OMX_ErrorNone;
+
+free_handle:
+    free(handle);
+
+    appdata = NULL;
+    callbacks = NULL;
+    *pHandle = NULL;
+
+    return ret;
 }
 
 OMX_ERRORTYPE ComponentBase::FreeHandle(OMX_HANDLETYPE hComponent)
@@ -621,6 +634,15 @@ OMX_ERRORTYPE ComponentBase::CBaseSetParameter(
         ret = SetWorkingRole((OMX_STRING)p->cRole);
         if (ret != OMX_ErrorNone)
             return ret;
+
+        if (ports)
+            FreePorts();
+
+        ret = ApplyWorkingRole();
+        if (ret != OMX_ErrorNone) {
+            SetWorkingRole(NULL);
+            return ret;
+        }
         break;
     }
     default:
@@ -1326,10 +1348,6 @@ inline OMX_ERRORTYPE ComponentBase::TransStateToIdle(OMX_STATETYPE current)
          */
         OMX_U32 i;
 
-        ret = ApplyWorkingRole();
-        if (ret != OMX_ErrorNone)
-            return ret;
-
         for (i = 0; i < nr_ports; i++)
             ports[i]->WaitPortBufferCompletion();
 
@@ -1499,6 +1517,9 @@ OMX_ERRORTYPE ComponentBase::SetWorkingRole(const OMX_STRING role)
 {
     OMX_U32 i;
 
+    if (state != OMX_StateUnloaded && state != OMX_StateLoaded)
+        return OMX_ErrorIncorrectStateOperation;
+
     if (!role) {
         working_role = NULL;
         return OMX_ErrorNone;
@@ -1518,9 +1539,16 @@ OMX_ERRORTYPE ComponentBase::SetWorkingRole(const OMX_STRING role)
 /* apply a working role for a component having multiple roles */
 OMX_ERRORTYPE ComponentBase::ApplyWorkingRole(void)
 {
+    OMX_U32 i;
     OMX_ERRORTYPE ret;
 
+    if (state != OMX_StateUnloaded && state != OMX_StateLoaded)
+        return OMX_ErrorIncorrectStateOperation;
+
     if (!working_role)
+        return OMX_ErrorBadParameter;
+
+    if (!callbacks || !appdata)
         return OMX_ErrorBadParameter;
 
     ret = AllocatePorts();
@@ -1529,18 +1557,20 @@ OMX_ERRORTYPE ComponentBase::ApplyWorkingRole(void)
         return ret;
     }
 
+    /* now we can access ports */
+    for (i = 0; i < nr_ports; i++) {
+        ports[i]->SetOwner(handle);
+        ports[i]->SetCallbacks(handle, callbacks, appdata);
+    }
+
     return OMX_ErrorNone;
 }
 
 OMX_ERRORTYPE ComponentBase::AllocatePorts(void)
 {
     OMX_ERRORTYPE ret;
-    OMX_U32 i;
 
     if (ports)
-        return OMX_ErrorBadParameter;
-
-    if (!callbacks || !appdata)
         return OMX_ErrorBadParameter;
 
     ret = ComponentAllocatePorts();
@@ -1548,12 +1578,6 @@ OMX_ERRORTYPE ComponentBase::AllocatePorts(void)
         LOGE("failed to %s::ComponentAllocatePorts(), ret = 0x%08x\n",
              name, ret);
         return ret;
-    }
-
-    /* now we can access ports */
-    for (i = 0; i < nr_ports; i++) {
-        ports[i]->SetOwner(handle);
-        ports[i]->SetCallbacks(handle, callbacks, appdata);
     }
 
     return OMX_ErrorNone;
