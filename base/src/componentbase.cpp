@@ -1235,7 +1235,7 @@ void ComponentBase::TransState(OMX_STATETYPE transition)
 {
     OMX_STATETYPE current = this->state;
     OMX_EVENTTYPE event;
-    OMX_U32 data1;
+    OMX_U32 data1, data2;
     OMX_ERRORTYPE ret;
 
     LOGD("current state = %s, transition state = %s\n",
@@ -1271,7 +1271,8 @@ void ComponentBase::TransState(OMX_STATETYPE transition)
 notify_event:
     if (ret == OMX_ErrorNone) {
         event = OMX_EventCmdComplete;
-        data1 = transition;
+        data1 = OMX_CommandStateSet;
+        data2 = transition;
 
         state = transition;
         LOGD("transition from %s to %s completed\n",
@@ -1280,6 +1281,7 @@ notify_event:
     else {
         event = OMX_EventError;
         data1 = ret;
+        data2 = 0;
 
         if (transition == OMX_StateInvalid) {
             state = transition;
@@ -1288,7 +1290,7 @@ notify_event:
         }
     }
 
-    callbacks->EventHandler(handle, appdata, event, data1, 0, NULL);
+    callbacks->EventHandler(handle, appdata, event, data1, data2, NULL);
 
     /* WaitForResources workaround */
     if (ret == OMX_ErrorNone && transition == OMX_StateWaitForResources)
