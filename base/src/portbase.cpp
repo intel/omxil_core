@@ -129,6 +129,10 @@ OMX_ERRORTYPE PortBase::UseBuffer(OMX_BUFFERHEADERTYPE **ppBufferHdr,
     struct list *entry;
     OMX_STATETYPE state;
 
+    if (!ppBufferHdr)
+        return OMX_ErrorBadParameter;
+    *ppBufferHdr = NULL;
+
     state = GetOwnerState();
     if (state != OMX_StateLoaded)
         return OMX_ErrorIncorrectStateOperation;
@@ -194,6 +198,10 @@ OMX_ERRORTYPE PortBase::AllocateBuffer(OMX_BUFFERHEADERTYPE **ppBuffer,
     struct list *entry;
     OMX_STATETYPE state;
 
+    if (!ppBuffer)
+        return OMX_ErrorBadParameter;
+    *ppBuffer = NULL;
+
     state = GetOwnerState();
     if (state != OMX_StateLoaded)
         return OMX_ErrorIncorrectStateOperation;
@@ -256,6 +264,9 @@ OMX_ERRORTYPE PortBase::FreeBuffer(OMX_U32 nPortIndex,
     struct list *entry;
     OMX_STATETYPE state;
     OMX_ERRORTYPE ret;
+
+    if (!pBuffer)
+        return OMX_ErrorBadParameter;
 
     state = GetOwnerState();
     if (state != OMX_StateLoaded)
