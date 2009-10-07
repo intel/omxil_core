@@ -567,17 +567,10 @@ OMX_ERRORTYPE ComponentBase::CBaseSetParameter(
     case OMX_IndexParamAudioInit:
     case OMX_IndexParamVideoInit:
     case OMX_IndexParamImageInit:
-    case OMX_IndexParamOtherInit: {
-        OMX_PORT_PARAM_TYPE *p = (OMX_PORT_PARAM_TYPE *)
-            pComponentParameterStructure;
-
-        ret = CheckTypeHeader(p, sizeof(*p));
-        if (ret != OMX_ErrorNone)
-            return ret;
-
-        memcpy(&portparam, p, sizeof(*p));
+    case OMX_IndexParamOtherInit:
+        /* preventing clients from setting OMX_PORT_PARAM_TYPE */
+        ret = OMX_ErrorUnsupportedIndex;
         break;
-    }
     case OMX_IndexParamPortDefinition: {
         OMX_PARAM_PORTDEFINITIONTYPE *p =
             (OMX_PARAM_PORTDEFINITIONTYPE *)pComponentParameterStructure;
