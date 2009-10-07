@@ -857,12 +857,24 @@ OMX_ERRORTYPE ComponentBase::CBaseUseBuffer(
     if (hComponent != handle)
         return OMX_ErrorBadParameter;
 
+    if (!ppBufferHdr)
+        return OMX_ErrorBadParameter;
+    *ppBufferHdr = NULL;
+
+    if (!pBuffer)
+        return OMX_ErrorBadParameter;
+
     if (ports)
         if (nPortIndex < nr_ports)
             port = ports[nPortIndex];
 
     if (!port)
         return OMX_ErrorBadParameter;
+
+    if (port->IsEnabled()) {
+        if (state != OMX_StateLoaded && state != OMX_StateWaitForResources)
+            return OMX_ErrorIncorrectStateOperation;
+    }
 
     return port->UseBuffer(ppBufferHdr, nPortIndex, pAppPrivate, nSizeBytes,
                            pBuffer);
@@ -902,12 +914,21 @@ OMX_ERRORTYPE ComponentBase::CBaseAllocateBuffer(
     if (hComponent != handle)
         return OMX_ErrorBadParameter;
 
+    if (!ppBuffer)
+        return OMX_ErrorBadParameter;
+    *ppBuffer = NULL;
+
     if (ports)
         if (nPortIndex < nr_ports)
             port = ports[nPortIndex];
 
     if (!port)
         return OMX_ErrorBadParameter;
+
+    if (port->IsEnabled()) {
+        if (state != OMX_StateLoaded && state != OMX_StateWaitForResources)
+            return OMX_ErrorIncorrectStateOperation;
+    }
 
     return port->AllocateBuffer(ppBuffer, nPortIndex, pAppPrivate, nSizeBytes);
 }
@@ -939,6 +960,9 @@ OMX_ERRORTYPE ComponentBase::CBaseFreeBuffer(
     OMX_ERRORTYPE ret;
 
     if (hComponent != handle)
+        return OMX_ErrorBadParameter;
+
+    if (!pBuffer)
         return OMX_ErrorBadParameter;
 
     if (ports)
