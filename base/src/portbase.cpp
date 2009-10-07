@@ -408,6 +408,11 @@ OMX_STATETYPE PortBase::GetOwnerState(void)
     return state;
 }
 
+bool PortBase::IsEnabled(void)
+{
+    return portparam.bEnabled == OMX_TRUE ? true : false;
+}
+
 /* end of component methods & helpers */
 
 /* end of PortBase */

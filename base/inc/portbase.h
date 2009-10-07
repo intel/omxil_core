@@ -81,6 +81,8 @@ public:
     /* flush all buffers not under processing */
     OMX_ERRORTYPE FlushPort(void);
 
+    bool IsEnabled(void);
+
     /* end of component methods & helpers */
 
 private:
