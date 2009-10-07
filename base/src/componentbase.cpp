@@ -1020,6 +1020,12 @@ OMX_ERRORTYPE ComponentBase::CBaseEmptyThisBuffer(
     if (!port)
         return OMX_ErrorBadParameter;
 
+    if (port->IsEnabled()) {
+        if (state != OMX_StateIdle && state != OMX_StateExecuting &&
+            state != OMX_StatePause)
+            return OMX_ErrorIncorrectStateOperation;
+    }
+
     ret = port->PushThisBuffer(pBuffer);
     if (ret == OMX_ErrorNone)
         bufferwork->ScheduleWork(this);
@@ -1032,6 +1038,7 @@ OMX_ERRORTYPE ComponentBase::FillThisBuffer(
     OMX_IN  OMX_BUFFERHEADERTYPE *pBuffer)
 {
     ComponentBase *cbase;
+
 
     if (!hComponent)
         return OMX_ErrorBadParameter;
@@ -1065,6 +1072,12 @@ OMX_ERRORTYPE ComponentBase::CBaseFillThisBuffer(
 
     if (!port)
         return OMX_ErrorBadParameter;
+
+    if (port->IsEnabled()) {
+        if (state != OMX_StateIdle && state != OMX_StateExecuting &&
+            state != OMX_StatePause)
+            return OMX_ErrorIncorrectStateOperation;
+    }
 
     ret = port->PushThisBuffer(pBuffer);
     if (ret == OMX_ErrorNone)
