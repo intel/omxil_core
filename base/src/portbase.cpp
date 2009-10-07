@@ -29,6 +29,7 @@ void PortBase::__PortBase(void)
     __queue_init(&bufferq);
     pthread_mutex_init(&bufferq_lock, NULL);
 
+    portdefinition = NULL;
     memset(&portparam, 0, sizeof(portparam));
     memset(&audioparam, 0, sizeof(audioparam));
 
@@ -58,6 +59,9 @@ PortBase::~PortBase()
     /* should've been already freed at buffer processing */
     queue_free_all(&bufferq);
     pthread_mutex_destroy(&bufferq_lock);
+
+    if (portdefinition)
+        free(portdefinition);
 }
 
 /* end of constructor & destructor */
@@ -95,6 +99,135 @@ OMX_ERRORTYPE PortBase::SetCallbacks(OMX_HANDLETYPE hComponent,
  * component methods & helpers
  */
 /* Get/SetParameter */
+OMX_ERRORTYPE PortBase::SetPortDefinition(
+    const OMX_PARAM_PORTDEFINITIONTYPE *p, bool isclient)
+{
+    OMX_PARAM_PORTDEFINITIONTYPE temp;
+
+    if (!portdefinition) {
+        OMX_STRING mimetype;
+        portdefinition = (OMX_PARAM_PORTDEFINITIONTYPE *)
+            calloc(1, sizeof(OMX_PARAM_PORTDEFINITIONTYPE) +
+                   OMX_MAX_STRINGNAME_SIZE);
+        if (!portdefinition)
+            return OMX_ErrorInsufficientResources;
+
+        ComponentBase::SetTypeHeader(portdefinition,
+                                     sizeof(OMX_PARAM_PORTDEFINITIONTYPE));
+
+        mimetype = (OMX_STRING)((unsigned char *)portdefinition +
+                                sizeof(OMX_PARAM_PORTDEFINITIONTYPE));
+
+        portdefinition->format.audio.cMIMEType = mimetype;
+        portdefinition->format.video.cMIMEType = mimetype;
+        portdefinition->format.image.cMIMEType = mimetype;
+    }
+
+    memcpy(&temp, &portdefinition, sizeof(temp));
+
+    if (isclient) {
+        if (temp.nBufferCountActual != p->nBufferCountActual) {
+            if (temp.nBufferCountMin > p->nBufferCountActual)
+                return OMX_ErrorBadParameter;
+
+            temp.nBufferCountActual = p->nBufferCountActual;
+        }
+
+        if (temp.eDomain != p->eDomain)
+            return OMX_ErrorBadParameter;
+    }
+
+    switch (p->eDomain) {
+    case OMX_PortDomainAudio: {
+        OMX_AUDIO_PORTDEFINITIONTYPE *format = &temp.format.audio;
+        const OMX_AUDIO_PORTDEFINITIONTYPE *pformat = &p->format.audio;
+        OMX_U32 mimetype_len = strlen(pformat->cMIMEType);
+
+        mimetype_len = OMX_MAX_STRINGNAME_SIZE-1 > mimetype_len ?
+            mimetype_len : OMX_MAX_STRINGNAME_SIZE-1;
+
+        strncpy(format->cMIMEType, pformat->cMIMEType,
+                mimetype_len);
+        format->cMIMEType[mimetype_len+1] = '\0';
+        format->pNativeRender = pformat->pNativeRender;
+        format->bFlagErrorConcealment = pformat->bFlagErrorConcealment;
+        format->eEncoding = pformat->eEncoding;
+
+        break;
+    }
+    case OMX_PortDomainVideo: {
+        OMX_VIDEO_PORTDEFINITIONTYPE *format = &temp.format.video;
+        const OMX_VIDEO_PORTDEFINITIONTYPE *pformat = &p->format.video;
+        OMX_U32 mimetype_len = strlen(pformat->cMIMEType);
+
+        mimetype_len = OMX_MAX_STRINGNAME_SIZE-1 > mimetype_len ?
+            mimetype_len : OMX_MAX_STRINGNAME_SIZE-1;
+
+        strncpy(format->cMIMEType, pformat->cMIMEType,
+                mimetype_len);
+        format->cMIMEType[mimetype_len+1] = '\0';
+        format->pNativeRender = pformat->pNativeRender;
+        format->nFrameWidth = pformat->nFrameWidth;
+        format->nFrameHeight = pformat->nFrameHeight;
+        format->nBitrate = pformat->nBitrate;
+        format->xFramerate = pformat->xFramerate;
+        format->bFlagErrorConcealment = pformat->bFlagErrorConcealment;
+        format->eCompressionFormat = pformat->eCompressionFormat;
+        format->eColorFormat = pformat->eColorFormat;
+        format->pNativeWindow = pformat->pNativeWindow;
+
+        if (!isclient) {
+            format->nStride = pformat->nStride;
+            format->nSliceHeight = pformat->nSliceHeight;
+        }
+
+        break;
+    }
+    case OMX_PortDomainImage: {
+        OMX_IMAGE_PORTDEFINITIONTYPE *format = &temp.format.image;
+        const OMX_IMAGE_PORTDEFINITIONTYPE *pformat = &p->format.image;
+        OMX_U32 mimetype_len = strlen(pformat->cMIMEType);
+
+        mimetype_len = OMX_MAX_STRINGNAME_SIZE-1 > mimetype_len ?
+            mimetype_len : OMX_MAX_STRINGNAME_SIZE-1;
+
+        strncpy(format->cMIMEType, pformat->cMIMEType,
+                mimetype_len+1);
+        format->cMIMEType[mimetype_len+1] = '\0';
+        format->nFrameWidth = pformat->nFrameWidth;
+        format->nFrameHeight = pformat->nFrameHeight;
+        format->nStride = pformat->nStride;
+        format->bFlagErrorConcealment = pformat->bFlagErrorConcealment;
+        format->eCompressionFormat = pformat->eCompressionFormat;
+        format->eColorFormat = pformat->eColorFormat;
+        format->pNativeWindow = pformat->pNativeWindow;
+
+        if (!isclient)
+            format->nSliceHeight = pformat->nSliceHeight;
+
+        break;
+    }
+    case OMX_PortDomainOther: {
+        OMX_OTHER_PORTDEFINITIONTYPE *format = &temp.format.other;
+        const OMX_OTHER_PORTDEFINITIONTYPE *pformat = &p->format.other;
+
+        format->eFormat = pformat->eFormat;
+        break;
+    }
+    default:
+        LOGE("cannot find 0x%08x port domain\n", p->eDomain);
+        return OMX_ErrorBadParameter;
+    }
+
+    memcpy(portdefinition, &temp, sizeof(temp));
+    return OMX_ErrorNone;
+}
+
+const OMX_PARAM_PORTDEFINITIONTYPE *PortBase::GetPortDefinition(void)
+{
+    return portdefinition;
+}
+
 void PortBase::SetPortParam(
     const OMX_PARAM_PORTDEFINITIONTYPE *pComponentParameterStructure)
 {

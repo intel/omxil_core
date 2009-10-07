@@ -42,6 +42,9 @@ public:
      * component methods & helpers
      */
     /* Get/SetParameter */
+    OMX_ERRORTYPE SetPortDefinition(const OMX_PARAM_PORTDEFINITIONTYPE *p,
+                                    bool isclient);
+    const OMX_PARAM_PORTDEFINITIONTYPE *GetPortDefinition(void);
     void SetPortParam(
         const OMX_PARAM_PORTDEFINITIONTYPE *pComponentParameterStructure);
     const OMX_PARAM_PORTDEFINITIONTYPE *GetPortParam(void);
@@ -107,6 +110,7 @@ private:
     pthread_mutex_t bufferq_lock;
 
     /* parameter */
+    OMX_PARAM_PORTDEFINITIONTYPE *portdefinition;
     OMX_PARAM_PORTDEFINITIONTYPE portparam;
     OMX_AUDIO_PARAM_PORTFORMATTYPE audioparam;
 
