@@ -594,6 +594,11 @@ OMX_ERRORTYPE ComponentBase::CBaseSetParameter(
         if (!port)
             return OMX_ErrorBadParameter;
 
+        if (port->IsEnabled()) {
+            if (state != OMX_StateLoaded && state != OMX_StateWaitForResources)
+                return OMX_ErrorIncorrectStateOperation;
+        }
+
         port->SetPortParam(p);
         break;
     }
@@ -613,6 +618,11 @@ OMX_ERRORTYPE ComponentBase::CBaseSetParameter(
         if (!port)
             return OMX_ErrorBadParameter;
 
+        if (port->IsEnabled()) {
+            if (state != OMX_StateLoaded && state != OMX_StateWaitForResources)
+                return OMX_ErrorIncorrectStateOperation;
+        }
+
         port->SetAudioPortParam(p);
         break;
     }
@@ -626,6 +636,9 @@ OMX_ERRORTYPE ComponentBase::CBaseSetParameter(
     case OMX_IndexParamStandardComponentRole: {
         OMX_PARAM_COMPONENTROLETYPE *p =
             (OMX_PARAM_COMPONENTROLETYPE *)pComponentParameterStructure;
+
+        if (state != OMX_StateLoaded && state != OMX_StateWaitForResources)
+            return OMX_ErrorIncorrectStateOperation;
 
         ret = CheckTypeHeader(p, sizeof(*p));
         if (ret != OMX_ErrorNone)
