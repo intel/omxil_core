@@ -1009,6 +1009,10 @@ OMX_ERRORTYPE ComponentBase::CBaseEmptyThisBuffer(
     if ((hComponent != handle) || !pBuffer)
         return OMX_ErrorBadParameter;
 
+    ret = CheckTypeHeader(pBuffer, sizeof(OMX_BUFFERHEADERTYPE));
+    if (ret != OMX_ErrorNone)
+        return ret;
+
     port_index = pBuffer->nInputPortIndex;
     if (port_index == (OMX_U32)-1)
         return OMX_ErrorBadParameter;
@@ -1018,6 +1022,9 @@ OMX_ERRORTYPE ComponentBase::CBaseEmptyThisBuffer(
             port = ports[port_index];
 
     if (!port)
+        return OMX_ErrorBadParameter;
+
+    if (pBuffer->pInputPortPrivate != port)
         return OMX_ErrorBadParameter;
 
     if (port->IsEnabled()) {
@@ -1038,7 +1045,6 @@ OMX_ERRORTYPE ComponentBase::FillThisBuffer(
     OMX_IN  OMX_BUFFERHEADERTYPE *pBuffer)
 {
     ComponentBase *cbase;
-
 
     if (!hComponent)
         return OMX_ErrorBadParameter;
@@ -1062,6 +1068,10 @@ OMX_ERRORTYPE ComponentBase::CBaseFillThisBuffer(
     if ((hComponent != handle) || !pBuffer)
         return OMX_ErrorBadParameter;
 
+    ret = CheckTypeHeader(pBuffer, sizeof(OMX_BUFFERHEADERTYPE));
+    if (ret != OMX_ErrorNone)
+        return ret;
+
     port_index = pBuffer->nOutputPortIndex;
     if (port_index == (OMX_U32)-1)
         return OMX_ErrorBadParameter;
@@ -1071,6 +1081,9 @@ OMX_ERRORTYPE ComponentBase::CBaseFillThisBuffer(
             port = ports[port_index];
 
     if (!port)
+        return OMX_ErrorBadParameter;
+
+    if (pBuffer->pOutputPortPrivate != port)
         return OMX_ErrorBadParameter;
 
     if (port->IsEnabled()) {
