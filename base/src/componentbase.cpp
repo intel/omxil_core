@@ -1682,6 +1682,43 @@ void ComponentBase::Work(void)
 
         ComponentProcessBuffers(buffers, nr_ports);
 
+        for (i = 0; i < nr_ports; i++) {
+            if (ports[i]->GetPortDirection() == OMX_DirInput) {
+                bool is_sink_component = true;
+                OMX_U32 j;
+
+                for (j = 0; j < nr_ports; j++) {
+                    if (j == i)
+                        continue;
+
+                    if (ports[j]->GetPortDirection() == OMX_DirOutput) {
+                        if (buffers[i]->nFlags == OMX_BUFFERFLAG_EOS)
+                            buffers[j]->nFlags = buffers[i]->nFlags;
+                        is_sink_component = false;
+                    }
+                }
+
+                if (is_sink_component) {
+                    if (buffers[i]->nFlags == OMX_BUFFERFLAG_EOS) {
+                        callbacks->EventHandler(handle, appdata,
+                                                OMX_EventBufferFlag,
+                                                i, buffers[i]->nFlags, NULL);
+                    }
+                }
+            }
+            else if (ports[i]->GetPortDirection() == OMX_DirOutput) {
+                if (buffers[i]->nFlags == OMX_BUFFERFLAG_EOS) {
+                    callbacks->EventHandler(handle, appdata,
+                                            OMX_EventBufferFlag,
+                                            i, buffers[i]->nFlags, NULL);
+                }
+            }
+            else {
+                LOGE("%s(): fatal error unknown port direction (0x%08x)\n",
+                     __func__, ports[i]->GetPortDirection());
+            }
+        }
+
         for (i = 0; i < nr_ports; i++)
             ports[i]->ReturnThisBuffer(buffers[i]);
     }
