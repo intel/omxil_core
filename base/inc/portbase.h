@@ -86,6 +86,8 @@ public:
 
     bool IsEnabled(void);
 
+    OMX_DIRTYPE GetPortDirection(void);
+
     /* end of component methods & helpers */
 
 private:

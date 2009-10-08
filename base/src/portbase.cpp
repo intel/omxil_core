@@ -523,6 +523,11 @@ bool PortBase::IsEnabled(void)
     return portparam.bEnabled == OMX_TRUE ? true : false;
 }
 
+OMX_DIRTYPE PortBase::GetPortDirection(void)
+{
+    return portparam.eDir;
+}
+
 /* end of component methods & helpers */
 
 /* end of PortBase */
