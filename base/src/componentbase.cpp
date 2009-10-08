@@ -1664,7 +1664,7 @@ OMX_ERRORTYPE ComponentBase::FreePorts(void)
 /* implement WorkableInterface */
 void ComponentBase::Work(void)
 {
-    OMX_BUFFERHEADERTYPE **buffers = NULL;
+    OMX_BUFFERHEADERTYPE *buffers[nr_ports];
     OMX_U32 i;
     bool avail = false;
 
@@ -1677,26 +1677,14 @@ void ComponentBase::Work(void)
 
     avail = IsAllBufferAvailable();
     if (avail) {
-        buffers = (OMX_BUFFERHEADERTYPE **)
-            calloc(nr_ports, sizeof(OMX_BUFFERHEADERTYPE *));
-        if (!buffers) {
-            bufferwork->ScheduleWork(this);
-            return;
-        }
-
         for (i = 0; i < nr_ports; i++)
             buffers[i] = ports[i]->PopBuffer();
+
+        ComponentProcessBuffers(buffers, nr_ports);
     }
     ScheduleIfAllBufferAvailable();
 
     pthread_mutex_unlock(&ports_block);
-
-    if (buffers) {
-        ComponentProcessBuffers(buffers, nr_ports);
-
-        free(buffers);
-        buffers = NULL;
-    }
 }
 
 bool ComponentBase::IsAllBufferAvailable(void)
