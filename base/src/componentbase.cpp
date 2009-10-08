@@ -1681,6 +1681,9 @@ void ComponentBase::Work(void)
             buffers[i] = ports[i]->PopBuffer();
 
         ComponentProcessBuffers(buffers, nr_ports);
+
+        for (i = 0; i < nr_ports; i++)
+            ports[i]->ReturnThisBuffer(buffers[i]);
     }
     ScheduleIfAllBufferAvailable();
 
