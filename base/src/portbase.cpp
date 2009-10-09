@@ -29,6 +29,9 @@ void PortBase::__PortBase(void)
     __queue_init(&bufferq);
     pthread_mutex_init(&bufferq_lock, NULL);
 
+    __queue_init(&markq);
+    pthread_mutex_init(&markq_lock, NULL);
+
     portdefinition = NULL;
     memset(&portparam, 0, sizeof(portparam));
     memset(&audioparam, 0, sizeof(audioparam));
@@ -59,6 +62,10 @@ PortBase::~PortBase()
     /* should've been already freed at buffer processing */
     queue_free_all(&bufferq);
     pthread_mutex_destroy(&bufferq_lock);
+
+    /* should've been already empty in PushThisBuffer () */
+    queue_free_all(&markq);
+    pthread_mutex_destroy(&markq_lock);
 
     if (portdefinition)
         free(portdefinition);
@@ -526,6 +533,31 @@ bool PortBase::IsEnabled(void)
 OMX_DIRTYPE PortBase::GetPortDirection(void)
 {
     return portparam.eDir;
+}
+
+OMX_ERRORTYPE PortBase::PushMark(OMX_MARKTYPE *mark)
+{
+    int ret;
+
+    pthread_mutex_lock(&markq_lock);
+    ret = queue_push_tail(&markq, mark);
+    pthread_mutex_unlock(&markq_lock);
+
+    if (ret)
+        return OMX_ErrorInsufficientResources;
+
+    return OMX_ErrorNone;
+}
+
+OMX_MARKTYPE *PortBase::PopMark(void)
+{
+    OMX_MARKTYPE *mark;
+
+    pthread_mutex_lock(&markq_lock);
+    mark = (OMX_MARKTYPE *)queue_pop_head(&markq);
+    pthread_mutex_unlock(&markq_lock);
+
+    return mark;
 }
 
 /* end of component methods & helpers */

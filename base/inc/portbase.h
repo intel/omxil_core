@@ -88,6 +88,8 @@ public:
 
     OMX_DIRTYPE GetPortDirection(void);
 
+    OMX_ERRORTYPE PushMark(OMX_MARKTYPE *mark);
+
     /* end of component methods & helpers */
 
 private:
@@ -98,6 +100,8 @@ private:
      * component methods & helpers
      */
     OMX_STATETYPE GetOwnerState(void);
+
+    OMX_MARKTYPE *PopMark(void);
 
     /* end of component methods & helpers */
 
@@ -110,6 +114,9 @@ private:
 
     struct queue bufferq;
     pthread_mutex_t bufferq_lock;
+
+    struct queue markq;
+    pthread_mutex_t markq_lock;
 
     /* parameter */
     OMX_PARAM_PORTDEFINITIONTYPE *portdefinition;
