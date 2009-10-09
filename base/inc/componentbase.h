@@ -340,6 +340,10 @@ private:
     /* allocate specific port type derived from portbase */
     virtual OMX_ERRORTYPE ComponentAllocatePorts(void) = 0;
 
+    /* SendCommand:OMX_CommandMarkBuffer */
+    /* called in CmdHandler() thread context */
+    void PushThisMark(OMX_U32 portindex, OMX_MARKTYPE *mark);
+
     /* Get/SetParameter */
     virtual OMX_ERRORTYPE
         ComponentGetParameter(OMX_INDEXTYPE nParamIndex,

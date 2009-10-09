@@ -1252,9 +1252,10 @@ void ComponentBase::CmdHandler(struct cmd_s *cmd)
          */
         break;
     case OMX_CommandMarkBuffer:
-        /*
-         * Todo
-         */
+        OMX_U32 port_index = (OMX_U32)cmd->param1;
+        OMX_MARKTYPE *mark = (OMX_MARKTYPE *)cmd->cmddata;
+
+        PushThisMark(port_index, mark);
         break;
     } /* switch */
 }
@@ -1568,6 +1569,45 @@ ComponentBase::TransStateToWaitForResources(OMX_STATETYPE current)
         ret = OMX_ErrorIncorrectStateOperation;
 
     return ret;
+}
+
+/* mark buffer */
+void ComponentBase::PushThisMark(OMX_U32 port_index, OMX_MARKTYPE *mark)
+{
+    PortBase *port = NULL;
+    OMX_EVENTTYPE event;
+    OMX_U32 data1, data2;
+    OMX_ERRORTYPE ret;
+
+    if (ports)
+        if (port_index < nr_ports)
+            port = ports[port_index];
+
+    if (!port) {
+        ret = OMX_ErrorBadPortIndex;
+        goto notify_event;
+    }
+
+    ret = port->PushMark(mark);
+    if (ret != OMX_ErrorNone) {
+        /* don't report OMX_ErrorInsufficientResources */
+        ret = OMX_ErrorUndefined;
+        goto notify_event;
+    }
+
+notify_event:
+    if (ret == OMX_ErrorNone) {
+        event = OMX_EventCmdComplete;
+        data1 = OMX_CommandMarkBuffer;
+        data2 = port_index;
+    }
+    else {
+        event = OMX_EventError;
+        data1 = ret;
+        data2 = 0;
+    }
+
+    callbacks->EventHandler(handle, appdata, event, data1, data2, NULL);
 }
 
 /* set working role */
