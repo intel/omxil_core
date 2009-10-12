@@ -417,11 +417,27 @@ OMX_ERRORTYPE ComponentBase::CBaseSendCommand(
          * Todo
          */
         //break;
-    case OMX_CommandMarkBuffer:
-        /*
-         * Todo
-         */
-        //break;
+        return OMX_ErrorUnsupportedIndex;
+    case OMX_CommandMarkBuffer: {
+        OMX_MARKTYPE *mark = (OMX_MARKTYPE *)pCmdData;
+        OMX_MARKTYPE *copiedmark;
+        OMX_U32 port_index = nParam1;
+
+        if (port_index > nr_ports-1)
+            return OMX_ErrorBadPortIndex;
+
+        if (!mark || !mark->hMarkTargetComponent)
+            return OMX_ErrorBadParameter;
+
+        copiedmark = (OMX_MARKTYPE *)malloc(sizeof(*copiedmark));
+        if (!copiedmark)
+            return OMX_ErrorInsufficientResources;
+
+        copiedmark->hMarkTargetComponent = mark->hMarkTargetComponent;
+        copiedmark->pMarkData = mark->pMarkData;
+        pCmdData = (OMX_PTR)copiedmark;
+        break;
+    }
     default:
         LOGE("command %d not supported\n", Cmd);
         return OMX_ErrorUnsupportedIndex;
@@ -1031,6 +1047,17 @@ OMX_ERRORTYPE ComponentBase::CBaseEmptyThisBuffer(
         if (state != OMX_StateIdle && state != OMX_StateExecuting &&
             state != OMX_StatePause)
             return OMX_ErrorIncorrectStateOperation;
+    }
+
+    if (!pBuffer->hMarkTargetComponent) {
+        OMX_MARKTYPE *mark;
+
+        mark = port->PopMark();
+        if (mark) {
+            pBuffer->hMarkTargetComponent = mark->hMarkTargetComponent;
+            pBuffer->pMarkData = mark->pMarkData;
+            free(mark);
+        }
     }
 
     ret = port->PushThisBuffer(pBuffer);
@@ -1689,6 +1716,11 @@ OMX_ERRORTYPE ComponentBase::FreePorts(void)
 
         for (i = 0; i < this_nr_ports; i++) {
             if (ports[i]) {
+                OMX_MARKTYPE *mark;
+                /* it should be empty before this */
+                while ((mark = ports[i]->PopMark()))
+                    free(mark);
+
                 delete ports[i];
                 ports[i] = NULL;
             }
@@ -1723,9 +1755,21 @@ void ComponentBase::Work(void)
         ComponentProcessBuffers(buffers, nr_ports);
 
         for (i = 0; i < nr_ports; i++) {
+            OMX_MARKTYPE *mark;
+
             if (ports[i]->GetPortDirection() == OMX_DirInput) {
                 bool is_sink_component = true;
                 OMX_U32 j;
+
+                if (buffers[i]->hMarkTargetComponent) {
+                    if (buffers[i]->hMarkTargetComponent == handle) {
+                        callbacks->EventHandler(handle, appdata,
+                                                OMX_EventMark, 0, 0,
+                                                buffers[i]->pMarkData);
+                        buffers[i]->hMarkTargetComponent = NULL;
+                        buffers[i]->pMarkData = NULL;
+                    }
+                }
 
                 for (j = 0; j < nr_ports; j++) {
                     if (j == i)
@@ -1734,6 +1778,57 @@ void ComponentBase::Work(void)
                     if (ports[j]->GetPortDirection() == OMX_DirOutput) {
                         if (buffers[i]->nFlags == OMX_BUFFERFLAG_EOS)
                             buffers[j]->nFlags = buffers[i]->nFlags;
+
+                        if (!buffers[j]->hMarkTargetComponent) {
+                            mark = ports[j]->PopMark();
+                            if (mark) {
+                                buffers[j]->hMarkTargetComponent =
+                                    mark->hMarkTargetComponent;
+                                buffers[j]->pMarkData = mark->pMarkData;
+                                free(mark);
+                                mark = NULL;
+                            }
+
+                            if (buffers[i]->hMarkTargetComponent) {
+                                if (buffers[j]->hMarkTargetComponent) {
+                                    mark = (OMX_MARKTYPE *)
+                                        malloc(sizeof(*mark));
+                                    if (mark) {
+                                        mark->hMarkTargetComponent =
+                                            buffers[i]->hMarkTargetComponent;
+                                        mark->pMarkData =
+                                            buffers[i]->pMarkData;
+                                        ports[j]->PushMark(mark);
+                                        mark = NULL;
+                                        buffers[i]->hMarkTargetComponent =
+                                            NULL;
+                                        buffers[i]->pMarkData = NULL;
+                                    }
+                                }
+                                else {
+                                    buffers[j]->hMarkTargetComponent =
+                                        buffers[i]->hMarkTargetComponent;
+                                    buffers[j]->pMarkData =
+                                        buffers[i]->pMarkData;
+                                    buffers[i]->hMarkTargetComponent = NULL;
+                                    buffers[i]->pMarkData = NULL;
+                                }
+                            }
+                        }
+                        else {
+                            if (buffers[i]->hMarkTargetComponent) {
+                                mark = (OMX_MARKTYPE *)malloc(sizeof(*mark));
+                                if (mark) {
+                                    mark->hMarkTargetComponent =
+                                        buffers[i]->hMarkTargetComponent;
+                                    mark->pMarkData = buffers[i]->pMarkData;
+                                    ports[j]->PushMark(mark);
+                                    mark = NULL;
+                                    buffers[i]->hMarkTargetComponent = NULL;
+                                    buffers[i]->pMarkData = NULL;
+                                }
+                            }
+                        }
                         is_sink_component = false;
                     }
                 }
@@ -1747,10 +1842,40 @@ void ComponentBase::Work(void)
                 }
             }
             else if (ports[i]->GetPortDirection() == OMX_DirOutput) {
+                bool is_source_component = true;
+                OMX_U32 j;
+
                 if (buffers[i]->nFlags == OMX_BUFFERFLAG_EOS) {
                     callbacks->EventHandler(handle, appdata,
                                             OMX_EventBufferFlag,
                                             i, buffers[i]->nFlags, NULL);
+                }
+
+                for (j = 0; j < nr_ports; j++) {
+                    if (j == i)
+                        continue;
+
+                    if (ports[j]->GetPortDirection() == OMX_DirInput)
+                        is_source_component = false;
+                }
+
+                if (is_source_component) {
+                    mark = ports[i]->PopMark();
+                    if (mark) {
+                        buffers[i]->hMarkTargetComponent =
+                            mark->hMarkTargetComponent;
+                        buffers[i]->pMarkData = mark->pMarkData;
+                        free(mark);
+                        mark = NULL;
+
+                        if (buffers[i]->hMarkTargetComponent == handle) {
+                            callbacks->EventHandler(handle, appdata,
+                                                    OMX_EventMark, 0, 0,
+                                                    buffers[i]->pMarkData);
+                            buffers[i]->hMarkTargetComponent = NULL;
+                            buffers[i]->pMarkData = NULL;
+                        }
+                    }
                 }
             }
             else {
