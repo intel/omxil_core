@@ -402,11 +402,13 @@ OMX_ERRORTYPE ComponentBase::CBaseSendCommand(
          * Todo
          */
         break;
-    case OMX_CommandFlush:
-        /*
-         * Todo
-         */
-        //break;
+    case OMX_CommandFlush: {
+        OMX_U32 port_index = nParam1;
+
+        if ((port_index != OMX_ALL) && (port_index > nr_ports-1))
+            return OMX_ErrorBadPortIndex;
+        break;
+    }
     case OMX_CommandPortDisable:
         /*
          * Todo
@@ -1263,11 +1265,12 @@ void ComponentBase::CmdHandler(struct cmd_s *cmd)
         TransState(transition);
         break;
     }
-    case OMX_CommandFlush:
-        /*
-         * Todo
-         */
+    case OMX_CommandFlush: {
+        OMX_U32 port_index = cmd->param1;
+
+        FlushPort(port_index, 1);
         break;
+    }
     case OMX_CommandPortDisable:
         /*
          * Todo
@@ -1635,6 +1638,32 @@ notify_event:
     }
 
     callbacks->EventHandler(handle, appdata, event, data1, data2, NULL);
+}
+
+void ComponentBase::FlushPort(OMX_U32 port_index, bool notify)
+{
+    OMX_U32 i, from_index, to_index;
+
+    if ((port_index != OMX_ALL) && (port_index > nr_ports-1))
+        return;
+
+    if (port_index == OMX_ALL) {
+        from_index = 0;
+        to_index = nr_ports - 1;
+    }
+    else {
+        from_index = port_index;
+        to_index = port_index;
+    }
+
+    pthread_mutex_lock(&ports_block);
+    for (i = from_index; i <= to_index; i++) {
+        ports[i]->FlushPort();
+        if (notify)
+            callbacks->EventHandler(handle, appdata, OMX_EventCmdComplete,
+                                    OMX_CommandFlush, i, NULL);
+    }
+    pthread_mutex_unlock(&ports_block);
 }
 
 /* set working role */

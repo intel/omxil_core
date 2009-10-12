@@ -344,6 +344,9 @@ private:
     /* called in CmdHandler() thread context */
     void PushThisMark(OMX_U32 portindex, OMX_MARKTYPE *mark);
 
+    /* SendCommand:OMX_CommandFlush (notify:1) or other parts (notify:0) */
+    void FlushPort(OMX_U32 port_index, bool notify);
+
     /* Get/SetParameter */
     virtual OMX_ERRORTYPE
         ComponentGetParameter(OMX_INDEXTYPE nParamIndex,
