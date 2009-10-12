@@ -1450,13 +1450,7 @@ inline OMX_ERRORTYPE ComponentBase::TransStateToIdle(OMX_STATETYPE current)
          *   2. stop buffer process work                        !
          *   3. stop component's internal processor
          */
-        OMX_U32 i;
-
-        pthread_mutex_lock(&ports_block);
-        for (i = 0; i < nr_ports; i++) {
-            ports[i]->FlushPort();
-        }
-        pthread_mutex_unlock(&ports_block);
+        FlushPort(OMX_ALL, 0);
 
         bufferwork->StopWork();
 
@@ -1470,13 +1464,7 @@ inline OMX_ERRORTYPE ComponentBase::TransStateToIdle(OMX_STATETYPE current)
          *   2. discard queued work, stop buffer process work   !
          *   3. stop component's internal processor
          */
-        OMX_U32 i;
-
-        pthread_mutex_lock(&ports_block);
-        for (i = 0; i < nr_ports; i++) {
-            ports[i]->FlushPort();
-        }
-        pthread_mutex_unlock(&ports_block);
+        FlushPort(OMX_ALL, 0);
 
         bufferwork->CancelScheduledWork(this);
         bufferwork->StopWork();
