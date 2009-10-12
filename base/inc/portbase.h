@@ -91,7 +91,14 @@ public:
     OMX_ERRORTYPE PushMark(OMX_MARKTYPE *mark);
     OMX_MARKTYPE *PopMark(void);
 
+    /* SendCommand(OMX_CommandPortDisable/Enable) */
+    OMX_ERRORTYPE TransState(OMX_U8 state);
+
     /* end of component methods & helpers */
+
+    /* TransState, state */
+    static const OMX_U8 OMX_PortEnabled = 0;
+    static const OMX_U8 OMX_PortDisabled = 1;
 
 private:
     /* common routines for constructor */
@@ -116,6 +123,10 @@ private:
 
     struct queue markq;
     pthread_mutex_t markq_lock;
+
+    /* state */
+    OMX_U8 state;
+    pthread_mutex_t state_lock;
 
     /* parameter */
     OMX_PARAM_PORTDEFINITIONTYPE *portdefinition;

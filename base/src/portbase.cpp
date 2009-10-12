@@ -32,6 +32,9 @@ void PortBase::__PortBase(void)
     __queue_init(&markq);
     pthread_mutex_init(&markq_lock, NULL);
 
+    state = OMX_PortEnabled;
+    pthread_mutex_init(&state_lock, NULL);
+
     portdefinition = NULL;
     memset(&portparam, 0, sizeof(portparam));
     memset(&audioparam, 0, sizeof(audioparam));
@@ -66,6 +69,8 @@ PortBase::~PortBase()
     /* should've been already empty in PushThisBuffer () */
     queue_free_all(&markq);
     pthread_mutex_destroy(&markq_lock);
+
+    pthread_mutex_destroy(&state_lock);
 
     if (portdefinition)
         free(portdefinition);
@@ -555,6 +560,38 @@ OMX_MARKTYPE *PortBase::PopMark(void)
     pthread_mutex_unlock(&markq_lock);
 
     return mark;
+}
+
+OMX_ERRORTYPE PortBase::TransState(OMX_U8 state)
+{
+    OMX_ERRORTYPE ret = OMX_ErrorNone;
+
+    pthread_mutex_lock(&state_lock);
+
+    if (this->state == state) {
+        ret = OMX_ErrorSameState;
+        goto unlock;
+    }
+
+    if (state == OMX_PortEnabled) {
+        WaitPortBufferCompletion();
+        portparam.bEnabled = OMX_TRUE;
+    }
+    else if(state == OMX_PortDisabled) {
+        FlushPort();
+        WaitPortBufferCompletion();
+        portparam.bEnabled = OMX_FALSE;
+    }
+    else {
+        ret = OMX_ErrorBadParameter;
+        goto unlock;
+    }
+
+    this->state = state;
+
+unlock:
+    pthread_mutex_unlock(&state_lock);
+    return ret;
 }
 
 /* end of component methods & helpers */
