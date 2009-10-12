@@ -529,7 +529,13 @@ OMX_STATETYPE PortBase::GetOwnerState(void)
 
 bool PortBase::IsEnabled(void)
 {
-    return portparam.bEnabled == OMX_TRUE ? true : false;
+    bool enabled;
+
+    pthread_mutex_lock(&state_lock);
+    enabled = (state == OMX_PortEnabled) ? true : false;
+    pthread_mutex_unlock(&state_lock);
+
+    return enabled;
 }
 
 OMX_DIRTYPE PortBase::GetPortDirection(void)
