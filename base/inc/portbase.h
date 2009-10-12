@@ -89,6 +89,7 @@ public:
     OMX_DIRTYPE GetPortDirection(void);
 
     OMX_ERRORTYPE PushMark(OMX_MARKTYPE *mark);
+    OMX_MARKTYPE *PopMark(void);
 
     /* end of component methods & helpers */
 
@@ -100,8 +101,6 @@ private:
      * component methods & helpers
      */
     OMX_STATETYPE GetOwnerState(void);
-
-    OMX_MARKTYPE *PopMark(void);
 
     /* end of component methods & helpers */
 
