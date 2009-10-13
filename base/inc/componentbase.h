@@ -380,6 +380,22 @@ private:
                                          bool *retain,
                                          OMX_U32 nr_buffers) = 0;
 
+    /* processor callbacks */
+    /* TransState */
+    virtual OMX_ERRORTYPE ProcessorInit(void);  /* Loaded to Idle */
+    virtual OMX_ERRORTYPE ProcessorDeinit(void);/* Idle to Loaded */
+    virtual OMX_ERRORTYPE ProcessorStart(void); /* Idle to Executing/Pause */
+    virtual OMX_ERRORTYPE ProcessorStop(void);  /* Executing/Pause to Idle */
+    virtual OMX_ERRORTYPE ProcessorPause(void); /* Executing to Pause */
+    virtual OMX_ERRORTYPE ProcessorResume(void);/* Pause to Executing */
+    /* Work */
+    virtual void ProcessorProcess(OMX_BUFFERHEADERTYPE **buffers,
+                                  bool *retain,
+                                  OMX_U32 nr_buffers) = 0;
+    /* SetConfig/SetParameter */
+    virtual OMX_ERRORTYPE ProcessorSetConfig(OMX_INDEXTYPE nParamIndex);
+    virtual OMX_ERRORTYPE ProcessorSetParameter(OMX_INDEXTYPE nParamIndex);
+
     /* end of component methods & helpers */
 
     /* process component's commands work */

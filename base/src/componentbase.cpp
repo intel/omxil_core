@@ -1996,6 +1996,48 @@ void ComponentBase::ScheduleIfAllBufferAvailable(void)
         bufferwork->ScheduleWork(this);
 }
 
+/* processor default callbacks */
+OMX_ERRORTYPE ComponentBase::ProcessorInit(void)
+{
+    return OMX_ErrorNone;
+}
+OMX_ERRORTYPE ComponentBase::ProcessorDeinit(void)
+{
+    return OMX_ErrorNone;
+}
+
+OMX_ERRORTYPE ComponentBase::ProcessorStart(void)
+{
+    return OMX_ErrorNone;
+}
+
+OMX_ERRORTYPE ComponentBase::ProcessorStop(void)
+{
+    return OMX_ErrorNone;
+}
+
+OMX_ERRORTYPE ComponentBase::ProcessorPause(void)
+{
+    return OMX_ErrorNone;
+}
+
+OMX_ERRORTYPE ComponentBase::ProcessorResume(void)
+{
+    return OMX_ErrorNone;
+}
+
+OMX_ERRORTYPE ComponentBase::ProcessorSetConfig(OMX_INDEXTYPE nParamIndex)
+{
+    return OMX_ErrorNone;
+}
+
+OMX_ERRORTYPE ComponentBase::ProcessorSetParameter(OMX_INDEXTYPE nParamIndex)
+{
+    return OMX_ErrorNone;
+}
+
+/* end of processor callbacks */
+
 /* end of component methods & helpers */
 
 /*
