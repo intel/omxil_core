@@ -375,11 +375,6 @@ private:
     /* bufferwork->ScheduleWork() if IsAllBufferAvailable is true */
     void ScheduleIfAllBufferAvailable(void);
 
-    /* component's processor */
-    virtual void ComponentProcessBuffers(OMX_BUFFERHEADERTYPE **buffers,
-                                         bool *retain,
-                                         OMX_U32 nr_buffers) = 0;
-
     /* processor callbacks */
     /* TransState */
     virtual OMX_ERRORTYPE ProcessorInit(void);  /* Loaded to Idle */

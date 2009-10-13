@@ -1806,7 +1806,7 @@ void ComponentBase::Work(void)
             retain[i] = false;
         }
 
-        ComponentProcessBuffers(buffers, &retain[0], nr_ports);
+        ProcessorProcess(buffers, &retain[0], nr_ports);
 
         for (i = 0; i < nr_ports; i++) {
             OMX_MARKTYPE *mark;
