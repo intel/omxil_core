@@ -1796,6 +1796,7 @@ OMX_ERRORTYPE ComponentBase::FreePorts(void)
 void ComponentBase::Work(void)
 {
     OMX_BUFFERHEADERTYPE *buffers[nr_ports];
+    bool retain[nr_ports];
     OMX_U32 i;
     bool avail = false;
 
@@ -1808,10 +1809,12 @@ void ComponentBase::Work(void)
 
     avail = IsAllBufferAvailable();
     if (avail) {
-        for (i = 0; i < nr_ports; i++)
+        for (i = 0; i < nr_ports; i++) {
             buffers[i] = ports[i]->PopBuffer();
+            retain[i] = false;
+        }
 
-        ComponentProcessBuffers(buffers, nr_ports);
+        ComponentProcessBuffers(buffers, &retain[0], nr_ports);
 
         for (i = 0; i < nr_ports; i++) {
             OMX_MARKTYPE *mark;
@@ -1838,6 +1841,8 @@ void ComponentBase::Work(void)
                         if (buffers[i]->nFlags & OMX_BUFFERFLAG_EOS) {
                             buffers[j]->nFlags |= OMX_BUFFERFLAG_EOS;
                             buffers[i]->nFlags &= ~OMX_BUFFERFLAG_EOS;
+                            retain[i] = false;
+                            retain[j] = false;
                         }
 
                         if (!buffers[j]->hMarkTargetComponent) {
@@ -1899,6 +1904,7 @@ void ComponentBase::Work(void)
                         callbacks->EventHandler(handle, appdata,
                                                 OMX_EventBufferFlag,
                                                 i, buffers[i]->nFlags, NULL);
+                        retain[i] = false;
                     }
                 }
             }
@@ -1910,6 +1916,7 @@ void ComponentBase::Work(void)
                     callbacks->EventHandler(handle, appdata,
                                             OMX_EventBufferFlag,
                                             i, buffers[i]->nFlags, NULL);
+                    retain[i] = false;
                 }
 
                 for (j = 0; j < nr_ports; j++) {
@@ -1921,20 +1928,22 @@ void ComponentBase::Work(void)
                 }
 
                 if (is_source_component) {
-                    mark = ports[i]->PopMark();
-                    if (mark) {
-                        buffers[i]->hMarkTargetComponent =
-                            mark->hMarkTargetComponent;
-                        buffers[i]->pMarkData = mark->pMarkData;
-                        free(mark);
-                        mark = NULL;
+                    if (!retain[i]) {
+                        mark = ports[i]->PopMark();
+                        if (mark) {
+                            buffers[i]->hMarkTargetComponent =
+                                mark->hMarkTargetComponent;
+                            buffers[i]->pMarkData = mark->pMarkData;
+                            free(mark);
+                            mark = NULL;
 
-                        if (buffers[i]->hMarkTargetComponent == handle) {
-                            callbacks->EventHandler(handle, appdata,
-                                                    OMX_EventMark, 0, 0,
-                                                    buffers[i]->pMarkData);
-                            buffers[i]->hMarkTargetComponent = NULL;
-                            buffers[i]->pMarkData = NULL;
+                            if (buffers[i]->hMarkTargetComponent == handle) {
+                                callbacks->EventHandler(handle, appdata,
+                                                        OMX_EventMark, 0, 0,
+                                                        buffers[i]->pMarkData);
+                                buffers[i]->hMarkTargetComponent = NULL;
+                                buffers[i]->pMarkData = NULL;
+                            }
                         }
                     }
                 }
@@ -1945,8 +1954,12 @@ void ComponentBase::Work(void)
             }
         }
 
-        for (i = 0; i < nr_ports; i++)
-            ports[i]->ReturnThisBuffer(buffers[i]);
+        for (i = 0; i < nr_ports; i++) {
+            if (retain[i])
+                ports[i]->RetainThisBuffer(buffers[i]);
+            else
+                ports[i]->ReturnThisBuffer(buffers[i]);
+        }
     }
     ScheduleIfAllBufferAvailable();
 

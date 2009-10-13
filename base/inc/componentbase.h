@@ -377,6 +377,7 @@ private:
 
     /* component's processor */
     virtual void ComponentProcessBuffers(OMX_BUFFERHEADERTYPE **buffers,
+                                         bool *retain,
                                          OMX_U32 nr_buffers) = 0;
 
     /* end of component methods & helpers */
