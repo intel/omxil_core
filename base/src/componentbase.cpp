@@ -1835,8 +1835,10 @@ void ComponentBase::Work(void)
                         continue;
 
                     if (ports[j]->GetPortDirection() == OMX_DirOutput) {
-                        if (buffers[i]->nFlags == OMX_BUFFERFLAG_EOS)
-                            buffers[j]->nFlags = buffers[i]->nFlags;
+                        if (buffers[i]->nFlags & OMX_BUFFERFLAG_EOS) {
+                            buffers[j]->nFlags |= OMX_BUFFERFLAG_EOS;
+                            buffers[i]->nFlags &= ~OMX_BUFFERFLAG_EOS;
+                        }
 
                         if (!buffers[j]->hMarkTargetComponent) {
                             mark = ports[j]->PopMark();
@@ -1893,7 +1895,7 @@ void ComponentBase::Work(void)
                 }
 
                 if (is_sink_component) {
-                    if (buffers[i]->nFlags == OMX_BUFFERFLAG_EOS) {
+                    if (buffers[i]->nFlags & OMX_BUFFERFLAG_EOS) {
                         callbacks->EventHandler(handle, appdata,
                                                 OMX_EventBufferFlag,
                                                 i, buffers[i]->nFlags, NULL);
@@ -1904,7 +1906,7 @@ void ComponentBase::Work(void)
                 bool is_source_component = true;
                 OMX_U32 j;
 
-                if (buffers[i]->nFlags == OMX_BUFFERFLAG_EOS) {
+                if (buffers[i]->nFlags & OMX_BUFFERFLAG_EOS) {
                     callbacks->EventHandler(handle, appdata,
                                             OMX_EventBufferFlag,
                                             i, buffers[i]->nFlags, NULL);
