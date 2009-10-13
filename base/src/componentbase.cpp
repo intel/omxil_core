@@ -1369,10 +1369,11 @@ notify_event:
         data1 = ret;
         data2 = 0;
 
-        if (transition == OMX_StateInvalid) {
-            state = transition;
-            LOGD("transition from %s to %s completed\n",
-                 GetStateName(current), GetStateName(transition));
+        if (transition == OMX_StateInvalid || ret == OMX_ErrorInvalidState) {
+            state = OMX_StateInvalid;
+            LOGD("failed transition from %s to %s, current state is %s\n",
+                 GetStateName(current), GetStateName(transition),
+                 GetStateName(state));
         }
     }
 
@@ -1389,20 +1390,17 @@ inline OMX_ERRORTYPE ComponentBase::TransStateToLoaded(OMX_STATETYPE current)
     OMX_ERRORTYPE ret;
 
     if (current == OMX_StateIdle) {
-        /*
-         * Todo
-         *   1. waits for completion of deallocation on each port
-         *      wokeup by FreeBuffer()
-         *   2. deinitialize buffer process work
-         *   3. deinitialize component's internal processor
-         *      (ex. deinitialize sw/hw codec)
-         */
         OMX_U32 i;
 
         for (i = 0; i < nr_ports; i++)
             ports[i]->WaitPortBufferCompletion();
 
-        ret = OMX_ErrorNone;
+        ret = ProcessorDeinit();
+        if (ret != OMX_ErrorNone) {
+            LOGE("failed to ProcessorDeinit() (ret = 0x%08x)\n", ret);
+            ret = OMX_ErrorInvalidState;
+            goto out;
+        }
     }
     else if (current == OMX_StateWaitForResources) {
         LOGE("state transition's requested from WaitForResources to "
@@ -1418,6 +1416,7 @@ inline OMX_ERRORTYPE ComponentBase::TransStateToLoaded(OMX_STATETYPE current)
     else
         ret = OMX_ErrorIncorrectStateOperation;
 
+out:
     return ret;
 }
 
@@ -1426,51 +1425,44 @@ inline OMX_ERRORTYPE ComponentBase::TransStateToIdle(OMX_STATETYPE current)
     OMX_ERRORTYPE ret;
 
     if (current == OMX_StateLoaded) {
-        /*
-         * Todo
-         *   1. waits for completion of allocation on each port.
-         *      wokeup by Allocate/UseBuffer()
-         *   2. initialize buffer process work.
-         *   3. initialize component's internal processor.
-         *      (ex. initialize sw/hw codec)
-         */
         OMX_U32 i;
+
+        ret = ProcessorInit();
+        if (ret != OMX_ErrorNone) {
+            LOGE("failed to ProcessorInit() (ret = 0x%08x)\n", ret);
+            ret = OMX_ErrorInvalidState;
+            goto out;
+        }
 
         for (i = 0; i < nr_ports; i++) {
             if (ports[i]->IsEnabled())
                 ports[i]->WaitPortBufferCompletion();
         }
-
-        ret = OMX_ErrorNone;
     }
     else if (current == OMX_StateExecuting) {
-        /*
-         * Todo
-         *   1. returns all buffers to thier suppliers.         !
-         *      call Fill/EmptyBufferDone() for all ports
-         *   2. stop buffer process work                        !
-         *   3. stop component's internal processor
-         */
         FlushPort(OMX_ALL, 0);
 
         bufferwork->StopWork();
 
-        ret = OMX_ErrorNone;
+        ret = ProcessorStop();
+        if (ret != OMX_ErrorNone) {
+            LOGE("failed to ProcessorStop() (ret = 0x%08x)\n", ret);
+            ret = OMX_ErrorInvalidState;
+            goto out;
+        }
     }
     else if (current == OMX_StatePause) {
-        /*
-         * Todo
-         *   1. returns all buffers to thier suppliers.         !
-         *      call Fill/EmptyBufferDone() for all ports
-         *   2. discard queued work, stop buffer process work   !
-         *   3. stop component's internal processor
-         */
         FlushPort(OMX_ALL, 0);
 
         bufferwork->CancelScheduledWork(this);
         bufferwork->StopWork();
 
-        ret = OMX_ErrorNone;
+        ret = ProcessorStop();
+        if (ret != OMX_ErrorNone) {
+            LOGE("failed to ProcessorStop() (ret = 0x%08x)\n", ret);
+            ret = OMX_ErrorInvalidState;
+            goto out;
+        }
     }
     else if (current == OMX_StateWaitForResources) {
         LOGE("state transition's requested from WaitForResources to Idle\n");
@@ -1482,6 +1474,7 @@ inline OMX_ERRORTYPE ComponentBase::TransStateToIdle(OMX_STATETYPE current)
     else
         ret = OMX_ErrorIncorrectStateOperation;
 
+out:
     return ret;
 }
 
@@ -1491,36 +1484,36 @@ ComponentBase::TransStateToExecuting(OMX_STATETYPE current)
     OMX_ERRORTYPE ret;
 
     if (current == OMX_StateIdle) {
-        /*
-         * Todo
-         *   1. start component's internal processor
-         *   2. start processing buffers on each port   !
-         */
-
         pthread_mutex_lock(&executing_lock);
         executing = true;
         pthread_mutex_unlock(&executing_lock);
 
         bufferwork->StartWork();
-        ret = OMX_ErrorNone;
+
+        ret = ProcessorStart();
+        if (ret != OMX_ErrorNone) {
+            LOGE("failed to ProcessorStart() (ret = 0x%08x)\n", ret);
+            ret = OMX_ErrorInvalidState;
+            goto out;
+        }
     }
     else if (current == OMX_StatePause) {
-        /*
-         * Todo
-         *   1. resume component's internal processor
-         *   2. resume buffer process work              !
-         */
-
         pthread_mutex_lock(&executing_lock);
         executing = true;
         pthread_cond_signal(&executing_wait);
         pthread_mutex_unlock(&executing_lock);
 
-        ret = OMX_ErrorNone;
+        ret = ProcessorResume();
+        if (ret != OMX_ErrorNone) {
+            LOGE("failed to ProcessorStart() (ret = 0x%08x)\n", ret);
+            ret = OMX_ErrorInvalidState;
+            goto out;
+        }
     }
     else
         ret = OMX_ErrorIncorrectStateOperation;
 
+out:
     return ret;
 }
 
@@ -1529,12 +1522,6 @@ inline OMX_ERRORTYPE ComponentBase::TransStateToPause(OMX_STATETYPE current)
     OMX_ERRORTYPE ret;
 
     if (current == OMX_StateIdle) {
-        /*
-         * Todo
-         *   1. start(paused) component's internal processor
-         *   2. start(paused) processing buffers on each port   !
-         */
-
         /* turn off executing flag */
         pthread_mutex_lock(&executing_lock);
         executing = false;
@@ -1542,24 +1529,29 @@ inline OMX_ERRORTYPE ComponentBase::TransStateToPause(OMX_STATETYPE current)
 
         bufferwork->StartWork();
 
-        ret = OMX_ErrorNone;
+        ret = ProcessorStart();
+        if (ret != OMX_ErrorNone) {
+            LOGE("failed to ProcessorPause() (ret = 0x%08x)\n", ret);
+            ret = OMX_ErrorInvalidState;
+            goto out;
+        }
     }
     else if (current == OMX_StateExecuting) {
-        /*
-         * Todo
-         *   1. pause buffer process work               !
-         *   2. pause component's internal processor
-         */
-
         pthread_mutex_lock(&executing_lock);
         executing = false;
         pthread_mutex_unlock(&executing_lock);
 
-        ret = OMX_ErrorNone;
+        ret = ProcessorPause();
+        if (ret != OMX_ErrorNone) {
+            LOGE("failed to ProcessorPause() (ret = 0x%08x)\n", ret);
+            ret = OMX_ErrorInvalidState;
+            goto out;
+        }
     }
     else
         ret = OMX_ErrorIncorrectStateOperation;
 
+out:
     return ret;
 }
 
