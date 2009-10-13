@@ -434,13 +434,27 @@ void PortBase::WaitPortBufferCompletion(void)
     pthread_mutex_unlock(&hdrs_lock);
 }
 
-    /* Empty/FillThisBuffer */
+/* Empty/FillThisBuffer */
 OMX_ERRORTYPE PortBase::PushThisBuffer(OMX_BUFFERHEADERTYPE *pBuffer)
 {
     int ret;
 
     pthread_mutex_lock(&bufferq_lock);
     ret = queue_push_tail(&bufferq, pBuffer);
+    pthread_mutex_unlock(&bufferq_lock);
+
+    if (ret)
+        return OMX_ErrorInsufficientResources;
+
+    return OMX_ErrorNone;
+}
+
+OMX_ERRORTYPE PortBase::RetainThisBuffer(OMX_BUFFERHEADERTYPE *pBuffer)
+{
+    int ret;
+
+    pthread_mutex_lock(&bufferq_lock);
+    ret = queue_push_head(&bufferq, pBuffer);
     pthread_mutex_unlock(&bufferq_lock);
 
     if (ret)

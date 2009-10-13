@@ -75,6 +75,8 @@ public:
 
     /* Empty/FillThisBuffer */
     OMX_ERRORTYPE PushThisBuffer(OMX_BUFFERHEADERTYPE *pBuffer);
+    /* push buffer at head */
+    OMX_ERRORTYPE RetainThisBuffer(OMX_BUFFERHEADERTYPE *pBuffer);
     OMX_BUFFERHEADERTYPE *PopBuffer(void);
     OMX_U32 BufferQueueLength(void);
 
