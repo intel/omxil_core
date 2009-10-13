@@ -410,16 +410,13 @@ OMX_ERRORTYPE ComponentBase::CBaseSendCommand(
         break;
     }
     case OMX_CommandPortDisable:
-        /*
-         * Todo
-         */
-        //break;
-    case OMX_CommandPortEnable:
-        /*
-         * Todo
-         */
-        //break;
-        return OMX_ErrorUnsupportedIndex;
+    case OMX_CommandPortEnable: {
+        OMX_U32 port_index = nParam1;
+
+        if ((port_index != OMX_ALL) && (port_index > nr_ports-1))
+            return OMX_ErrorBadPortIndex;
+        break;
+    }
     case OMX_CommandMarkBuffer: {
         OMX_MARKTYPE *mark = (OMX_MARKTYPE *)pCmdData;
         OMX_MARKTYPE *copiedmark;
@@ -1271,16 +1268,18 @@ void ComponentBase::CmdHandler(struct cmd_s *cmd)
         FlushPort(port_index, 1);
         break;
     }
-    case OMX_CommandPortDisable:
-        /*
-         * Todo
-         */
+    case OMX_CommandPortDisable: {
+        OMX_U32 port_index = cmd->param1;
+
+        TransStatePort(port_index, PortBase::OMX_PortDisabled);
         break;
-    case OMX_CommandPortEnable:
-        /*
-         * Todo
-         */
+    }
+    case OMX_CommandPortEnable: {
+        OMX_U32 port_index = cmd->param1;
+
+        TransStatePort(port_index, PortBase::OMX_PortEnabled);
         break;
+    }
     case OMX_CommandMarkBuffer:
         OMX_U32 port_index = (OMX_U32)cmd->param1;
         OMX_MARKTYPE *mark = (OMX_MARKTYPE *)cmd->cmddata;
@@ -1437,8 +1436,10 @@ inline OMX_ERRORTYPE ComponentBase::TransStateToIdle(OMX_STATETYPE current)
          */
         OMX_U32 i;
 
-        for (i = 0; i < nr_ports; i++)
-            ports[i]->WaitPortBufferCompletion();
+        for (i = 0; i < nr_ports; i++) {
+            if (ports[i]->IsEnabled())
+                ports[i]->WaitPortBufferCompletion();
+        }
 
         ret = OMX_ErrorNone;
     }
@@ -1650,6 +1651,47 @@ void ComponentBase::FlushPort(OMX_U32 port_index, bool notify)
         if (notify)
             callbacks->EventHandler(handle, appdata, OMX_EventCmdComplete,
                                     OMX_CommandFlush, i, NULL);
+    }
+    pthread_mutex_unlock(&ports_block);
+}
+
+void ComponentBase::TransStatePort(OMX_U32 port_index, OMX_U8 state)
+{
+    OMX_EVENTTYPE event;
+    OMX_U32 data1, data2;
+    OMX_U32 i, from_index, to_index;
+    OMX_ERRORTYPE ret;
+
+    if ((port_index != OMX_ALL) && (port_index > nr_ports-1))
+        return;
+
+    if (port_index == OMX_ALL) {
+        from_index = 0;
+        to_index = nr_ports - 1;
+    }
+    else {
+        from_index = port_index;
+        to_index = port_index;
+    }
+
+    pthread_mutex_lock(&ports_block);
+    for (i = from_index; i <= to_index; i++) {
+        ret = ports[i]->TransState(state);
+        if (ret == OMX_ErrorNone) {
+            event = OMX_EventCmdComplete;
+            if (state == PortBase::OMX_PortEnabled)
+                data1 = OMX_CommandPortEnable;
+            else
+                data1 = OMX_CommandPortDisable;
+            data2 = i;
+        }
+        else {
+            event = OMX_EventError;
+            data1 = ret;
+            data2 = 0;
+        }
+        callbacks->EventHandler(handle, appdata, OMX_EventCmdComplete,
+                                OMX_CommandPortDisable, data2, NULL);
     }
     pthread_mutex_unlock(&ports_block);
 }
@@ -1915,9 +1957,11 @@ bool ComponentBase::IsAllBufferAvailable(void)
     OMX_U32 nr_avail = 0;
 
     for (i = 0; i < nr_ports; i++) {
-        OMX_U32 length;
+        OMX_U32 length = 0;
 
-        length = ports[i]->BufferQueueLength();
+        if (ports[i]->IsEnabled())
+            length = ports[i]->BufferQueueLength();
+
         if (length)
             nr_avail++;
     }

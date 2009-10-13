@@ -347,6 +347,10 @@ private:
     /* SendCommand:OMX_CommandFlush (notify:1) or other parts (notify:0) */
     void FlushPort(OMX_U32 port_index, bool notify);
 
+    /* SendCommand:OMX_CommandPortDisable/Enable */
+    /* state: PortBase::OMX_PortEnabled/Disabled */
+    void TransStatePort(OMX_U32 port_index, OMX_U8 state);
+
     /* Get/SetParameter */
     virtual OMX_ERRORTYPE
         ComponentGetParameter(OMX_INDEXTYPE nParamIndex,
