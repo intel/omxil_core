@@ -1813,144 +1813,7 @@ void ComponentBase::Work(void)
         }
 
         ProcessorProcess(buffers, &retain[0], nr_ports);
-
-        for (i = 0; i < nr_ports; i++) {
-            OMX_MARKTYPE *mark;
-
-            if (ports[i]->GetPortDirection() == OMX_DirInput) {
-                bool is_sink_component = true;
-                OMX_U32 j;
-
-                if (buffers[i]->hMarkTargetComponent) {
-                    if (buffers[i]->hMarkTargetComponent == handle) {
-                        callbacks->EventHandler(handle, appdata,
-                                                OMX_EventMark, 0, 0,
-                                                buffers[i]->pMarkData);
-                        buffers[i]->hMarkTargetComponent = NULL;
-                        buffers[i]->pMarkData = NULL;
-                    }
-                }
-
-                for (j = 0; j < nr_ports; j++) {
-                    if (j == i)
-                        continue;
-
-                    if (ports[j]->GetPortDirection() == OMX_DirOutput) {
-                        if (buffers[i]->nFlags & OMX_BUFFERFLAG_EOS) {
-                            buffers[j]->nFlags |= OMX_BUFFERFLAG_EOS;
-                            buffers[i]->nFlags &= ~OMX_BUFFERFLAG_EOS;
-                            retain[i] = false;
-                            retain[j] = false;
-                        }
-
-                        if (!buffers[j]->hMarkTargetComponent) {
-                            mark = ports[j]->PopMark();
-                            if (mark) {
-                                buffers[j]->hMarkTargetComponent =
-                                    mark->hMarkTargetComponent;
-                                buffers[j]->pMarkData = mark->pMarkData;
-                                free(mark);
-                                mark = NULL;
-                            }
-
-                            if (buffers[i]->hMarkTargetComponent) {
-                                if (buffers[j]->hMarkTargetComponent) {
-                                    mark = (OMX_MARKTYPE *)
-                                        malloc(sizeof(*mark));
-                                    if (mark) {
-                                        mark->hMarkTargetComponent =
-                                            buffers[i]->hMarkTargetComponent;
-                                        mark->pMarkData =
-                                            buffers[i]->pMarkData;
-                                        ports[j]->PushMark(mark);
-                                        mark = NULL;
-                                        buffers[i]->hMarkTargetComponent =
-                                            NULL;
-                                        buffers[i]->pMarkData = NULL;
-                                    }
-                                }
-                                else {
-                                    buffers[j]->hMarkTargetComponent =
-                                        buffers[i]->hMarkTargetComponent;
-                                    buffers[j]->pMarkData =
-                                        buffers[i]->pMarkData;
-                                    buffers[i]->hMarkTargetComponent = NULL;
-                                    buffers[i]->pMarkData = NULL;
-                                }
-                            }
-                        }
-                        else {
-                            if (buffers[i]->hMarkTargetComponent) {
-                                mark = (OMX_MARKTYPE *)malloc(sizeof(*mark));
-                                if (mark) {
-                                    mark->hMarkTargetComponent =
-                                        buffers[i]->hMarkTargetComponent;
-                                    mark->pMarkData = buffers[i]->pMarkData;
-                                    ports[j]->PushMark(mark);
-                                    mark = NULL;
-                                    buffers[i]->hMarkTargetComponent = NULL;
-                                    buffers[i]->pMarkData = NULL;
-                                }
-                            }
-                        }
-                        is_sink_component = false;
-                    }
-                }
-
-                if (is_sink_component) {
-                    if (buffers[i]->nFlags & OMX_BUFFERFLAG_EOS) {
-                        callbacks->EventHandler(handle, appdata,
-                                                OMX_EventBufferFlag,
-                                                i, buffers[i]->nFlags, NULL);
-                        retain[i] = false;
-                    }
-                }
-            }
-            else if (ports[i]->GetPortDirection() == OMX_DirOutput) {
-                bool is_source_component = true;
-                OMX_U32 j;
-
-                if (buffers[i]->nFlags & OMX_BUFFERFLAG_EOS) {
-                    callbacks->EventHandler(handle, appdata,
-                                            OMX_EventBufferFlag,
-                                            i, buffers[i]->nFlags, NULL);
-                    retain[i] = false;
-                }
-
-                for (j = 0; j < nr_ports; j++) {
-                    if (j == i)
-                        continue;
-
-                    if (ports[j]->GetPortDirection() == OMX_DirInput)
-                        is_source_component = false;
-                }
-
-                if (is_source_component) {
-                    if (!retain[i]) {
-                        mark = ports[i]->PopMark();
-                        if (mark) {
-                            buffers[i]->hMarkTargetComponent =
-                                mark->hMarkTargetComponent;
-                            buffers[i]->pMarkData = mark->pMarkData;
-                            free(mark);
-                            mark = NULL;
-
-                            if (buffers[i]->hMarkTargetComponent == handle) {
-                                callbacks->EventHandler(handle, appdata,
-                                                        OMX_EventMark, 0, 0,
-                                                        buffers[i]->pMarkData);
-                                buffers[i]->hMarkTargetComponent = NULL;
-                                buffers[i]->pMarkData = NULL;
-                            }
-                        }
-                    }
-                }
-            }
-            else {
-                LOGE("%s(): fatal error unknown port direction (0x%08x)\n",
-                     __func__, ports[i]->GetPortDirection());
-            }
-        }
+        PostProcessBuffer(buffers, &retain[0], nr_ports);
 
         for (i = 0; i < nr_ports; i++) {
             if (retain[i])
@@ -1992,6 +1855,147 @@ void ComponentBase::ScheduleIfAllBufferAvailable(void)
     avail = IsAllBufferAvailable();
     if (avail)
         bufferwork->ScheduleWork(this);
+}
+
+void ComponentBase::PostProcessBuffer(OMX_BUFFERHEADERTYPE **buffers,
+                                      bool *retain,
+                                      OMX_U32 nr_buffers)
+{
+    OMX_U32 i;
+
+    for (i = 0; i < nr_ports; i++) {
+        OMX_MARKTYPE *mark;
+
+        if (ports[i]->GetPortDirection() == OMX_DirInput) {
+            bool is_sink_component = true;
+            OMX_U32 j;
+
+            if (buffers[i]->hMarkTargetComponent) {
+                if (buffers[i]->hMarkTargetComponent == handle) {
+                    callbacks->EventHandler(handle, appdata, OMX_EventMark,
+                                            0, 0, buffers[i]->pMarkData);
+                    buffers[i]->hMarkTargetComponent = NULL;
+                    buffers[i]->pMarkData = NULL;
+                }
+            }
+
+            for (j = 0; j < nr_ports; j++) {
+                if (j == i)
+                    continue;
+
+                if (ports[j]->GetPortDirection() == OMX_DirOutput) {
+                    if (buffers[i]->nFlags & OMX_BUFFERFLAG_EOS) {
+                        buffers[j]->nFlags |= OMX_BUFFERFLAG_EOS;
+                        buffers[i]->nFlags &= ~OMX_BUFFERFLAG_EOS;
+                        retain[i] = false;
+                        retain[j] = false;
+                    }
+
+                    if (!buffers[j]->hMarkTargetComponent) {
+                        mark = ports[j]->PopMark();
+                        if (mark) {
+                            buffers[j]->hMarkTargetComponent =
+                                mark->hMarkTargetComponent;
+                            buffers[j]->pMarkData = mark->pMarkData;
+                            free(mark);
+                            mark = NULL;
+                        }
+
+                        if (buffers[i]->hMarkTargetComponent) {
+                            if (buffers[j]->hMarkTargetComponent) {
+                                mark = (OMX_MARKTYPE *)
+                                    malloc(sizeof(*mark));
+                                if (mark) {
+                                    mark->hMarkTargetComponent =
+                                        buffers[i]->hMarkTargetComponent;
+                                    mark->pMarkData = buffers[i]->pMarkData;
+                                    ports[j]->PushMark(mark);
+                                    mark = NULL;
+                                    buffers[i]->hMarkTargetComponent = NULL;
+                                    buffers[i]->pMarkData = NULL;
+                                }
+                            }
+                            else {
+                                buffers[j]->hMarkTargetComponent =
+                                    buffers[i]->hMarkTargetComponent;
+                                buffers[j]->pMarkData = buffers[i]->pMarkData;
+                                buffers[i]->hMarkTargetComponent = NULL;
+                                buffers[i]->pMarkData = NULL;
+                            }
+                        }
+                    }
+                    else {
+                        if (buffers[i]->hMarkTargetComponent) {
+                            mark = (OMX_MARKTYPE *)malloc(sizeof(*mark));
+                            if (mark) {
+                                mark->hMarkTargetComponent =
+                                    buffers[i]->hMarkTargetComponent;
+                                mark->pMarkData = buffers[i]->pMarkData;
+                                ports[j]->PushMark(mark);
+                                mark = NULL;
+                                buffers[i]->hMarkTargetComponent = NULL;
+                                buffers[i]->pMarkData = NULL;
+                            }
+                        }
+                    }
+                    is_sink_component = false;
+                }
+            }
+
+            if (is_sink_component) {
+                if (buffers[i]->nFlags & OMX_BUFFERFLAG_EOS) {
+                    callbacks->EventHandler(handle, appdata,
+                                            OMX_EventBufferFlag,
+                                            i, buffers[i]->nFlags, NULL);
+                    retain[i] = false;
+                }
+            }
+        }
+        else if (ports[i]->GetPortDirection() == OMX_DirOutput) {
+            bool is_source_component = true;
+            OMX_U32 j;
+
+            if (buffers[i]->nFlags & OMX_BUFFERFLAG_EOS) {
+                callbacks->EventHandler(handle, appdata,
+                                        OMX_EventBufferFlag,
+                                        i, buffers[i]->nFlags, NULL);
+                retain[i] = false;
+            }
+
+            for (j = 0; j < nr_ports; j++) {
+                if (j == i)
+                    continue;
+
+                if (ports[j]->GetPortDirection() == OMX_DirInput)
+                    is_source_component = false;
+            }
+
+            if (is_source_component) {
+                if (!retain[i]) {
+                    mark = ports[i]->PopMark();
+                    if (mark) {
+                        buffers[i]->hMarkTargetComponent =
+                            mark->hMarkTargetComponent;
+                        buffers[i]->pMarkData = mark->pMarkData;
+                        free(mark);
+                        mark = NULL;
+
+                        if (buffers[i]->hMarkTargetComponent == handle) {
+                            callbacks->EventHandler(handle, appdata,
+                                                    OMX_EventMark, 0, 0,
+                                                    buffers[i]->pMarkData);
+                            buffers[i]->hMarkTargetComponent = NULL;
+                            buffers[i]->pMarkData = NULL;
+                        }
+                    }
+                }
+            }
+        }
+        else {
+            LOGE("%s(): fatal error unknown port direction (0x%08x)\n",
+                 __func__, ports[i]->GetPortDirection());
+        }
+    }
 }
 
 /* processor default callbacks */

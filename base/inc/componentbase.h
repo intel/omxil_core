@@ -374,6 +374,10 @@ private:
     bool IsAllBufferAvailable(void);
     /* bufferwork->ScheduleWork() if IsAllBufferAvailable is true */
     void ScheduleIfAllBufferAvailable(void);
+    /* called in Work() after ProcessorProcess() */
+    void PostProcessBuffer(OMX_BUFFERHEADERTYPE **buffers,
+                           bool *retain,
+                           OMX_U32 nr_buffers);
 
     /* processor callbacks */
     /* TransState */
