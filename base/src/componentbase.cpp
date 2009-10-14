@@ -516,25 +516,6 @@ OMX_ERRORTYPE ComponentBase::CBaseGetParameter(
         memcpy(p, port->GetPortDefinition(), sizeof(*p));
         break;
     }
-    case OMX_IndexParamAudioPortFormat: {
-        OMX_AUDIO_PARAM_PORTFORMATTYPE *p =
-            (OMX_AUDIO_PARAM_PORTFORMATTYPE *)pComponentParameterStructure;
-        OMX_U32 index = p->nPortIndex;
-        PortBase *port = NULL;
-
-        ret = CheckTypeHeader(p, sizeof(*p));
-        if (ret != OMX_ErrorNone)
-            return ret;
-
-        if (index < nr_ports)
-            port = ports[index];
-
-        if (!port)
-            return OMX_ErrorBadPortIndex;
-
-        memcpy(p, port->GetAudioPortParam(), sizeof(*p));
-        break;
-    }
     case OMX_IndexParamCompBufferSupplier:
         /*
          * Todo
@@ -608,30 +589,6 @@ OMX_ERRORTYPE ComponentBase::CBaseSetParameter(
         }
 
         port->SetPortDefinition(p, false);
-        break;
-    }
-    case OMX_IndexParamAudioPortFormat: {
-        OMX_AUDIO_PARAM_PORTFORMATTYPE *p =
-            (OMX_AUDIO_PARAM_PORTFORMATTYPE *)pComponentParameterStructure;
-        OMX_U32 index = p->nPortIndex;
-        PortBase *port = NULL;
-
-        ret = CheckTypeHeader(p, sizeof(*p));
-        if (ret != OMX_ErrorNone)
-            return ret;
-
-        if (index < nr_ports)
-            port = ports[index];
-
-        if (!port)
-            return OMX_ErrorBadPortIndex;
-
-        if (port->IsEnabled()) {
-            if (state != OMX_StateLoaded && state != OMX_StateWaitForResources)
-                return OMX_ErrorIncorrectStateOperation;
-        }
-
-        port->SetAudioPortParam(p);
         break;
     }
     case OMX_IndexParamCompBufferSupplier:
