@@ -35,7 +35,13 @@ void PortBase::__PortBase(void)
     state = OMX_PortEnabled;
     pthread_mutex_init(&state_lock, NULL);
 
-    portdefinition = NULL;
+    memset(&portdefinition, 0, sizeof(portdefinition));
+    ComponentBase::SetTypeHeader(&portdefinition, sizeof(portdefinition));
+    memset(definition_format_mimetype, 0, OMX_MAX_STRINGNAME_SIZE);
+    portdefinition.format.audio.cMIMEType = &definition_format_mimetype[0];
+    portdefinition.format.video.cMIMEType = &definition_format_mimetype[0];
+    portdefinition.format.image.cMIMEType = &definition_format_mimetype[0];
+
     memset(&portparam, 0, sizeof(portparam));
     memset(&audioparam, 0, sizeof(audioparam));
 
@@ -71,9 +77,6 @@ PortBase::~PortBase()
     pthread_mutex_destroy(&markq_lock);
 
     pthread_mutex_destroy(&state_lock);
-
-    if (portdefinition)
-        free(portdefinition);
 }
 
 /* end of constructor & destructor */
@@ -116,26 +119,7 @@ OMX_ERRORTYPE PortBase::SetPortDefinition(
 {
     OMX_PARAM_PORTDEFINITIONTYPE temp;
 
-    if (!portdefinition) {
-        OMX_STRING mimetype;
-        portdefinition = (OMX_PARAM_PORTDEFINITIONTYPE *)
-            calloc(1, sizeof(OMX_PARAM_PORTDEFINITIONTYPE) +
-                   OMX_MAX_STRINGNAME_SIZE);
-        if (!portdefinition)
-            return OMX_ErrorInsufficientResources;
-
-        ComponentBase::SetTypeHeader(portdefinition,
-                                     sizeof(OMX_PARAM_PORTDEFINITIONTYPE));
-
-        mimetype = (OMX_STRING)((unsigned char *)portdefinition +
-                                sizeof(OMX_PARAM_PORTDEFINITIONTYPE));
-
-        portdefinition->format.audio.cMIMEType = mimetype;
-        portdefinition->format.video.cMIMEType = mimetype;
-        portdefinition->format.image.cMIMEType = mimetype;
-    }
-
-    memcpy(&temp, portdefinition, sizeof(temp));
+    memcpy(&temp, &portdefinition, sizeof(temp));
 
     if (isclient) {
         if (temp.nPortIndex != p->nPortIndex)
@@ -245,13 +229,13 @@ OMX_ERRORTYPE PortBase::SetPortDefinition(
         return OMX_ErrorBadParameter;
     }
 
-    memcpy(portdefinition, &temp, sizeof(temp));
+    memcpy(&portdefinition, &temp, sizeof(temp));
     return OMX_ErrorNone;
 }
 
 const OMX_PARAM_PORTDEFINITIONTYPE *PortBase::GetPortDefinition(void)
 {
-    return portdefinition;
+    return &portdefinition;
 }
 
 void PortBase::SetPortParam(

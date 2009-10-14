@@ -131,7 +131,10 @@ private:
     pthread_mutex_t state_lock;
 
     /* parameter */
-    OMX_PARAM_PORTDEFINITIONTYPE *portdefinition;
+    OMX_PARAM_PORTDEFINITIONTYPE portdefinition;
+    /* room for portdefinition.format.*.cMIMEType */
+    char definition_format_mimetype[OMX_MAX_STRINGNAME_SIZE];
+
     OMX_PARAM_PORTDEFINITIONTYPE portparam;
     OMX_AUDIO_PARAM_PORTFORMATTYPE audioparam;
 
