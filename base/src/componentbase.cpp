@@ -2060,7 +2060,7 @@ void ComponentBase::SetTypeHeader(OMX_PTR type, OMX_U32 size)
     nversion->nVersion = OMX_SPEC_VERSION;
 }
 
-OMX_ERRORTYPE ComponentBase::CheckTypeHeader(OMX_PTR type, OMX_U32 size)
+OMX_ERRORTYPE ComponentBase::CheckTypeHeader(const OMX_PTR type, OMX_U32 size)
 {
     OMX_U32 *nsize;
     OMX_VERSIONTYPE *nversion;

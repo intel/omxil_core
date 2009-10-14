@@ -273,7 +273,7 @@ public:
      * omx header manipuation
      */
     static void SetTypeHeader(OMX_PTR type, OMX_U32 size);
-    static OMX_ERRORTYPE CheckTypeHeader(OMX_PTR type, OMX_U32 size);
+    static OMX_ERRORTYPE CheckTypeHeader(const OMX_PTR type, OMX_U32 size);
 
     /* end of omx header manipuation */
 
