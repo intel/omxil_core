@@ -1987,6 +1987,11 @@ const OMX_STRING ComponentBase::GetWorkingRole(void)
     return &working_role[0];
 }
 
+const OMX_COMPONENTTYPE *ComponentBase::GetComponentHandle(void)
+{
+    return handle;
+}
+
 /* end of component methods & helpers */
 
 /*

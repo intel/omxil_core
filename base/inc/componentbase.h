@@ -289,10 +289,7 @@ public:
 protected:
     /* helper for derived class */
     const OMX_STRING GetWorkingRole(void);
-
-    /* omx standard handle */
-    /* allocated at GetHandle, freed at FreeHandle */
-    OMX_COMPONENTTYPE *handle;
+    const OMX_COMPONENTTYPE *GetComponentHandle(void);
 
     /* ports */
     /*
@@ -413,6 +410,10 @@ private:
     OMX_U32 nr_roles;
 
     OMX_STRING working_role;
+
+    /* omx standard handle */
+    /* allocated at GetHandle, freed at FreeHandle */
+    OMX_COMPONENTTYPE *handle;
 
     /* component module */
     CModule *cmodule;
