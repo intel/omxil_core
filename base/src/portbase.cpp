@@ -54,6 +54,12 @@ PortBase::PortBase()
     __PortBase();
 }
 
+PortBase::PortBase(const OMX_PARAM_PORTDEFINITIONTYPE *portdefinition)
+{
+    __PortBase();
+    SetPortDefinition(portdefinition, false);
+}
+
 PortBase::~PortBase()
 {
     struct list *entry, *temp;

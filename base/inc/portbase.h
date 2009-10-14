@@ -20,7 +20,7 @@ public:
      * constructor & destructor
      */
     PortBase();
-    PortBase(const OMX_PARAM_PORTDEFINITIONTYPE *param);
+    PortBase(const OMX_PARAM_PORTDEFINITIONTYPE *portdefinition);
     virtual ~PortBase();
 
     /* end of constructor & destructor */
