@@ -43,7 +43,7 @@ public:
      */
     /* Get/SetParameter */
     OMX_ERRORTYPE SetPortDefinition(const OMX_PARAM_PORTDEFINITIONTYPE *p,
-                                    bool isclient);
+                                    bool overwrite_readonly);
     const OMX_PARAM_PORTDEFINITIONTYPE *GetPortDefinition(void);
     /* audio parameter */
     void SetAudioPortParam(

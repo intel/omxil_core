@@ -607,7 +607,7 @@ OMX_ERRORTYPE ComponentBase::CBaseSetParameter(
                 return OMX_ErrorIncorrectStateOperation;
         }
 
-        port->SetPortDefinition(p, true);
+        port->SetPortDefinition(p, false);
         break;
     }
     case OMX_IndexParamAudioPortFormat: {

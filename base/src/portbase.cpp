@@ -57,7 +57,7 @@ PortBase::PortBase()
 PortBase::PortBase(const OMX_PARAM_PORTDEFINITIONTYPE *portdefinition)
 {
     __PortBase();
-    SetPortDefinition(portdefinition, false);
+    SetPortDefinition(portdefinition, true);
 }
 
 PortBase::~PortBase()
@@ -120,13 +120,13 @@ OMX_ERRORTYPE PortBase::SetCallbacks(OMX_HANDLETYPE hComponent,
  */
 /* Get/SetParameter */
 OMX_ERRORTYPE PortBase::SetPortDefinition(
-    const OMX_PARAM_PORTDEFINITIONTYPE *p, bool isclient)
+    const OMX_PARAM_PORTDEFINITIONTYPE *p, bool overwrite_readonly)
 {
     OMX_PARAM_PORTDEFINITIONTYPE temp;
 
     memcpy(&temp, &portdefinition, sizeof(temp));
 
-    if (isclient) {
+    if (!overwrite_readonly) {
         if (temp.nPortIndex != p->nPortIndex)
             return OMX_ErrorBadParameter;
         if (temp.eDir != p->eDir)
@@ -191,7 +191,7 @@ OMX_ERRORTYPE PortBase::SetPortDefinition(
         format->eColorFormat = pformat->eColorFormat;
         format->pNativeWindow = pformat->pNativeWindow;
 
-        if (!isclient) {
+        if (overwrite_readonly) {
             format->nStride = pformat->nStride;
             format->nSliceHeight = pformat->nSliceHeight;
         }
@@ -217,7 +217,7 @@ OMX_ERRORTYPE PortBase::SetPortDefinition(
         format->eColorFormat = pformat->eColorFormat;
         format->pNativeWindow = pformat->pNativeWindow;
 
-        if (!isclient)
+        if (overwrite_readonly)
             format->nSliceHeight = pformat->nSliceHeight;
 
         break;
