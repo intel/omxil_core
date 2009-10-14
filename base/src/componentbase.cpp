@@ -511,7 +511,7 @@ OMX_ERRORTYPE ComponentBase::CBaseGetParameter(
             port = ports[index];
 
         if (!port)
-            return OMX_ErrorBadParameter;
+            return OMX_ErrorBadPortIndex;
 
         memcpy(p, port->GetPortDefinition(), sizeof(*p));
         break;
@@ -530,7 +530,7 @@ OMX_ERRORTYPE ComponentBase::CBaseGetParameter(
             port = ports[index];
 
         if (!port)
-            return OMX_ErrorBadParameter;
+            return OMX_ErrorBadPortIndex;
 
         memcpy(p, port->GetAudioPortParam(), sizeof(*p));
         break;
@@ -600,7 +600,7 @@ OMX_ERRORTYPE ComponentBase::CBaseSetParameter(
             port = ports[index];
 
         if (!port)
-            return OMX_ErrorBadParameter;
+            return OMX_ErrorBadPortIndex;
 
         if (port->IsEnabled()) {
             if (state != OMX_StateLoaded && state != OMX_StateWaitForResources)
@@ -624,7 +624,7 @@ OMX_ERRORTYPE ComponentBase::CBaseSetParameter(
             port = ports[index];
 
         if (!port)
-            return OMX_ErrorBadParameter;
+            return OMX_ErrorBadPortIndex;
 
         if (port->IsEnabled()) {
             if (state != OMX_StateLoaded && state != OMX_StateWaitForResources)
