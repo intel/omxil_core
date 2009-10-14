@@ -1981,6 +1981,12 @@ OMX_ERRORTYPE ComponentBase::ProcessorResume(void)
 
 /* end of processor callbacks */
 
+/* helper for derived class */
+const OMX_STRING ComponentBase::GetWorkingRole(void)
+{
+    return &working_role[0];
+}
+
 /* end of component methods & helpers */
 
 /*

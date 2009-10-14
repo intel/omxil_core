@@ -287,6 +287,9 @@ public:
     /* end of helper method for queury_roles() */
 
 protected:
+    /* helper for derived class */
+    const OMX_STRING GetWorkingRole(void);
+
     /* omx standard handle */
     /* allocated at GetHandle, freed at FreeHandle */
     OMX_COMPONENTTYPE *handle;
