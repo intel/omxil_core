@@ -670,6 +670,9 @@ OMX_ERRORTYPE ComponentBase::CBaseSetParameter(
         ret = ComponentSetParameter(nIndex, pComponentParameterStructure);
     } /* switch */
 
+    if (ret == OMX_ErrorNone)
+        ProcessorSetParameter(nIndex);
+
     return ret;
 }
 
@@ -743,6 +746,9 @@ OMX_ERRORTYPE ComponentBase::CBaseSetConfig(
     default:
         ret = ComponentSetConfig(nIndex, pComponentConfigStructure);
     }
+
+    if (ret == OMX_ErrorNone)
+        ProcessorSetConfig(nIndex);
 
     return ret;
 }
