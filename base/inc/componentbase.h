@@ -391,9 +391,6 @@ private:
     virtual void ProcessorProcess(OMX_BUFFERHEADERTYPE **buffers,
                                   bool *retain,
                                   OMX_U32 nr_buffers) = 0;
-    /* SetConfig/SetParameter */
-    virtual OMX_ERRORTYPE ProcessorSetConfig(OMX_INDEXTYPE nParamIndex);
-    virtual OMX_ERRORTYPE ProcessorSetParameter(OMX_INDEXTYPE nParamIndex);
 
     /* end of component methods & helpers */
 

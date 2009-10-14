@@ -627,9 +627,6 @@ OMX_ERRORTYPE ComponentBase::CBaseSetParameter(
         ret = ComponentSetParameter(nIndex, pComponentParameterStructure);
     } /* switch */
 
-    if (ret == OMX_ErrorNone)
-        ProcessorSetParameter(nIndex);
-
     return ret;
 }
 
@@ -703,9 +700,6 @@ OMX_ERRORTYPE ComponentBase::CBaseSetConfig(
     default:
         ret = ComponentSetConfig(nIndex, pComponentConfigStructure);
     }
-
-    if (ret == OMX_ErrorNone)
-        ProcessorSetConfig(nIndex);
 
     return ret;
 }
@@ -1981,16 +1975,6 @@ OMX_ERRORTYPE ComponentBase::ProcessorPause(void)
 }
 
 OMX_ERRORTYPE ComponentBase::ProcessorResume(void)
-{
-    return OMX_ErrorNone;
-}
-
-OMX_ERRORTYPE ComponentBase::ProcessorSetConfig(OMX_INDEXTYPE nParamIndex)
-{
-    return OMX_ErrorNone;
-}
-
-OMX_ERRORTYPE ComponentBase::ProcessorSetParameter(OMX_INDEXTYPE nParamIndex)
 {
     return OMX_ErrorNone;
 }
