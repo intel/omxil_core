@@ -42,7 +42,6 @@ void PortBase::__PortBase(void)
     portdefinition.format.video.cMIMEType = &definition_format_mimetype[0];
     portdefinition.format.image.cMIMEType = &definition_format_mimetype[0];
 
-    memset(&portparam, 0, sizeof(portparam));
     memset(&audioparam, 0, sizeof(audioparam));
 
     owner = NULL;
@@ -238,17 +237,6 @@ const OMX_PARAM_PORTDEFINITIONTYPE *PortBase::GetPortDefinition(void)
     return &portdefinition;
 }
 
-void PortBase::SetPortParam(
-    const OMX_PARAM_PORTDEFINITIONTYPE *pComponentParameterStructure)
-{
-    memcpy(&portparam, pComponentParameterStructure, sizeof(portparam));
-}
-
-const OMX_PARAM_PORTDEFINITIONTYPE *PortBase::GetPortParam(void)
-{
-    return &portparam;
-}
-
 /* audio parameter */
 void PortBase::SetAudioPortParam(
     const OMX_AUDIO_PARAM_PORTFORMATTYPE *pComponentParameterStructure)
@@ -273,7 +261,7 @@ OMX_ERRORTYPE PortBase::UseBuffer(OMX_BUFFERHEADERTYPE **ppBufferHdr,
 
     pthread_mutex_lock(&hdrs_lock);
 
-    if (portparam.bPopulated == OMX_TRUE) {
+    if (portdefinition.bPopulated == OMX_TRUE) {
         pthread_mutex_unlock(&hdrs_lock);
         return OMX_ErrorNone;
     }
@@ -295,7 +283,7 @@ OMX_ERRORTYPE PortBase::UseBuffer(OMX_BUFFERHEADERTYPE **ppBufferHdr,
     buffer_hdr->pBuffer = pBuffer;
     buffer_hdr->nAllocLen = nSizeBytes;
     buffer_hdr->pAppPrivate = pAppPrivate;
-    if (portparam.eDir == OMX_DirInput) {
+    if (portdefinition.eDir == OMX_DirInput) {
         buffer_hdr->nInputPortIndex = nPortIndex;
         buffer_hdr->nOutputPortIndex = 0x7fffffff;
         buffer_hdr->pInputPortPrivate = this;
@@ -311,8 +299,8 @@ OMX_ERRORTYPE PortBase::UseBuffer(OMX_BUFFERHEADERTYPE **ppBufferHdr,
     buffer_hdrs = __list_add_tail(buffer_hdrs, entry);
     nr_buffer_hdrs++;
 
-    if (nr_buffer_hdrs >= portparam.nBufferCountActual) {
-        portparam.bPopulated = OMX_TRUE;
+    if (nr_buffer_hdrs >= portdefinition.nBufferCountActual) {
+        portdefinition.bPopulated = OMX_TRUE;
         buffer_hdrs_completion = true;
         pthread_cond_signal(&hdrs_wait);
     }
@@ -332,7 +320,7 @@ OMX_ERRORTYPE PortBase::AllocateBuffer(OMX_BUFFERHEADERTYPE **ppBuffer,
     struct list *entry;
 
     pthread_mutex_lock(&hdrs_lock);
-    if (portparam.bPopulated == OMX_TRUE) {
+    if (portdefinition.bPopulated == OMX_TRUE) {
         pthread_mutex_unlock(&hdrs_lock);
         return OMX_ErrorNone;
     }
@@ -355,7 +343,7 @@ OMX_ERRORTYPE PortBase::AllocateBuffer(OMX_BUFFERHEADERTYPE **ppBuffer,
     buffer_hdr->pBuffer = (OMX_U8 *)buffer_hdr + sizeof(*buffer_hdr);
     buffer_hdr->nAllocLen = nSizeBytes;
     buffer_hdr->pAppPrivate = pAppPrivate;
-    if (portparam.eDir == OMX_DirInput) {
+    if (portdefinition.eDir == OMX_DirInput) {
         buffer_hdr->nInputPortIndex = nPortIndex;
         buffer_hdr->nOutputPortIndex = (OMX_U32)-1;
         buffer_hdr->pInputPortPrivate = this;
@@ -371,8 +359,8 @@ OMX_ERRORTYPE PortBase::AllocateBuffer(OMX_BUFFERHEADERTYPE **ppBuffer,
     buffer_hdrs = __list_add_tail(buffer_hdrs, entry);
     nr_buffer_hdrs++;
 
-    if (nr_buffer_hdrs == portparam.nBufferCountActual) {
-        portparam.bPopulated = OMX_TRUE;
+    if (nr_buffer_hdrs == portdefinition.nBufferCountActual) {
+        portdefinition.bPopulated = OMX_TRUE;
         buffer_hdrs_completion = true;
         pthread_cond_signal(&hdrs_wait);
     }
@@ -411,7 +399,7 @@ OMX_ERRORTYPE PortBase::FreeBuffer(OMX_U32 nPortIndex,
     buffer_hdrs = __list_delete(buffer_hdrs, entry);
     nr_buffer_hdrs--;
 
-    portparam.bPopulated = OMX_FALSE;
+    portdefinition.bPopulated = OMX_FALSE;
     if (!nr_buffer_hdrs) {
         buffer_hdrs_completion = true;
         pthread_cond_signal(&hdrs_wait);
@@ -485,7 +473,7 @@ OMX_U32 PortBase::BufferQueueLength(void)
 
 OMX_ERRORTYPE PortBase::ReturnThisBuffer(OMX_BUFFERHEADERTYPE *pBuffer)
 {
-    OMX_DIRTYPE direction = portparam.eDir;
+    OMX_DIRTYPE direction = portdefinition.eDir;
     OMX_U32 port_index;
     OMX_ERRORTYPE (*bufferdone_callback)(OMX_HANDLETYPE,
                                          OMX_PTR,
@@ -505,7 +493,7 @@ OMX_ERRORTYPE PortBase::ReturnThisBuffer(OMX_BUFFERHEADERTYPE *pBuffer)
     else
         return OMX_ErrorBadParameter;
 
-    if (port_index != portparam.nPortIndex)
+    if (port_index != portdefinition.nPortIndex)
         return OMX_ErrorBadParameter;
 
     return bufferdone_callback(owner, appdata, pBuffer);
@@ -552,7 +540,7 @@ bool PortBase::IsEnabled(void)
 
 OMX_DIRTYPE PortBase::GetPortDirection(void)
 {
-    return portparam.eDir;
+    return portdefinition.eDir;
 }
 
 OMX_ERRORTYPE PortBase::PushMark(OMX_MARKTYPE *mark)
@@ -593,12 +581,12 @@ OMX_ERRORTYPE PortBase::TransState(OMX_U8 state)
 
     if (state == OMX_PortEnabled) {
         WaitPortBufferCompletion();
-        portparam.bEnabled = OMX_TRUE;
+        portdefinition.bEnabled = OMX_TRUE;
     }
     else if(state == OMX_PortDisabled) {
         FlushPort();
         WaitPortBufferCompletion();
-        portparam.bEnabled = OMX_FALSE;
+        portdefinition.bEnabled = OMX_FALSE;
     }
     else {
         ret = OMX_ErrorBadParameter;

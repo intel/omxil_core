@@ -45,9 +45,6 @@ public:
     OMX_ERRORTYPE SetPortDefinition(const OMX_PARAM_PORTDEFINITIONTYPE *p,
                                     bool isclient);
     const OMX_PARAM_PORTDEFINITIONTYPE *GetPortDefinition(void);
-    void SetPortParam(
-        const OMX_PARAM_PORTDEFINITIONTYPE *pComponentParameterStructure);
-    const OMX_PARAM_PORTDEFINITIONTYPE *GetPortParam(void);
     /* audio parameter */
     void SetAudioPortParam(
         const OMX_AUDIO_PARAM_PORTFORMATTYPE *pComponentParameterStructure);
@@ -135,7 +132,6 @@ private:
     /* room for portdefinition.format.*.cMIMEType */
     char definition_format_mimetype[OMX_MAX_STRINGNAME_SIZE];
 
-    OMX_PARAM_PORTDEFINITIONTYPE portparam;
     OMX_AUDIO_PARAM_PORTFORMATTYPE audioparam;
 
     /* owner handle */
