@@ -513,7 +513,7 @@ OMX_ERRORTYPE ComponentBase::CBaseGetParameter(
         if (!port)
             return OMX_ErrorBadParameter;
 
-        memcpy(p, port->GetPortParam(), sizeof(*p));
+        memcpy(p, port->GetPortDefinition(), sizeof(*p));
         break;
     }
     case OMX_IndexParamAudioPortFormat: {
@@ -607,7 +607,7 @@ OMX_ERRORTYPE ComponentBase::CBaseSetParameter(
                 return OMX_ErrorIncorrectStateOperation;
         }
 
-        port->SetPortParam(p);
+        port->SetPortDefinition(p, true);
         break;
     }
     case OMX_IndexParamAudioPortFormat: {
