@@ -142,4 +142,66 @@ private:
     OMX_CALLBACKTYPE *callbacks;
 };
 
+/* end of PortBase */
+
+class PortAudio : public PortBase
+{
+public:
+    PortAudio();
+
+    OMX_ERRORTYPE SetPortAudioParam(
+        const OMX_AUDIO_PARAM_PORTFORMATTYPE *audioparam, bool internal);
+    const OMX_AUDIO_PARAM_PORTFORMATTYPE *GetPortAudioParam(void);
+
+private:
+    OMX_AUDIO_PARAM_PORTFORMATTYPE audioparam;
+};
+
+/* end of PortAudio */
+
+class PortVideo : public PortBase
+{
+public:
+    PortVideo();
+
+    OMX_ERRORTYPE SetPortVideoParam(
+        const OMX_VIDEO_PARAM_PORTFORMATTYPE *videoparam, bool internal);
+    const OMX_VIDEO_PARAM_PORTFORMATTYPE *GetPortVideoParam(void);
+
+private:
+    OMX_VIDEO_PARAM_PORTFORMATTYPE videoparam;
+};
+
+/* end of PortVideo */
+
+class PortImage : public PortBase
+{
+public:
+    PortImage();
+
+    OMX_ERRORTYPE SetPortImageParam(
+        const OMX_IMAGE_PARAM_PORTFORMATTYPE *imageparam, bool internal);
+    const OMX_IMAGE_PARAM_PORTFORMATTYPE *GetPortImageParam(void);
+
+private:
+    OMX_IMAGE_PARAM_PORTFORMATTYPE imageparam;
+};
+
+/* end of PortImage */
+
+class PortOther : public PortBase
+{
+public:
+    PortOther();
+
+    OMX_ERRORTYPE SetPortOtherParam(
+        const OMX_OTHER_PARAM_PORTFORMATTYPE *otherparam, bool internal);
+    const OMX_OTHER_PARAM_PORTFORMATTYPE *GetPortOtherParam(void);
+
+private:
+    OMX_OTHER_PARAM_PORTFORMATTYPE otherparam;
+};
+
+/* end of PortOther */
+
 #endif /* __PORTBASE_H */
