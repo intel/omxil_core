@@ -1420,7 +1420,7 @@ inline OMX_ERRORTYPE ComponentBase::TransStateToLoaded(OMX_STATETYPE current)
         ret = OMX_ErrorNone;
     }
     else
-        ret = OMX_ErrorIncorrectStateOperation;
+        ret = OMX_ErrorIncorrectStateTransition;
 
 out:
     return ret;
@@ -1478,7 +1478,7 @@ inline OMX_ERRORTYPE ComponentBase::TransStateToIdle(OMX_STATETYPE current)
         ret = OMX_ErrorNone;
     }
     else
-        ret = OMX_ErrorIncorrectStateOperation;
+        ret = OMX_ErrorIncorrectStateTransition;
 
 out:
     return ret;
@@ -1517,7 +1517,7 @@ ComponentBase::TransStateToExecuting(OMX_STATETYPE current)
         }
     }
     else
-        ret = OMX_ErrorIncorrectStateOperation;
+        ret = OMX_ErrorIncorrectStateTransition;
 
 out:
     return ret;
@@ -1555,7 +1555,7 @@ inline OMX_ERRORTYPE ComponentBase::TransStateToPause(OMX_STATETYPE current)
         }
     }
     else
-        ret = OMX_ErrorIncorrectStateOperation;
+        ret = OMX_ErrorIncorrectStateTransition;
 
 out:
     return ret;
@@ -1583,7 +1583,7 @@ ComponentBase::TransStateToWaitForResources(OMX_STATETYPE current)
         ret = OMX_ErrorNone;
     }
     else
-        ret = OMX_ErrorIncorrectStateOperation;
+        ret = OMX_ErrorIncorrectStateTransition;
 
     return ret;
 }
