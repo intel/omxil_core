@@ -135,18 +135,32 @@ OMX_ERRORTYPE PortBase::SetPortDefinition(
         portdefinition->format.image.cMIMEType = mimetype;
     }
 
-    memcpy(&temp, &portdefinition, sizeof(temp));
+    memcpy(&temp, portdefinition, sizeof(temp));
 
     if (isclient) {
+        if (temp.nPortIndex != p->nPortIndex)
+            return OMX_ErrorBadParameter;
+        if (temp.eDir != p->eDir)
+            return OMX_ErrorBadParameter;
+        if (temp.eDomain != p->eDomain)
+            return OMX_ErrorBadParameter;
         if (temp.nBufferCountActual != p->nBufferCountActual) {
             if (temp.nBufferCountMin > p->nBufferCountActual)
                 return OMX_ErrorBadParameter;
 
             temp.nBufferCountActual = p->nBufferCountActual;
         }
-
-        if (temp.eDomain != p->eDomain)
-            return OMX_ErrorBadParameter;
+    }
+    else {
+        temp.nPortIndex = p->nPortIndex;
+        temp.eDir = p->eDir;
+        temp.nBufferCountActual = p->nBufferCountActual;
+        temp.nBufferCountMin = p->nBufferCountMin;
+        temp.bEnabled = p->bEnabled;
+        temp.bPopulated = p->bPopulated;
+        temp.eDomain = p->eDomain;
+        temp.bBuffersContiguous = p->bBuffersContiguous;
+        temp.nBufferAlignment = p->nBufferAlignment;
     }
 
     switch (p->eDomain) {
