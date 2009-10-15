@@ -536,10 +536,15 @@ OMX_STATETYPE PortBase::GetOwnerState(void)
 bool PortBase::IsEnabled(void)
 {
     bool enabled;
+    bool unlock = true;
 
-    pthread_mutex_lock(&state_lock);
+    if (pthread_mutex_trylock(&state_lock))
+        unlock = false;
+
     enabled = (state == OMX_PortEnabled) ? true : false;
-    pthread_mutex_unlock(&state_lock);
+
+    if (unlock)
+        pthread_mutex_unlock(&state_lock);
 
     return enabled;
 }
