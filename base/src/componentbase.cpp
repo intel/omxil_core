@@ -1237,11 +1237,15 @@ void ComponentBase::CmdHandler(struct cmd_s *cmd)
         TransStatePort(port_index, PortBase::OMX_PortEnabled);
         break;
     }
-    case OMX_CommandMarkBuffer:
+    case OMX_CommandMarkBuffer: {
         OMX_U32 port_index = (OMX_U32)cmd->param1;
         OMX_MARKTYPE *mark = (OMX_MARKTYPE *)cmd->cmddata;
 
         PushThisMark(port_index, mark);
+        break;
+    }
+    default:
+        LOGE("receive command 0x%08x that cannot be handled\n", cmd->cmd);
         break;
     } /* switch */
 }
