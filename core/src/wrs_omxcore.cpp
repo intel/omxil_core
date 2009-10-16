@@ -109,7 +109,7 @@ OMX_API OMX_ERRORTYPE OMX_APIENTRY OMX_Init(void)
 
     pthread_mutex_lock(&g_module_lock);
     if (!g_initialized) {
-        g_module_list = construct_components("wrs_omxil_components.cfg");
+        g_module_list = construct_components("wrs_omxil_components.list");
         if (!g_module_list) {
             pthread_mutex_unlock(&g_module_lock);
             return OMX_ErrorInsufficientResources;
