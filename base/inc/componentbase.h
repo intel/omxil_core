@@ -436,10 +436,10 @@ private:
     const static OMX_U8 OMX_SPEC_VERSION_STEP = 0;
 
     const static OMX_U32 OMX_SPEC_VERSION = 0
-        | (OMX_SPEC_VERSION_MAJOR << 24)
-        | (OMX_SPEC_VERSION_MINOR << 16)
-        | (OMX_SPEC_VERSION_REVISION << 8)
-        | (OMX_SPEC_VERSION_STEP << 0);
+        | (OMX_SPEC_VERSION_MAJOR << 0)
+        | (OMX_SPEC_VERSION_MINOR << 8)
+        | (OMX_SPEC_VERSION_REVISION << 16)
+        | (OMX_SPEC_VERSION_STEP << 24);
 };
 
 #endif /* __COMPONENTBASE_H */
