@@ -579,22 +579,25 @@ OMX_MARKTYPE *PortBase::PopMark(void)
     return mark;
 }
 
-OMX_ERRORTYPE PortBase::TransState(OMX_U8 state)
+OMX_ERRORTYPE PortBase::TransState(OMX_U8 transition)
 {
+    OMX_U8 current;
     OMX_ERRORTYPE ret = OMX_ErrorNone;
 
     pthread_mutex_lock(&state_lock);
 
-    if (this->state == state) {
+    current = state;
+
+    if (current == transition) {
         ret = OMX_ErrorSameState;
         goto unlock;
     }
 
-    if (state == OMX_PortEnabled) {
+    if (transition == OMX_PortEnabled) {
         WaitPortBufferCompletion();
         portdefinition.bEnabled = OMX_TRUE;
     }
-    else if(state == OMX_PortDisabled) {
+    else if(transition == OMX_PortDisabled) {
         FlushPort();
         WaitPortBufferCompletion();
         portdefinition.bEnabled = OMX_FALSE;
@@ -604,7 +607,7 @@ OMX_ERRORTYPE PortBase::TransState(OMX_U8 state)
         goto unlock;
     }
 
-    this->state = state;
+    state = transition;
 
 unlock:
     pthread_mutex_unlock(&state_lock);

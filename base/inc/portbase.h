@@ -96,8 +96,8 @@ public:
     /* end of component methods & helpers */
 
     /* TransState, state */
-    static const OMX_U8 OMX_PortEnabled = 0;
-    static const OMX_U8 OMX_PortDisabled = 1;
+    static const OMX_U8 OMX_PortDisabled = 0;
+    static const OMX_U8 OMX_PortEnabled = 1;
 
 private:
     /* common routines for constructor */
