@@ -1,3 +1,8 @@
+/*
+ * Copyright (C) 2009 Wind River Systems
+ *      Author: Ho-Eun Ryu <ho-eun.ryu@windriver.com>
+ */
+
 #ifndef __LOG_H
 #define __LOG_H
 

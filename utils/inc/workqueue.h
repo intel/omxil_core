@@ -1,3 +1,8 @@
+/*
+ * Copyright (C) 2009 Wind River Systems
+ *      Author: Ho-Eun Ryu <ho-eun.ryu@windriver.com>
+ */
+
 #ifndef __WORKQUEUE_H
 #define __WORKQUEUE_H
 

@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2009 Wind River Systems.
+ * Copyright (C) 2009 Wind River Systems
+ *      Author: Ho-Eun Ryu <ho-eun.ryu@windriver.com>
  */
 
 #include <string.h>
