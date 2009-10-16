@@ -430,10 +430,17 @@ private:
     char name[OMX_MAX_STRINGNAME_SIZE];
 
     /* omx specification version */
+#ifndef ANDROID
     const static OMX_U8 OMX_SPEC_VERSION_MAJOR = 1;
     const static OMX_U8 OMX_SPEC_VERSION_MINOR = 1;
+    const static OMX_U8 OMX_SPEC_VERSION_REVISION = 2;
+    const static OMX_U8 OMX_SPEC_VERSION_STEP = 0;
+#else
+    const static OMX_U8 OMX_SPEC_VERSION_MAJOR = 1;
+    const static OMX_U8 OMX_SPEC_VERSION_MINOR = 0;
     const static OMX_U8 OMX_SPEC_VERSION_REVISION = 0;
     const static OMX_U8 OMX_SPEC_VERSION_STEP = 0;
+#endif
 
     const static OMX_U32 OMX_SPEC_VERSION = 0
         | (OMX_SPEC_VERSION_MAJOR << 0)
