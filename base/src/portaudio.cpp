@@ -100,6 +100,61 @@ const OMX_AUDIO_PARAM_MP3TYPE *PortMp3::GetPortMp3Param(void)
 
 /* end of PortMp3 */
 
+PortAac::PortAac()
+{
+    OMX_AUDIO_PARAM_PORTFORMATTYPE audioparam;
+
+    memcpy(&audioparam, GetPortAudioParam(), sizeof(audioparam));
+    audioparam.eEncoding = OMX_AUDIO_CodingAAC;
+    SetPortAudioParam(&audioparam, false);
+
+    memset(&aacparam, 0, sizeof(aacparam));
+    ComponentBase::SetTypeHeader(&aacparam, sizeof(aacparam));
+}
+
+OMX_ERRORTYPE PortAac::SetPortAacParam(const OMX_AUDIO_PARAM_AACPROFILETYPE *p,
+                                       bool overwrite_readonly)
+{
+    if (!overwrite_readonly) {
+        OMX_ERRORTYPE ret;
+
+        ret = ComponentBase::CheckTypeHeader((void *)p, sizeof(*p));
+        if (ret != OMX_ErrorNone)
+            return ret;
+        if (aacparam.nPortIndex != p->nPortIndex)
+            return OMX_ErrorBadPortIndex;
+    }
+    else {
+        OMX_AUDIO_PARAM_PORTFORMATTYPE audioparam;
+
+        memcpy(&audioparam, GetPortAudioParam(), sizeof(audioparam));
+        audioparam.nPortIndex = p->nPortIndex;
+        SetPortAudioParam(&audioparam, true);
+
+        aacparam.nPortIndex = p->nPortIndex;
+    }
+
+    aacparam.nChannels = p->nChannels;
+    aacparam.nBitRate = p->nBitRate;
+    aacparam.nSampleRate = p->nSampleRate;
+    aacparam.nAudioBandWidth = p->nAudioBandWidth;
+    aacparam.nFrameLength = p->nFrameLength;
+    aacparam.nAACtools = p->nAACtools;
+    aacparam.nAACERtools = p->nAACERtools;
+    aacparam.eAACProfile = p->eAACProfile;
+    aacparam.eAACStreamFormat = p->eAACStreamFormat;
+    aacparam.eChannelMode = p->eChannelMode;
+
+    return OMX_ErrorNone;
+}
+
+const OMX_AUDIO_PARAM_AACPROFILETYPE *PortAac::GetPortAacParam(void)
+{
+    return &aacparam;
+}
+
+/* end of PortAac */
+
 PortPcm::PortPcm()
 {
     OMX_AUDIO_PARAM_PORTFORMATTYPE audioparam;

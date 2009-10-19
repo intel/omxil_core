@@ -42,6 +42,21 @@ private:
 
 /* end of PortMp3 */
 
+class PortAac : public PortAudio
+{
+public:
+    PortAac();
+
+    OMX_ERRORTYPE SetPortAacParam(const OMX_AUDIO_PARAM_AACPROFILETYPE *p,
+                                  bool overwrite_readonly);
+    const OMX_AUDIO_PARAM_AACPROFILETYPE *GetPortAacParam(void);
+
+private:
+    OMX_AUDIO_PARAM_AACPROFILETYPE aacparam;
+};
+
+/* end of PortAac */
+
 class PortPcm : public PortAudio
 {
 public:
