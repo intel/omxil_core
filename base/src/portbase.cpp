@@ -244,18 +244,6 @@ const OMX_PARAM_PORTDEFINITIONTYPE *PortBase::GetPortDefinition(void)
     return &portdefinition;
 }
 
-/* audio parameter */
-void PortBase::SetAudioPortParam(
-    const OMX_AUDIO_PARAM_PORTFORMATTYPE *pComponentParameterStructure)
-{
-    memcpy(&audioparam, pComponentParameterStructure, sizeof(audioparam));
-}
-
-const OMX_AUDIO_PARAM_PORTFORMATTYPE *PortBase::GetAudioPortParam(void)
-{
-    return &audioparam;
-}
-
 /* Use/Allocate/FreeBuffer */
 OMX_ERRORTYPE PortBase::UseBuffer(OMX_BUFFERHEADERTYPE **ppBufferHdr,
                                   OMX_U32 nPortIndex,

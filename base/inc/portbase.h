@@ -46,10 +46,6 @@ public:
     OMX_ERRORTYPE SetPortDefinition(const OMX_PARAM_PORTDEFINITIONTYPE *p,
                                     bool overwrite_readonly);
     const OMX_PARAM_PORTDEFINITIONTYPE *GetPortDefinition(void);
-    /* audio parameter */
-    void SetAudioPortParam(
-        const OMX_AUDIO_PARAM_PORTFORMATTYPE *pComponentParameterStructure);
-    const OMX_AUDIO_PARAM_PORTFORMATTYPE *GetAudioPortParam(void);
 
     /* Use/Allocate/FreeBuffer */
     OMX_ERRORTYPE UseBuffer(OMX_BUFFERHEADERTYPE **ppBufferHdr,
