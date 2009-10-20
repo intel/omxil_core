@@ -156,11 +156,8 @@ ComponentBase::~ComponentBase()
     pthread_mutex_destroy(&ports_block);
 
     if (roles) {
-        OMX_U32 i;
-
-        for (i = 0; i < nr_roles; i++)
-            free(roles[i]);
-
+        if (roles[0])
+            free(roles[0]);
         free(roles);
     }
 }
@@ -217,8 +214,8 @@ OMX_ERRORTYPE ComponentBase::SetRolesOfComponent(OMX_U32 nr_roles,
     if (!this->roles)
         return OMX_ErrorInsufficientResources;
 
-    this->roles[0] = (OMX_U8 *)malloc(OMX_MAX_STRINGNAME_SIZE);
-    if (!this->roles) {
+    this->roles[0] = (OMX_U8 *)malloc(OMX_MAX_STRINGNAME_SIZE * nr_roles);
+    if (!this->roles[0]) {
         free(this->roles);
         this->roles = NULL;
         return OMX_ErrorInsufficientResources;
