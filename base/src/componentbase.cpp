@@ -1398,19 +1398,7 @@ inline OMX_ERRORTYPE ComponentBase::TransStateToIdle(OMX_STATETYPE current)
                 ports[i]->WaitPortBufferCompletion();
         }
     }
-    else if (current == OMX_StateExecuting) {
-        FlushPort(OMX_ALL, 0);
-
-        bufferwork->StopWork();
-
-        ret = ProcessorStop();
-        if (ret != OMX_ErrorNone) {
-            LOGE("failed to ProcessorStop() (ret = 0x%08x)\n", ret);
-            ret = OMX_ErrorInvalidState;
-            goto out;
-        }
-    }
-    else if (current == OMX_StatePause) {
+    else if ((current == OMX_StatePause) || (current == OMX_StateExecuting)) {
         FlushPort(OMX_ALL, 0);
 
         bufferwork->CancelScheduledWork(this);
