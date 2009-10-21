@@ -148,6 +148,7 @@ OMX_ERRORTYPE PortBase::SetPortDefinition(
         temp.eDir = p->eDir;
         temp.nBufferCountActual = p->nBufferCountActual;
         temp.nBufferCountMin = p->nBufferCountMin;
+        temp.nBufferSize = p->nBufferSize;
         temp.bEnabled = p->bEnabled;
         temp.bPopulated = p->bPopulated;
         temp.eDomain = p->eDomain;
