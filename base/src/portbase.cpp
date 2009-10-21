@@ -12,6 +12,8 @@
 #include <portbase.h>
 #include <componentbase.h>
 
+#define LOG_NDEBUG 1
+
 #define LOG_TAG "portbase"
 #include <log.h>
 
@@ -254,16 +256,23 @@ OMX_ERRORTYPE PortBase::UseBuffer(OMX_BUFFERHEADERTYPE **ppBufferHdr,
     OMX_BUFFERHEADERTYPE *buffer_hdr;
     struct list *entry;
 
+    LOGV("%s(): enter, nPortIndex=%lu, nSizeBytes=%lu\n", __func__,
+         nPortIndex, nSizeBytes);
+
     pthread_mutex_lock(&hdrs_lock);
 
     if (portdefinition.bPopulated == OMX_TRUE) {
         pthread_mutex_unlock(&hdrs_lock);
+        LOGV("%s(): exit, already populated (ret = 0x%08x)\n", __func__,
+             OMX_ErrorNone);
         return OMX_ErrorNone;
     }
 
     buffer_hdr = (OMX_BUFFERHEADERTYPE *)calloc(1, sizeof(*buffer_hdr));
     if (!buffer_hdr) {
         pthread_mutex_unlock(&hdrs_lock);
+        LOGE("%s(): exit (ret = 0x%08x)\n",
+             __func__, OMX_ErrorInsufficientResources);
         return OMX_ErrorInsufficientResources;
     }
 
@@ -271,6 +280,8 @@ OMX_ERRORTYPE PortBase::UseBuffer(OMX_BUFFERHEADERTYPE **ppBufferHdr,
     if (!entry) {
         free(buffer_hdr);
         pthread_mutex_unlock(&hdrs_lock);
+        LOGE("%s(): exit (ret = 0x%08x)\n",
+             __func__, OMX_ErrorInsufficientResources);
         return OMX_ErrorInsufficientResources;
     }
 
@@ -294,15 +305,21 @@ OMX_ERRORTYPE PortBase::UseBuffer(OMX_BUFFERHEADERTYPE **ppBufferHdr,
     buffer_hdrs = __list_add_tail(buffer_hdrs, entry);
     nr_buffer_hdrs++;
 
+    LOGV("%s(): a buffer allocated (%lu/%lu)\n", __func__,
+         nr_buffer_hdrs, portdefinition.nBufferCountActual);
+
     if (nr_buffer_hdrs >= portdefinition.nBufferCountActual) {
         portdefinition.bPopulated = OMX_TRUE;
         buffer_hdrs_completion = true;
         pthread_cond_signal(&hdrs_wait);
+        LOGV("%s(): allocate all buffers, nBufferCountActual (%lu)\n",
+             __func__, portdefinition.nBufferCountActual);
     }
 
     *ppBufferHdr = buffer_hdr;
 
     pthread_mutex_unlock(&hdrs_lock);
+    LOGV("%s(): exit (ret = 0x%08x)\n", __func__, OMX_ErrorNone);
     return OMX_ErrorNone;
 }
 
@@ -314,9 +331,14 @@ OMX_ERRORTYPE PortBase::AllocateBuffer(OMX_BUFFERHEADERTYPE **ppBuffer,
     OMX_BUFFERHEADERTYPE *buffer_hdr;
     struct list *entry;
 
+    LOGV("%s(): enter, nPortIndex=%lu, nSizeBytes=%lu\n", __func__,
+         nPortIndex, nSizeBytes);
+
     pthread_mutex_lock(&hdrs_lock);
     if (portdefinition.bPopulated == OMX_TRUE) {
         pthread_mutex_unlock(&hdrs_lock);
+        LOGV("%s(): exit, already populated (ret = 0x%08x)\n", __func__,
+             OMX_ErrorNone);
         return OMX_ErrorNone;
     }
 
@@ -324,6 +346,8 @@ OMX_ERRORTYPE PortBase::AllocateBuffer(OMX_BUFFERHEADERTYPE **ppBuffer,
         calloc(1, sizeof(*buffer_hdr) + nSizeBytes);
     if (!buffer_hdr) {
         pthread_mutex_unlock(&hdrs_lock);
+        LOGE("%s(): exit (ret = 0x%08x)\n",
+             __func__, OMX_ErrorInsufficientResources);
         return OMX_ErrorInsufficientResources;
     }
 
@@ -331,6 +355,8 @@ OMX_ERRORTYPE PortBase::AllocateBuffer(OMX_BUFFERHEADERTYPE **ppBuffer,
     if (!entry) {
         free(buffer_hdr);
         pthread_mutex_unlock(&hdrs_lock);
+        LOGE("%s(): exit (ret = 0x%08x)\n",
+             __func__, OMX_ErrorInsufficientResources);
         return OMX_ErrorInsufficientResources;
     }
 
@@ -354,15 +380,21 @@ OMX_ERRORTYPE PortBase::AllocateBuffer(OMX_BUFFERHEADERTYPE **ppBuffer,
     buffer_hdrs = __list_add_tail(buffer_hdrs, entry);
     nr_buffer_hdrs++;
 
+    LOGV("%s(): a buffer allocated (%lu/%lu)\n", __func__,
+         nr_buffer_hdrs, portdefinition.nBufferCountActual);
+
     if (nr_buffer_hdrs == portdefinition.nBufferCountActual) {
         portdefinition.bPopulated = OMX_TRUE;
         buffer_hdrs_completion = true;
         pthread_cond_signal(&hdrs_wait);
+        LOGV("%s(): allocate all buffers, nBufferCountActual (%lu)\n",
+             __func__, portdefinition.nBufferCountActual);
     }
 
     *ppBuffer = buffer_hdr;
 
     pthread_mutex_unlock(&hdrs_lock);
+    LOGV("%s(): exit (ret = 0x%08x)\n", __func__, OMX_ErrorNone);
     return OMX_ErrorNone;
 }
 
@@ -372,45 +404,60 @@ OMX_ERRORTYPE PortBase::FreeBuffer(OMX_U32 nPortIndex,
     struct list *entry;
     OMX_ERRORTYPE ret;
 
+    LOGV("%s(): enter, nPortIndex=%lu\n", __func__, nPortIndex);
+
     pthread_mutex_lock(&hdrs_lock);
     entry = list_find(buffer_hdrs, pBuffer);
 
     if (!entry) {
         pthread_mutex_unlock(&hdrs_lock);
+        LOGV("%s(): exit (ret = 0x%08x)\n", __func__, OMX_ErrorNone);
         return OMX_ErrorNone;
     }
 
     if (entry->data != pBuffer) {
         pthread_mutex_unlock(&hdrs_lock);
+        LOGE("%s(): exit, (entry->data != pBuffer) (ret = 0x%08x)\n", __func__,
+             OMX_ErrorBadParameter);
         return OMX_ErrorBadParameter;
     }
 
     ret = ComponentBase::CheckTypeHeader(pBuffer, sizeof(*pBuffer));
     if (ret != OMX_ErrorNone) {
         pthread_mutex_unlock(&hdrs_lock);
+        LOGE("%s(): exit (ret = 0x%08x)\n",
+             __func__, OMX_ErrorInsufficientResources);
         return ret;
     }
 
     buffer_hdrs = __list_delete(buffer_hdrs, entry);
     nr_buffer_hdrs--;
 
+    LOGV("%s(): free a buffer (%lu/%lu)\n", __func__,
+         nr_buffer_hdrs, portdefinition.nBufferCountActual);
+
     portdefinition.bPopulated = OMX_FALSE;
     if (!nr_buffer_hdrs) {
         buffer_hdrs_completion = true;
         pthread_cond_signal(&hdrs_wait);
+        LOGV("%s(): free all allocated buffers\n", __func__);
     }
 
     free(pBuffer);
 
     pthread_mutex_unlock(&hdrs_lock);
+    LOGV("%s(): exit (ret = 0x%08x)\n", __func__, OMX_ErrorNone);
     return OMX_ErrorNone;
 }
 
 void PortBase::WaitPortBufferCompletion(void)
 {
     pthread_mutex_lock(&hdrs_lock);
-    if (!buffer_hdrs_completion)
+    if (!buffer_hdrs_completion) {
+        LOGV("%s(): wait for buffer header completion\n", __func__);
         pthread_cond_wait(&hdrs_wait, &hdrs_lock);
+        LOGV("%s(): wokeup (buffer header completion)\n", __func__);
+    }
     buffer_hdrs_completion = !buffer_hdrs_completion;
     pthread_mutex_unlock(&hdrs_lock);
 }
@@ -473,9 +520,15 @@ OMX_ERRORTYPE PortBase::ReturnThisBuffer(OMX_BUFFERHEADERTYPE *pBuffer)
     OMX_ERRORTYPE (*bufferdone_callback)(OMX_HANDLETYPE,
                                          OMX_PTR,
                                          OMX_BUFFERHEADERTYPE *);
+    OMX_ERRORTYPE ret;
 
-    if (!pBuffer)
+    LOGV("%s(): enter\n", __func__);
+
+    if (!pBuffer) {
+        LOGE("%s(): exit, invalid buffer pointer (ret = 0x%08x)\n", __func__,
+             OMX_ErrorBadParameter);
         return OMX_ErrorBadParameter;
+    }
 
     if (direction == OMX_DirInput) {
         port_index = pBuffer->nInputPortIndex;
@@ -485,13 +538,26 @@ OMX_ERRORTYPE PortBase::ReturnThisBuffer(OMX_BUFFERHEADERTYPE *pBuffer)
         port_index = pBuffer->nOutputPortIndex;
         bufferdone_callback = callbacks->FillBufferDone;
     }
-    else
+    else {
+        LOGE("%s(): exit, invalid direction (%d) (ret = 0x%08x)\n", __func__,
+             direction, OMX_ErrorBadParameter);
         return OMX_ErrorBadParameter;
+    }
 
-    if (port_index != portdefinition.nPortIndex)
+    LOGV("%s(): direction=%d, port_index=%lu\n",
+         __func__, direction, port_index);
+
+    if (port_index != portdefinition.nPortIndex) {
+        LOGE("%s(): exit, not matched port index (%lu/%lu) (ret = 0x%08x)\n",
+             __func__, port_index, portdefinition.nPortIndex,
+             OMX_ErrorBadParameter);
         return OMX_ErrorBadParameter;
+    }
 
-    return bufferdone_callback(owner, appdata, pBuffer);
+    ret = bufferdone_callback(owner, appdata, pBuffer);
+    LOGV("%s(): exit, after calling bufferdone callback (ret = 0x%08x)\n",
+         __func__, ret);
+    return ret;
 }
 
 /* SendCommand:Flush/PortEnable/Disable */
@@ -573,12 +639,16 @@ OMX_ERRORTYPE PortBase::TransState(OMX_U8 transition)
     OMX_U8 current;
     OMX_ERRORTYPE ret = OMX_ErrorNone;
 
+    LOGV("%s(): enter, transition=%d\n", __func__, transition);
+
     pthread_mutex_lock(&state_lock);
 
     current = state;
 
     if (current == transition) {
         ret = OMX_ErrorSameState;
+        LOGE("%s(): exit, same state (%d) (ret = 0x%08x)\n",
+             __func__, current, OMX_ErrorSameState);
         goto unlock;
     }
 
@@ -593,10 +663,14 @@ OMX_ERRORTYPE PortBase::TransState(OMX_U8 transition)
     }
     else {
         ret = OMX_ErrorBadParameter;
+        LOGE("%s(): exit, invalid transition (%d) (ret = 0x%08x)\n",
+             __func__, transition, OMX_ErrorSameState);
         goto unlock;
     }
 
     state = transition;
+    LOGV("%s(): transition from %d to %d completed\n", __func__,
+         current, transition);
 
 unlock:
     pthread_mutex_unlock(&state_lock);
