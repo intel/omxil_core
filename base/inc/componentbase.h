@@ -288,9 +288,13 @@ public:
     /* end of helper method for queury_roles() */
 
 protected:
-    /* helper for derived class */
+    /* helpers for derived class */
     const OMX_STRING GetWorkingRole(void);
     const OMX_COMPONENTTYPE *GetComponentHandle(void);
+
+    void DumpBuffer(const OMX_BUFFERHEADERTYPE *bufferheader);
+
+    /* end of helpers for derived class */
 
     /* ports */
     /*
