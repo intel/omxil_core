@@ -1402,6 +1402,14 @@ inline OMX_ERRORTYPE ComponentBase::TransStateToIdle(OMX_STATETYPE current)
         FlushPort(OMX_ALL, 0);
 
         bufferwork->CancelScheduledWork(this);
+
+        if (current == OMX_StatePause) {
+            pthread_mutex_lock(&executing_lock);
+            executing = true;
+            pthread_cond_signal(&executing_wait);
+            pthread_mutex_unlock(&executing_lock);
+        }
+
         bufferwork->StopWork();
 
         ret = ProcessorStop();
@@ -1764,7 +1772,6 @@ void ComponentBase::Work(void)
         }
     }
     ScheduleIfAllBufferAvailable();
-
     pthread_mutex_unlock(&ports_block);
 }
 
