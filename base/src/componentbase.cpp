@@ -1991,16 +1991,21 @@ const OMX_COMPONENTTYPE *ComponentBase::GetComponentHandle(void)
 
 void ComponentBase::DumpBuffer(const OMX_BUFFERHEADERTYPE *bufferheader)
 {
-    OMX_U8 *buffer = bufferheader->pBuffer, *p;
+    OMX_U8 *pbuffer = bufferheader->pBuffer, *p;
     OMX_U32 offset = bufferheader->nOffset;
     OMX_U32 alloc_len = bufferheader->nAllocLen;
     OMX_U32 filled_len =  bufferheader->nFilledLen;
     OMX_U32 left = filled_len, oneline;
     OMX_U32 index = 0, i;
+    /* 0x%04lx:  %02x %02x .. (n = 16)\n\0 */
+    char prbuffer[8 + 3 * 0x10 + 2], *pp;
+    OMX_U32 prbuffer_len;
 
     LOGD("Componant %s DumpBuffer\n", name);
-    LOGD("inport index = %lu, outport index = %lu",
-         bufferheader->nInputPortIndex, bufferheader->nOutputPortIndex);
+    LOGD("%s port index = %lu",
+         (bufferheader->nInputPortIndex != 0x7fffffff) ? "input" : "output",
+         (bufferheader->nInputPortIndex != 0x7fffffff) ?
+         bufferheader->nInputPortIndex : bufferheader->nOutputPortIndex);
     LOGD("nAllocLen = %lu, nOffset = %lu, nFilledLen = %lu\n",
          alloc_len, offset, filled_len);
     LOGD("nTimeStamp = %lld, nTickCount = %lu",
@@ -2008,23 +2013,27 @@ void ComponentBase::DumpBuffer(const OMX_BUFFERHEADERTYPE *bufferheader)
          bufferheader->nTickCount);
     LOGD("nFlags = 0x%08lx\n", bufferheader->nFlags);
 
-    if (!buffer || !alloc_len || !filled_len)
+    if (!pbuffer || !alloc_len || !filled_len)
         return;
 
     if (offset + filled_len > alloc_len)
         return;
 
-    p = buffer + offset;
-
+    p = pbuffer + offset;
     while (left) {
-        oneline = left > 16 ? 16 : left;
-        LOGD("0x%04lx: ", index);
+        oneline = left > 0x10 ? 0x10 : left; /* 16 items per 1 line */
+        pp += sprintf(pp, "0x%04lx: ", index);
         for (i = 0; i < oneline; i++)
-            LOGD(" %02x", *(p + i));
-        LOGD("\n");
+            pp += sprintf(pp, " %02x", *(p + i));
+        pp += sprintf(pp, "\n");
+        *pp = '\0';
+
         index += 0x10;
         p += oneline;
         left -= oneline;
+
+        pp = &prbuffer[0];
+        LOGD("%s", pp);
     }
 }
 
