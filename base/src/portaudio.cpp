@@ -155,6 +155,59 @@ const OMX_AUDIO_PARAM_AACPROFILETYPE *PortAac::GetPortAacParam(void)
 
 /* end of PortAac */
 
+PortWma::PortWma()
+{
+    OMX_AUDIO_PARAM_PORTFORMATTYPE audioparam;
+
+    memcpy(&audioparam, GetPortAudioParam(), sizeof(audioparam));
+    audioparam.eEncoding = OMX_AUDIO_CodingWMA;
+    SetPortAudioParam(&audioparam, false);
+
+    memset(&wmaparam, 0, sizeof(wmaparam));
+    ComponentBase::SetTypeHeader(&wmaparam, sizeof(wmaparam));
+}
+
+OMX_ERRORTYPE PortWma::SetPortWmaParam(const OMX_AUDIO_PARAM_WMATYPE *p,
+                                       bool overwrite_readonly)
+{
+    if (!overwrite_readonly) {
+        OMX_ERRORTYPE ret;
+
+        ret = ComponentBase::CheckTypeHeader((void *)p, sizeof(*p));
+        if (ret != OMX_ErrorNone)
+            return ret;
+        if (wmaparam.nPortIndex != p->nPortIndex)
+            return OMX_ErrorBadPortIndex;
+    }
+    else {
+        OMX_AUDIO_PARAM_PORTFORMATTYPE audioparam;
+
+        memcpy(&audioparam, GetPortAudioParam(), sizeof(audioparam));
+        audioparam.nPortIndex = p->nPortIndex;
+        SetPortAudioParam(&audioparam, true);
+
+        wmaparam.nPortIndex = p->nPortIndex;
+    }
+
+    wmaparam.nChannels = p->nChannels;
+    wmaparam.nBitRate = p->nBitRate;
+    wmaparam.eFormat = p->eFormat;
+    wmaparam.eProfile = p->eProfile;
+    wmaparam.nSamplingRate = p->nSamplingRate;
+    wmaparam.nBlockAlign = p->nBlockAlign;
+    wmaparam.nEncodeOptions = p->nEncodeOptions;
+    wmaparam.nSuperBlockAlign = p->nSuperBlockAlign;
+
+    return OMX_ErrorNone;
+}
+
+const OMX_AUDIO_PARAM_WMATYPE *PortWma::GetPortWmaParam(void)
+{
+    return &wmaparam;
+}
+
+/* end of PortWma */
+
 PortPcm::PortPcm()
 {
     OMX_AUDIO_PARAM_PORTFORMATTYPE audioparam;

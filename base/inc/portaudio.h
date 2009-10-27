@@ -57,6 +57,21 @@ private:
 
 /* end of PortAac */
 
+class PortWma : public PortAudio
+{
+public:
+    PortWma();
+
+    OMX_ERRORTYPE SetPortWmaParam(const OMX_AUDIO_PARAM_WMATYPE *p,
+                                  bool overwrite_readonly);
+    const OMX_AUDIO_PARAM_WMATYPE *GetPortWmaParam(void);
+
+private:
+    OMX_AUDIO_PARAM_WMATYPE wmaparam;
+};
+
+/* end of PortWma */
+
 class PortPcm : public PortAudio
 {
 public:
