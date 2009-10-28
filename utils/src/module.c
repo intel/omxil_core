@@ -38,7 +38,6 @@ static pthread_mutex_t g_lock = PTHREAD_MUTEX_INITIALIZER;
 
 static struct module *module_find_with_name(struct module *head,
                                             const char *filename)
-                                            
 {
     struct module *module;
 
@@ -52,7 +51,6 @@ static struct module *module_find_with_name(struct module *head,
 
 static struct module *module_find_with_handle(struct module *head,
                                               const void *handle)
-                                              
 {
     struct module *module;
 

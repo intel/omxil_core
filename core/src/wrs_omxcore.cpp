@@ -184,7 +184,7 @@ OMX_API OMX_ERRORTYPE OMX_APIENTRY OMX_GetHandle(
         cname = cmodule->GetComponentName();
         if (!strcmp(cComponentName, cname)) {
             ComponentBase *cbase = NULL;
-            
+
             ret = cmodule->Load();
             if (ret != OMX_ErrorNone)
                 goto unlock_list;

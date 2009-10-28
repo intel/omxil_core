@@ -29,7 +29,7 @@ OMX_ERRORTYPE PortOther::SetPortOtherParam(
 {
     if (!internal) {
         OMX_ERRORTYPE ret;
-        
+
         ret = ComponentBase::CheckTypeHeader((void *)p, sizeof(*p));
         if (ret != OMX_ErrorNone)
             return ret;
