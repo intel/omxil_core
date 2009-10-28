@@ -36,6 +36,15 @@ int mp3_header_parse(const unsigned char *buffer,
 
 /* end of MP3 */
 
+/*
+ * MP4
+ */
+
+int audio_specific_config_parse(const unsigned char *buffer,
+                                int *aot, int *frequency, int *channel);
+
+/* end of MP4 */
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

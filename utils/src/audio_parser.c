@@ -351,3 +351,162 @@ int mp3_header_parse(const unsigned char *buffer,
 }
 
 /* end of MP3 */
+
+/*
+ * MP4
+ *   FIXME
+ *     - aot escape, explicit frequency
+ */
+
+struct audio_specific_config_s {
+    union {
+#if (__BYTE_ORDER == __LITTLE_ENDIAN)
+        struct {
+            unsigned int
+                extension_flag : 1,
+                dependson_corecoder : 1,
+                frame_length_flag : 1,
+                channel_config : 4,
+                frequency_index : 4,
+                object_type : 5;
+        };
+        struct {
+            unsigned char h0, h1;
+        };
+#elif (__BYTE_ORDER == __BIG_ENDIAN)
+        struct {
+            unsigned int
+                object_type : 5,
+                frequecy_index : 4,
+                channel_config : 4,
+                frame_length_flag : 1,
+                dependson_corecoder : 1,
+                extension_flag : 1;
+        };
+        struct {
+            unsigned char h1, h0;
+        };
+#endif
+    };
+} __attribute__ ((packed));
+
+/* index : frequecy_index */
+static const unsigned int frequency_table[16] = {
+    [0] = 96000,
+    [1] = 88200,
+    [2] = 64000,
+    [3] = 48000,
+    [4] = 44100,
+    [5] = 32000,
+    [6] = 24000,
+    [7] = 22050,
+    [8] = 16000,
+    [9] = 12000,
+    [10] = 11025,
+    [11] = 8000,
+    [12] = 7350,
+    [13] = 0,
+    [14] = 0,
+    [15] = 0, /* explicit specified ? */
+};
+
+static const char *aot_string[46] = {
+    [0] = "Null",
+    [1] = "AAC Main",
+    [2] = "AAC LC (Low Complexity)",
+    [3] = "AAC SSR (Scalable Sample Rate)",
+    [4] = "AAC LTP (Long Term Prediction)",
+    [5] = "SBR (Spectral Band Replication)",
+    [6] = "AAC Scalable",
+    [7] = "TwinVQ",
+    [8] = "CELP (Code Excited Linear Prediction)",
+    [9] = "HXVC (Harmonic Vector eXcitation Coding)",
+    [10] = "Reserved",
+    [11] = "Reserved",
+    [12] = "TTSI (Text-To-Speech Interface)",
+    [13] = "Main Synthesis",
+    [14] = "Wavetable Synthesis",
+    [15] = "General MIDI",
+    [16] = "Algorithmic Synthesis and Audio Effects",
+    [17] = "ER (Error Resilient) AAC LC",
+    [18] = "Reserved",
+    [19] = "ER AAC LTP",
+    [20] = "ER AAC Scalable",
+    [21] = "ER TwinVQ",
+    [22] = "ER BSAC (Bit-Sliced Arithmetic Coding)",
+    [23] = "ER AAC LD (Low Delay)",
+    [24] = "ER CELP",
+    [25] = "ER HVXC",
+    [26] = "ER HILN (Harmonic and Individual Lines plus Noise)",
+    [27] = "ER Parametric",
+    [28] = "SSC (SinuSoidal Coding)",
+    [29] = "PS (Parametric Stereo)",
+    [30] = "MPEG Surround",
+    [31] = "(Escape value)",
+    [32] = "Layer-1",
+    [33] = "Layer-2",
+    [34] = "Layer-3",
+    [35] = "DST (Direct Stream Transfer)",
+    [36] = "ALS (Audio Lossless)",
+    [37] = "SLS (Scalable LosslesS)",
+    [38] = "SLS non-core",
+    [39] = "ER AAC ELD (Enhanced Low Delay)",
+    [40] = "SMR (Symbolic Music Representation) Simple",
+    [41] = "SMR Main",
+    [42] = "USAC (Unified Speech and Audio Coding) (no SBR)",
+    [43] = "SAOC (Spatial Audio Object Coding)",
+    [44] = "Reserved",
+    [45] = "USAC",
+};
+
+/* index  = channel_index */
+static const char *channel_string[16] = {
+    [0] = "Defined in AOT Specifc Config",
+    [1] = "front-center",
+    [2] = "front-left, front-right",
+    [3] = "front-center, front-left, front-right",
+    [4] = "front-center, front-left, front-right, back-center",
+    [5] = "front-center, front-left, front-right, back-left, back-right",
+    [6] = "front-center, front-left, front-right, back-left, back-right, LFE-channel",
+    [7] = "front-center, front-left, front-right, side-left, side-right, back-left, back-right, LFE-channel",
+    [8] = "Reserved",
+    [9] = "Reserved",
+    [10] = "Reserved",
+    [11] = "Reserved",
+    [12] = "Reserved",
+    [13] = "Reserved",
+    [14] = "Reserved",
+    [15] = "Reserved",
+};
+
+int audio_specific_config_parse(const unsigned char *buffer,
+                                int *aot, int *frequency, int *channel)
+{
+    const unsigned char *p = buffer;
+    struct audio_specific_config_s config;
+
+    if (!p || !(p + 1))
+        return -1;
+
+    if (!aot || !frequency || !channel)
+        return -1;
+
+    config.h0 = *(p + 1);
+    config.h1 = *(p + 0);
+
+    *aot = config.object_type;
+    *frequency = frequency_table[config.frequency_index];
+    *channel = config.channel_config;
+
+    LOGV("audio specific config\n");
+    LOGV("  aot: 0x%x, %s\n", config.object_type,
+         aot_string[config.object_type]);
+    LOGV("  frequency: 0x%x, %u\n", config.frequency_index,
+         frequency_table[config.frequency_index]);
+    LOGV("  channel: %d, %s\n", config.channel_config,
+         channel_string[config.channel_config]);
+
+    return 0;
+}
+
+/* end of MP4 */
