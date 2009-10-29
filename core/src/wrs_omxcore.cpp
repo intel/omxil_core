@@ -60,15 +60,11 @@ static struct list *construct_components(const char *config_file_name)
 
         LOGV("found component library %s\n", library_name);
 
-        ret = cmodule->Load();
+        ret = cmodule->Load(MODULE_LAZY);
         if (ret != OMX_ErrorNone)
             goto delete_cmodule;
 
-        ret = cmodule->QueryComponentName();
-        if (ret != OMX_ErrorNone)
-            goto unload_cmodule;
-
-        ret = cmodule->QueryComponentRoles();
+        ret = cmodule->QueryComponentNameAndRoles();
         if (ret != OMX_ErrorNone)
             goto unload_cmodule;
 
@@ -185,7 +181,7 @@ OMX_API OMX_ERRORTYPE OMX_APIENTRY OMX_GetHandle(
         if (!strcmp(cComponentName, cname)) {
             ComponentBase *cbase = NULL;
 
-            ret = cmodule->Load();
+            ret = cmodule->Load(MODULE_NOW);
             if (ret != OMX_ErrorNone)
                 goto unlock_list;
 

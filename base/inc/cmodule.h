@@ -11,12 +11,26 @@
 
 #include <module.h>
 
-class CModule;
-class ComponentBase;
+/*
+ * WRS OMX-IL Component Module Symbol
+ */
+#define WRS_OMXIL_CMODULE_SYMBOL            WRS_OMXIL_CMODULE
+#define WRS_OMXIL_CMODULE_SYMBOL_STRING     "WRS_OMXIL_CMODULE"
 
-typedef OMX_ERRORTYPE (*cmodule_instantiate_t)(OMX_PTR *);
-typedef OMX_ERRORTYPE (*cmodule_query_name_t)(OMX_STRING, OMX_U32);
-typedef OMX_ERRORTYPE (*cmodule_query_roles_t)(OMX_U32 *, OMX_U8 **);
+struct wrs_omxil_cmodule_ops_s {
+    OMX_ERRORTYPE (*instantiate)(OMX_PTR *);
+};
+
+struct wrs_omxil_cmodule_s {
+    const char *name;
+
+    const char **roles;
+    const int nr_roles;
+
+    struct wrs_omxil_cmodule_ops_s *ops;
+};
+
+class ComponentBase;
 
 class CModule {
  public:
@@ -26,7 +40,7 @@ class CModule {
     /*
      * library loading / unloading
      */
-    OMX_ERRORTYPE Load(void);
+    OMX_ERRORTYPE Load(int flag);
     OMX_U32 Unload(void);
 
     /* end of library loading / unloading */
@@ -46,11 +60,7 @@ class CModule {
     /* end of accessor */
 
     /* library symbol method and helpers */
-    /* call instantiate / query_name / query_roles */
-    OMX_ERRORTYPE QueryComponentName(void);
-    OMX_ERRORTYPE QueryComponentName(OMX_STRING cname, OMX_U32 len);
-    OMX_ERRORTYPE QueryComponentRoles(void);
-    OMX_ERRORTYPE QueryComponentRoles(OMX_U32 *nr_roles, OMX_U8 **roles);
+    OMX_ERRORTYPE QueryComponentNameAndRoles(void);
     OMX_ERRORTYPE InstantiateComponent(ComponentBase **instance);
 
     /* end of library symbol method and helpers */
@@ -59,9 +69,7 @@ class CModule {
     /*
      * library symbol
      */
-    cmodule_instantiate_t instantiate;
-    cmodule_query_name_t query_name;
-    cmodule_query_roles_t query_roles;
+    struct wrs_omxil_cmodule_s *wrs_omxil_cmodule;
 
     /* end of library symbol */
 

@@ -24,10 +24,7 @@
 CModule::CModule(const OMX_STRING lname)
 {
     module = NULL;
-
-    instantiate = NULL;
-    query_name = NULL;
-    query_roles = NULL;
+    wrs_omxil_cmodule = NULL;
 
     roles = NULL;
     nr_roles = 0;
@@ -41,7 +38,7 @@ CModule::CModule(const OMX_STRING lname)
 
 CModule::~CModule()
 {
-    while (Unload()) ;
+    Unload();
 
     if (roles) {
         if (roles[0])
@@ -55,79 +52,47 @@ CModule::~CModule()
 /*
  * library loading / unloading
  */
-OMX_ERRORTYPE CModule::Load()
+OMX_ERRORTYPE CModule::Load(int flag)
 {
     struct module *m;
 
-    m = module_open(lname, MODULE_NOW);
+    if (module)
+        return OMX_ErrorNone;
+
+    m = module_open(lname, flag);
     if (!m) {
         LOGE("module not founded (%s)\n", lname);
         return OMX_ErrorComponentNotFound;
     }
-    LOGV("module founded (%s)\n", lname);
 
-    if (!module) {
-        instantiate = (cmodule_instantiate_t)
-            module_symbol(m, "omx_component_module_instantiate");
-        if (!instantiate) {
-            LOGE("module instantiate() symbol not founded (%s)\n", lname);
-            module_close(m);
-            return OMX_ErrorInvalidComponent;
-        }
+    wrs_omxil_cmodule = (struct wrs_omxil_cmodule_s *)
+        module_symbol(m, WRS_OMXIL_CMODULE_SYMBOL_STRING);
+    if (!wrs_omxil_cmodule) {
+        LOGE("module %s symbol not founded (%s)\n",
+             lname, WRS_OMXIL_CMODULE_SYMBOL_STRING);
 
-        query_name = (cmodule_query_name_t)
-            module_symbol(m, "omx_component_module_query_name");
-        if (!query_name) {
-            LOGE("module query_name() symbol not founded (%s)\n", lname);
-
-            instantiate = NULL;
-            module_close(m);
-            return OMX_ErrorInvalidComponent;
-        }
-
-        query_roles = (cmodule_query_roles_t)
-            module_symbol(m, "omx_component_module_query_roles");
-        if (!query_roles) {
-            LOGE("module query_roles() symbol not founded (%s)\n", lname);
-
-            query_name = NULL;
-            instantiate = NULL;
-            module_close(m);
-            return OMX_ErrorInvalidComponent;
-        }
-
-        module = m;
-        LOGV("module %s successfully loaded\n", lname);
+        module_close(m);
+        return OMX_ErrorInvalidComponent;
     }
-    else {
-        if (module != m) {
-            LOGE("module fatal error, module != m (%p != %p)\n", module, m);
-            module_close(m);
-            return OMX_ErrorUndefined;
-        }
-    }
+
+    module = m;
+    LOGI("module %s successfully loaded\n", lname);
 
     return OMX_ErrorNone;
 }
 
 OMX_U32 CModule::Unload(void)
 {
-    OMX_U32 ref_count;
-
     if (!module)
         return 0;
 
-    ref_count = module_close(module);
-    if (!ref_count) {
-        module = NULL;
-        instantiate = NULL;
-        query_name = NULL;
-        query_roles = NULL;
+    module_close(module);
 
-        LOGV("module %s successfully unloaded\n", lname);
-    }
+    module = NULL;
+    wrs_omxil_cmodule = NULL;
 
-    return ref_count;
+    LOGI("module %s successfully unloaded\n", lname);
+    return 0;
 }
 
 /* end of library loading / unloading */
@@ -195,119 +160,95 @@ bool CModule::QueryHavingThisRole(const OMX_STRING role)
 /*
  * library symbol method and helpers
  */
-/* call instance / query_name /query_roles */
-OMX_ERRORTYPE CModule::QueryComponentName(void)
-{
-    OMX_ERRORTYPE ret = OMX_ErrorUndefined;
-
-    if (query_name)
-        ret = query_name(&cname[0], OMX_MAX_STRINGNAME_SIZE);
-
-    cname[OMX_MAX_STRINGNAME_SIZE-1] = '\0';
-    return ret;
-}
-
-OMX_ERRORTYPE CModule::QueryComponentName(OMX_STRING cname, OMX_U32 len)
-{
-    OMX_ERRORTYPE ret = OMX_ErrorUndefined;
-
-    if (query_name)
-        ret = query_name(cname, len);
-
-    cname[len-1] = '\0';
-    return ret;
-}
-
-OMX_ERRORTYPE CModule::QueryComponentRoles(void)
-{
-    OMX_ERRORTYPE ret;
-
-    if (!query_roles)
-        return OMX_ErrorUndefined;
-
-    if (nr_roles && roles)
-        return OMX_ErrorNone;
-
-    roles = NULL;
-    ret = query_roles(&nr_roles, roles);
-    if (ret != OMX_ErrorNone) {
-        nr_roles = 0;
-        roles = NULL;
-    }
-
-    roles = (OMX_U8 **)malloc(sizeof(OMX_STRING) * nr_roles);
-    if (roles) {
-        roles[0] = (OMX_U8 *)malloc(OMX_MAX_STRINGNAME_SIZE * nr_roles);
-        if (roles[0]) {
-            OMX_U32 i;
-
-            for (i = 0; i < nr_roles-1; i++)
-                roles[i+1] = roles[i] + OMX_MAX_STRINGNAME_SIZE;
-        }
-        else {
-            free(roles);
-            roles = NULL;
-            nr_roles = 0;
-            return OMX_ErrorInsufficientResources;
-        }
-    }
-    else  {
-        nr_roles = 0;
-        roles = NULL;
-        return OMX_ErrorInsufficientResources;
-    }
-
-    ret = query_roles(&nr_roles, roles);
-    if (ret != OMX_ErrorNone) {
-        nr_roles = 0;
-        free(roles[0]);
-        free(roles);
-        roles = NULL;
-        return ret;
-    }
-
-    return OMX_ErrorNone;
-}
-
-OMX_ERRORTYPE CModule::QueryComponentRoles(OMX_U32 *nr_roles, OMX_U8 **roles)
-{
-    OMX_ERRORTYPE ret = OMX_ErrorUndefined;
-
-    if (query_roles)
-        ret = query_roles(nr_roles, roles);
-
-    return ret;
-}
-
 OMX_ERRORTYPE CModule::InstantiateComponent(ComponentBase **instance)
 {
-    OMX_ERRORTYPE ret = OMX_ErrorUndefined;
+    ComponentBase *cbase;
+    OMX_ERRORTYPE ret;
 
-    if (!instance || *instance)
+    if (!instance)
         return OMX_ErrorBadParameter;
     *instance = NULL;
 
-    if (instantiate) {
-        ComponentBase *cbase;
+    if (!wrs_omxil_cmodule)
+        return OMX_ErrorUndefined;
 
-        ret = instantiate((void **)instance);
-        if (ret != OMX_ErrorNone) {
-            instance = NULL;
-            return ret;
-        }
-        cbase = *instance;
-
-        cbase->SetCModule(this);
-        cbase->SetName(cname);
-        ret = cbase->SetRolesOfComponent(nr_roles, (const OMX_U8 **)roles);
-        if (ret != OMX_ErrorNone) {
-            delete cbase;
-            *instance = NULL;
-            return ret;
-        }
+    ret = wrs_omxil_cmodule->ops->instantiate((void **)&cbase);
+    if (ret != OMX_ErrorNone) {
+        LOGE("%s failed to instantiate()\n", lname);
+        return ret;
     }
 
-    return ret;
+    cbase->SetCModule(this);
+    cbase->SetName(cname);
+    ret = cbase->SetRolesOfComponent(nr_roles, (const OMX_U8 **)roles);
+    if (ret != OMX_ErrorNone) {
+        delete cbase;
+        return ret;
+    }
+
+    *instance = cbase;
+    return OMX_ErrorNone;
+}
+
+OMX_ERRORTYPE CModule::QueryComponentNameAndRoles(void)
+{
+    const char *name;
+    OMX_U32 name_len;
+    OMX_U32 copy_name_len;
+
+    const OMX_U8 **roles;
+    OMX_U32 nr_roles;
+    OMX_U32 role_len;
+    OMX_U32 copy_role_len;
+    OMX_U8 **this_roles;
+
+    OMX_U32 i;
+    OMX_ERRORTYPE ret;
+
+    if (this->roles)
+        return OMX_ErrorNone;
+
+    if (!wrs_omxil_cmodule)
+        return OMX_ErrorUndefined;
+
+    roles = (const OMX_U8 **)wrs_omxil_cmodule->roles;
+    nr_roles = wrs_omxil_cmodule->nr_roles;
+
+    this_roles = (OMX_U8 **)malloc(sizeof(OMX_STRING) * nr_roles);
+    if (!this_roles)
+        return OMX_ErrorInsufficientResources;
+
+    this_roles[0] = (OMX_U8 *)malloc(OMX_MAX_STRINGNAME_SIZE * nr_roles);
+    if (!this_roles[0]) {
+        free(this_roles);
+        return OMX_ErrorInsufficientResources;
+    }
+
+    for (i = 0; i < nr_roles; i++) {
+        if (i < nr_roles - 1)
+            this_roles[i+1] = this_roles[i] + OMX_MAX_STRINGNAME_SIZE;
+
+        role_len = strlen((const OMX_STRING)&roles[i][0]);
+        copy_role_len = role_len > OMX_MAX_STRINGNAME_SIZE-1 ?
+            OMX_MAX_STRINGNAME_SIZE-1 : role_len;
+
+        strncpy((OMX_STRING)&this_roles[i][0],
+                (const OMX_STRING)&roles[i][0], copy_role_len);
+        this_roles[i][copy_role_len] = '\0';
+    }
+
+    this->roles = this_roles;
+    this->nr_roles = nr_roles;
+
+    name = wrs_omxil_cmodule->name;
+    name_len = strlen(name);
+    copy_name_len = name_len > OMX_MAX_STRINGNAME_SIZE-1 ?
+        OMX_MAX_STRINGNAME_SIZE-1 : name_len;
+
+    strncpy(&cname[0], name, copy_name_len);
+    cname[copy_name_len] = '\0';
+
+    return OMX_ErrorNone;
 }
 
 /* end of library symbol method and helpers */

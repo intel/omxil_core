@@ -244,6 +244,9 @@ OMX_ERRORTYPE ComponentBase::GetHandle(OMX_HANDLETYPE *pHandle,
     OMX_U32 i;
     OMX_ERRORTYPE ret;
 
+    if (!pHandle)
+        return OMX_ErrorBadParameter;
+
     if (handle)
         return OMX_ErrorUndefined;
 
@@ -2077,39 +2080,6 @@ OMX_ERRORTYPE ComponentBase::CheckTypeHeader(const OMX_PTR type, OMX_U32 size)
     if (nversion->nVersion != OMX_SPEC_VERSION)
         return OMX_ErrorVersionMismatch;
 
-    return OMX_ErrorNone;
-}
-
-/*
- * query_roles helper
- */
-OMX_ERRORTYPE ComponentBase::QueryRolesHelper(
-    OMX_U32 nr_comp_roles,
-    const OMX_U8 **comp_roles,
-    OMX_U32 *nr_roles, OMX_U8 **roles)
-{
-    OMX_U32 i;
-
-    if (!roles) {
-        *nr_roles = nr_comp_roles;
-        return OMX_ErrorNone;
-    }
-
-    if (!nr_roles || (*nr_roles != nr_comp_roles) || !roles)
-        return OMX_ErrorBadParameter;
-
-    for (i = 0; i < nr_comp_roles; i++) {
-        if (!roles[i])
-            break;
-
-        strncpy((OMX_STRING)&roles[i][0],
-                (const OMX_STRING)&comp_roles[i][0], OMX_MAX_STRINGNAME_SIZE);
-    }
-
-    if (i != nr_comp_roles)
-        return OMX_ErrorBadParameter;
-
-    *nr_roles = nr_comp_roles;
     return OMX_ErrorNone;
 }
 
