@@ -408,11 +408,6 @@ private:
     /* buffer processing work */
     WorkQueue *bufferwork;
 
-    /* StatePause <-> StateExecuting */
-    bool executing;
-    pthread_mutex_t executing_lock;
-    pthread_cond_t executing_wait;
-
     /* roles */
     OMX_U8 **roles;
     OMX_U32 nr_roles;

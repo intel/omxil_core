@@ -34,7 +34,7 @@ CmdProcessWork::CmdProcessWork(CmdHandlerInterface *ci)
     __queue_init(&q);
     pthread_mutex_init(&lock, NULL);
 
-    workq->StartWork();
+    workq->StartWork(true);
 }
 
 CmdProcessWork::~CmdProcessWork()
@@ -128,10 +128,6 @@ void ComponentBase::__ComponentBase(void)
 
     cmdwork = new CmdProcessWork(this);
 
-    executing = false;
-    pthread_mutex_init(&executing_lock, NULL);
-    pthread_cond_init(&executing_wait, NULL);
-
     bufferwork = new WorkQueue();
 
     pthread_mutex_init(&ports_block, NULL);
@@ -153,8 +149,6 @@ ComponentBase::~ComponentBase()
     delete cmdwork;
 
     delete bufferwork;
-    pthread_mutex_destroy(&executing_lock);
-    pthread_cond_destroy(&executing_wait);
 
     pthread_mutex_destroy(&ports_block);
 
@@ -1409,12 +1403,8 @@ inline OMX_ERRORTYPE ComponentBase::TransStateToIdle(OMX_STATETYPE current)
 
         bufferwork->CancelScheduledWork(this);
 
-        if (current == OMX_StatePause) {
-            pthread_mutex_lock(&executing_lock);
-            executing = true;
-            pthread_cond_signal(&executing_wait);
-            pthread_mutex_unlock(&executing_lock);
-        }
+        if (current == OMX_StatePause)
+            bufferwork->ResumeWork();
 
         bufferwork->StopWork();
 
@@ -1445,11 +1435,7 @@ ComponentBase::TransStateToExecuting(OMX_STATETYPE current)
     OMX_ERRORTYPE ret;
 
     if (current == OMX_StateIdle) {
-        pthread_mutex_lock(&executing_lock);
-        executing = true;
-        pthread_mutex_unlock(&executing_lock);
-
-        bufferwork->StartWork();
+        bufferwork->StartWork(true);
 
         ret = ProcessorStart();
         if (ret != OMX_ErrorNone) {
@@ -1459,10 +1445,7 @@ ComponentBase::TransStateToExecuting(OMX_STATETYPE current)
         }
     }
     else if (current == OMX_StatePause) {
-        pthread_mutex_lock(&executing_lock);
-        executing = true;
-        pthread_cond_signal(&executing_wait);
-        pthread_mutex_unlock(&executing_lock);
+        bufferwork->ResumeWork();
 
         ret = ProcessorResume();
         if (ret != OMX_ErrorNone) {
@@ -1483,12 +1466,7 @@ inline OMX_ERRORTYPE ComponentBase::TransStateToPause(OMX_STATETYPE current)
     OMX_ERRORTYPE ret;
 
     if (current == OMX_StateIdle) {
-        /* turn off executing flag */
-        pthread_mutex_lock(&executing_lock);
-        executing = false;
-        pthread_mutex_unlock(&executing_lock);
-
-        bufferwork->StartWork();
+        bufferwork->StartWork(false);
 
         ret = ProcessorStart();
         if (ret != OMX_ErrorNone) {
@@ -1498,9 +1476,7 @@ inline OMX_ERRORTYPE ComponentBase::TransStateToPause(OMX_STATETYPE current)
         }
     }
     else if (current == OMX_StateExecuting) {
-        pthread_mutex_lock(&executing_lock);
-        executing = false;
-        pthread_mutex_unlock(&executing_lock);
+        bufferwork->PauseWork();
 
         ret = ProcessorPause();
         if (ret != OMX_ErrorNone) {
@@ -1752,11 +1728,6 @@ void ComponentBase::Work(void)
     bool retain[nr_ports];
     OMX_U32 i;
     bool avail = false;
-
-    pthread_mutex_lock(&executing_lock);
-    if (!executing)
-        pthread_cond_wait(&executing_wait, &executing_lock);
-    pthread_mutex_unlock(&executing_lock);
 
     pthread_mutex_lock(&ports_block);
 
