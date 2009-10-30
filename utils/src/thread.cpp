@@ -13,27 +13,36 @@ Thread::Thread()
 {
     r = NULL;
     created = false;
+
+    pthread_mutex_init(&lock, NULL);
 }
 
 Thread::Thread(RunnableInterface *r)
 {
     this->r = r;
+    created = false;
+
+    pthread_mutex_init(&lock, NULL);
 }
 
 Thread::~Thread()
 {
     Join();
+
+    pthread_mutex_destroy(&lock);
 }
 
 int Thread::Start(void)
 {
     int ret = 0;
 
+    pthread_mutex_lock(&lock);
     if (!created) {
         ret = pthread_create(&id, NULL, Instance, this);
         if (!ret)
             created = true;
     }
+    pthread_mutex_unlock(&lock);
 
     return ret;
 }
@@ -42,10 +51,12 @@ int Thread::Join(void)
 {
     int ret = 0;
 
+    pthread_mutex_lock(&lock);
     if (created) {
         ret = pthread_join(id, NULL);
         created = false;
     }
+    pthread_mutex_unlock(&lock);
 
     return ret;
 }

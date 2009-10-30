@@ -41,6 +41,8 @@ private:
     RunnableInterface *r;
     pthread_t id;
     bool created;
+
+    pthread_mutex_t lock;
 };
 
 #endif /* __THREAD_H */
