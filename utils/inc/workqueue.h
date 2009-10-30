@@ -32,9 +32,11 @@ public:
      */
     ~WorkQueue();
 
-    /* start & stop work thread */
-    int StartWork(void);
+    /* start & stop & pause & resume work thread */
+    int StartWork(bool executing);
     void StopWork(void);
+    void PauseWork(void);
+    void ResumeWork(void);
 
     /* the class inheriting WorkQueue uses this method */
     void ScheduleWork(void);
@@ -88,6 +90,11 @@ private:
     struct list *works;
     pthread_mutex_t wlock;
     pthread_cond_t wcond;
+
+    /* executing & pause */
+    bool executing;
+    pthread_mutex_t executing_lock;
+    pthread_cond_t executing_wait;
 
     int stop;
 };

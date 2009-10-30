@@ -11,10 +11,14 @@
 WorkQueue::WorkQueue()
 {
     stop = false;
+    executing = true;
     works = NULL;
 
     pthread_mutex_init(&wlock, NULL);
     pthread_cond_init(&wcond, NULL);
+
+    pthread_mutex_init(&executing_lock, NULL);
+    pthread_cond_init(&executing_wait, NULL);
 }
 
 WorkQueue::~WorkQueue()
@@ -30,13 +34,18 @@ WorkQueue::~WorkQueue()
     pthread_mutex_destroy(&wlock);
 }
 
-int WorkQueue::StartWork(void)
+int WorkQueue::StartWork(bool executing)
 {
+    if (!executing)
+        PauseWork();
+
     return Start();
 }
 
 void WorkQueue::StopWork(void)
 {
+    ResumeWork();
+
     FlushWork();
 
     pthread_mutex_lock(&wlock);
@@ -45,6 +54,21 @@ void WorkQueue::StopWork(void)
     pthread_mutex_unlock(&wlock);
 
     Join();
+}
+
+void WorkQueue::PauseWork(void)
+{
+    pthread_mutex_lock(&executing_lock);
+    executing = false;
+    pthread_mutex_unlock(&executing_lock);
+}
+
+void WorkQueue::ResumeWork(void)
+{
+    pthread_mutex_lock(&executing_lock);
+    executing = true;
+    pthread_cond_signal(&executing_wait);
+    pthread_mutex_unlock(&executing_lock);
 }
 
 void WorkQueue::Run(void)
@@ -74,8 +98,15 @@ void WorkQueue::Run(void)
 
 void WorkQueue::DoWork(WorkableInterface *wi)
 {
-    if (wi)
+    if (wi) {
+        pthread_mutex_lock(&executing_lock);
+        if (!executing)
+            pthread_cond_wait(&executing_wait, &executing_lock);
+
         wi->Work();
+
+        pthread_mutex_unlock(&executing_lock);
+    }
 }
 
 void WorkQueue::Work(void)
