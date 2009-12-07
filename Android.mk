@@ -1,3 +1,5 @@
+ifeq ($(strip $(BOARD_USES_WRS_OMXIL_CORE)),true)
+
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
@@ -13,3 +15,5 @@ $(call add-prebuilt-files, ETC, 10_wrs_omxil_core.cfg)
 
 # utility
 -include $(WRS_OMXIL_CORE_ROOT)/utils/src/Android.mk
+
+endif
