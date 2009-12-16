@@ -29,4 +29,19 @@ private:
 
 /* end of PortVideo */
 
+class PortAvc : public PortVideo
+{
+public:
+    PortAvc();
+
+    OMX_ERRORTYPE SetPortAvcParam(const OMX_VIDEO_PARAM_AVCTYPE *p,
+                                  bool overwrite_readonly);
+    const OMX_VIDEO_PARAM_AVCTYPE *GetPortAvcParam(void);
+
+private:
+    OMX_VIDEO_PARAM_AVCTYPE avcparam;
+};
+
+/* end of PortAvc */
+
 #endif /* __PORTVIDEO_H */
