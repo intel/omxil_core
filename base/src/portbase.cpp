@@ -35,6 +35,9 @@ void PortBase::__PortBase(void)
     __queue_init(&bufferq);
     pthread_mutex_init(&bufferq_lock, NULL);
 
+    __queue_init(&retainedbufferq);
+    pthread_mutex_init(&retainedbufferq_lock, NULL);
+
     __queue_init(&markq);
     pthread_mutex_init(&markq_lock, NULL);
 
@@ -82,6 +85,10 @@ PortBase::~PortBase()
     /* should've been already freed at buffer processing */
     queue_free_all(&bufferq);
     pthread_mutex_destroy(&bufferq_lock);
+
+    /* should've been already freed at buffer processing */
+    queue_free_all(&retainedbufferq);
+    pthread_mutex_destroy(&retainedbufferq_lock);
 
     /* should've been already empty in PushThisBuffer () */
     queue_free_all(&markq);
@@ -481,20 +488,6 @@ OMX_ERRORTYPE PortBase::PushThisBuffer(OMX_BUFFERHEADERTYPE *pBuffer)
     return OMX_ErrorNone;
 }
 
-OMX_ERRORTYPE PortBase::RetainThisBuffer(OMX_BUFFERHEADERTYPE *pBuffer)
-{
-    int ret;
-
-    pthread_mutex_lock(&bufferq_lock);
-    ret = queue_push_head(&bufferq, pBuffer);
-    pthread_mutex_unlock(&bufferq_lock);
-
-    if (ret)
-        return OMX_ErrorInsufficientResources;
-
-    return OMX_ErrorNone;
-}
-
 OMX_BUFFERHEADERTYPE *PortBase::PopBuffer(void)
 {
     OMX_BUFFERHEADERTYPE *buffer;
@@ -558,10 +551,90 @@ OMX_ERRORTYPE PortBase::ReturnThisBuffer(OMX_BUFFERHEADERTYPE *pBuffer)
         return OMX_ErrorBadParameter;
     }
 
+    if (pBuffer->nFlags & OMX_BUFFERFLAG_EOS) {
+        callbacks->EventHandler(owner, appdata,
+                                OMX_EventBufferFlag,
+                                port_index, pBuffer->nFlags, NULL);
+    }
+
+    if (pBuffer->hMarkTargetComponent == owner) {
+        callbacks->EventHandler(owner, appdata, OMX_EventMark,
+                                0, 0, pBuffer->pMarkData);
+        pBuffer->hMarkTargetComponent = NULL;
+        pBuffer->pMarkData = NULL;
+    }
+
     ret = bufferdone_callback(owner, appdata, pBuffer);
     LOGV("%s(): exit, after calling bufferdone callback (ret = 0x%08x)\n",
          __func__, ret);
     return ret;
+}
+
+/* retain buffer */
+OMX_ERRORTYPE PortBase::RetainThisBuffer(OMX_BUFFERHEADERTYPE *pBuffer,
+                                         bool accumulate)
+{
+    int ret;
+
+    /* push at tail of retainedbufferq */
+    if (accumulate == true) {
+        /* do not accumulate a buffer set EOS flag */
+        if (pBuffer->nFlags & OMX_BUFFERFLAG_EOS)
+            return OMX_ErrorBadParameter;
+
+        pthread_mutex_lock(&retainedbufferq_lock);
+        if ((OMX_U32)queue_length(&retainedbufferq) <
+            portdefinition.nBufferCountActual)
+            ret = queue_push_tail(&retainedbufferq, pBuffer);
+        else {
+            ret = OMX_ErrorInsufficientResources;
+            LOGE("%s(): retained bufferq length (%d) exceeds port's "
+                 "nBufferCountActual (%lu)", __func__,
+                 queue_length(&retainedbufferq),
+                 portdefinition.nBufferCountActual);
+        }
+        pthread_mutex_unlock(&retainedbufferq_lock);
+    }
+    /*
+     * just push at head of bufferq to get this buffer again in
+     * ComponentBase::ProcessorProcess()
+     */
+    else {
+        pthread_mutex_lock(&bufferq_lock);
+        ret = queue_push_head(&bufferq, pBuffer);
+        pthread_mutex_unlock(&bufferq_lock);
+    }
+
+    if (ret)
+        return OMX_ErrorInsufficientResources;
+
+    return OMX_ErrorNone;
+}
+
+void PortBase::ReturnAllRetainedBuffers(void)
+{
+    OMX_BUFFERHEADERTYPE *buffer;
+    OMX_ERRORTYPE ret;
+    int i;
+
+    pthread_mutex_lock(&retainedbufferq_lock);
+
+    do {
+        buffer = (OMX_BUFFERHEADERTYPE *)queue_pop_head(&retainedbufferq);
+
+        if (buffer) {
+            LOGV("%s(): returns a retained buffer (%lu / %d)\n", __func__,
+                 i++, queue_length(&retainedbufferq));
+
+            ret = ReturnThisBuffer(buffer);
+            if (ret != OMX_ErrorNone)
+                LOGE("%s(): ReturnThisBuffer failed (ret 0x%x08x)\n", __func__,
+                     ret);
+        }
+    } while (buffer);
+
+    LOGV("%s(): returned all retained buffers\n", __func__);
+    pthread_mutex_unlock(&retainedbufferq_lock);
 }
 
 /* SendCommand:Flush/PortEnable/Disable */
@@ -569,6 +642,8 @@ OMX_ERRORTYPE PortBase::ReturnThisBuffer(OMX_BUFFERHEADERTYPE *pBuffer)
 OMX_ERRORTYPE PortBase::FlushPort(void)
 {
     OMX_BUFFERHEADERTYPE *buffer;
+
+    ReturnAllRetainedBuffers();
 
     while ((buffer = PopBuffer()))
         ReturnThisBuffer(buffer);

@@ -72,13 +72,20 @@ public:
 
     /* Empty/FillThisBuffer */
     OMX_ERRORTYPE PushThisBuffer(OMX_BUFFERHEADERTYPE *pBuffer);
-    /* push buffer at head */
-    OMX_ERRORTYPE RetainThisBuffer(OMX_BUFFERHEADERTYPE *pBuffer);
     OMX_BUFFERHEADERTYPE *PopBuffer(void);
     OMX_U32 BufferQueueLength(void);
 
     /* Empty/FillBufferDone */
     OMX_ERRORTYPE ReturnThisBuffer(OMX_BUFFERHEADERTYPE *pBuffer);
+
+    /* retain buffer */
+    OMX_ERRORTYPE RetainThisBuffer(OMX_BUFFERHEADERTYPE *pBuffer,
+                                   bool accumulate);
+    /*
+     * components have responsibilty of calling this function to return all
+     * accumulated buffers to omx-il clients.
+     */
+    void ReturnAllRetainedBuffers(void);
 
     /* flush all buffers not under processing */
     OMX_ERRORTYPE FlushPort(void);
@@ -119,6 +126,10 @@ private:
 
     struct queue bufferq;
     pthread_mutex_t bufferq_lock;
+
+    /* retained buffers (only accumulated buffer) */
+    struct queue retainedbufferq;
+    pthread_mutex_t retainedbufferq_lock;
 
     struct queue markq;
     pthread_mutex_t markq_lock;
