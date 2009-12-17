@@ -295,7 +295,7 @@ protected:
     const OMX_STRING GetWorkingRole(void);
     const OMX_COMPONENTTYPE *GetComponentHandle(void);
 
-    void DumpBuffer(const OMX_BUFFERHEADERTYPE *bufferheader);
+    void DumpBuffer(const OMX_BUFFERHEADERTYPE *bufferheader, bool dumpdata);
 
     /* end of helpers for derived class */
 

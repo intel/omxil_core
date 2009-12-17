@@ -1966,7 +1966,8 @@ const OMX_COMPONENTTYPE *ComponentBase::GetComponentHandle(void)
     return handle;
 }
 
-void ComponentBase::DumpBuffer(const OMX_BUFFERHEADERTYPE *bufferheader)
+void ComponentBase::DumpBuffer(const OMX_BUFFERHEADERTYPE *bufferheader,
+                               bool dumpdata)
 {
     OMX_U8 *pbuffer = bufferheader->pBuffer, *p;
     OMX_U32 offset = bufferheader->nOffset;
@@ -1994,6 +1995,9 @@ void ComponentBase::DumpBuffer(const OMX_BUFFERHEADERTYPE *bufferheader)
         return;
 
     if (offset + filled_len > alloc_len)
+        return;
+
+    if (!dumpdata)
         return;
 
     p = pbuffer + offset;
