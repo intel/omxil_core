@@ -36,7 +36,7 @@ extern "C" {
 int mp3_header_parse(const unsigned char *buffer,
                      int *version, int *layer, int *crc, int *bitrate,
                      int *frequency, int *channel, int *mode_extension,
-                     int *frame_length);
+                     int *frame_length, int *frame_duration);
 
 /* end of MP3 */
 
