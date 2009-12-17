@@ -688,6 +688,11 @@ OMX_DIRTYPE PortBase::GetPortDirection(void)
     return portdefinition.eDir;
 }
 
+OMX_U32 PortBase::GetPortBufferCount(void)
+{
+    return nr_buffer_hdrs;
+}
+
 OMX_ERRORTYPE PortBase::PushMark(OMX_MARKTYPE *mark)
 {
     int ret;

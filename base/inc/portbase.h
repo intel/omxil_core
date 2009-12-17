@@ -93,6 +93,7 @@ public:
     bool IsEnabled(void);
 
     OMX_DIRTYPE GetPortDirection(void);
+    OMX_U32 GetPortBufferCount(void);
 
     OMX_ERRORTYPE PushMark(OMX_MARKTYPE *mark);
     OMX_MARKTYPE *PopMark(void);
