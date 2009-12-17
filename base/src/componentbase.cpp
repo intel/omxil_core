@@ -1283,8 +1283,8 @@ void ComponentBase::TransState(OMX_STATETYPE transition)
     OMX_U32 data1, data2;
     OMX_ERRORTYPE ret;
 
-    LOGD("current state = %s, transition state = %s\n",
-         GetStateName(current), GetStateName(transition));
+    LOGD("%s: current state = %s, transition state = %s\n",
+         name, GetStateName(current), GetStateName(transition));
 
     /* same state */
     if (current == transition) {
@@ -1320,8 +1320,8 @@ notify_event:
         data2 = transition;
 
         state = transition;
-        LOGD("transition from %s to %s completed\n",
-             GetStateName(current), GetStateName(transition));
+        LOGD("%s: transition from %s to %s completed\n",
+             name, GetStateName(current), GetStateName(transition));
     }
     else {
         event = OMX_EventError;
@@ -1330,8 +1330,8 @@ notify_event:
 
         if (transition == OMX_StateInvalid || ret == OMX_ErrorInvalidState) {
             state = OMX_StateInvalid;
-            LOGD("failed transition from %s to %s, current state is %s\n",
-                 GetStateName(current), GetStateName(transition),
+            LOGD("%s: failed transition from %s to %s, current state is %s\n",
+                 name, GetStateName(current), GetStateName(transition),
                  GetStateName(state));
         }
     }
@@ -1681,6 +1681,9 @@ OMX_ERRORTYPE ComponentBase::ApplyWorkingRole(void)
 
 OMX_ERRORTYPE ComponentBase::AllocatePorts(void)
 {
+    OMX_DIRTYPE dir;
+    bool has_input, has_output;
+    OMX_U32 i;
     OMX_ERRORTYPE ret;
 
     if (ports)
@@ -1693,7 +1696,38 @@ OMX_ERRORTYPE ComponentBase::AllocatePorts(void)
         return ret;
     }
 
+    has_input = false;
+    has_output = false;
+    ret = OMX_ErrorNone;
+    for (i = 0; i < nr_ports; i++) {
+        dir = ports[i]->GetPortDirection();
+        if (dir == OMX_DirInput)
+            has_input = true;
+        else if (dir == OMX_DirOutput)
+            has_output = true;
+        else {
+            ret = OMX_ErrorUndefined;
+            break;
+        }
+    }
+    if (ret != OMX_ErrorNone)
+        goto free_ports;
+
+    if ((has_input == false) && (has_output == true))
+        cvariant = CVARIANT_SOURCE;
+    else if ((has_input == true) && (has_output == true))
+        cvariant = CVARIANT_FILTER;
+    else if ((has_input == true) && (has_output == false))
+        cvariant = CVARIANT_SINK;
+    else
+        goto free_ports;
+
     return OMX_ErrorNone;
+
+free_ports:
+    LOGE("%s(): exit, unknown component variant\n", __func__);
+    FreePorts();
+    return ret;
 }
 
 /* called int FreeHandle() */
@@ -1725,7 +1759,7 @@ OMX_ERRORTYPE ComponentBase::FreePorts(void)
 void ComponentBase::Work(void)
 {
     OMX_BUFFERHEADERTYPE *buffers[nr_ports];
-    bool retain[nr_ports];
+    buffer_retain_t retain[nr_ports];
     OMX_U32 i;
     bool avail = false;
 
@@ -1735,15 +1769,18 @@ void ComponentBase::Work(void)
     if (avail) {
         for (i = 0; i < nr_ports; i++) {
             buffers[i] = ports[i]->PopBuffer();
-            retain[i] = false;
+            retain[i] = BUFFER_RETAIN_NOT_RETAIN;
         }
 
         ProcessorProcess(buffers, &retain[0], nr_ports);
-        PostProcessBuffer(buffers, &retain[0], nr_ports);
+
+        PostProcessBuffers(buffers, &retain[0]);
 
         for (i = 0; i < nr_ports; i++) {
-            if (retain[i])
-                ports[i]->RetainThisBuffer(buffers[i]);
+            if (retain[i] == BUFFER_RETAIN_GETAGAIN)
+                ports[i]->RetainThisBuffer(buffers[i], false);
+            else if (retain[i] == BUFFER_RETAIN_ACCUMULATE)
+                ports[i]->RetainThisBuffer(buffers[i], true);
             else
                 ports[i]->ReturnThisBuffer(buffers[i]);
         }
@@ -1782,75 +1819,78 @@ void ComponentBase::ScheduleIfAllBufferAvailable(void)
         bufferwork->ScheduleWork(this);
 }
 
-void ComponentBase::PostProcessBuffer(OMX_BUFFERHEADERTYPE **buffers,
-                                      bool *retain,
-                                      OMX_U32 nr_buffers)
+inline void ComponentBase::SourcePostProcessBuffers(
+    OMX_BUFFERHEADERTYPE **buffers,
+    const buffer_retain_t *retain)
 {
     OMX_U32 i;
 
     for (i = 0; i < nr_ports; i++) {
-        OMX_MARKTYPE *mark;
+        /*
+         * in case of source component, buffers're marked when they come
+         * from the ouput ports
+         */
+        if (!buffers[i]->hMarkTargetComponent) {
+            OMX_MARKTYPE *mark;
 
-        if (ports[i]->GetPortDirection() == OMX_DirInput) {
-            bool is_sink_component = true;
-            OMX_U32 j;
-
-            if (buffers[i]->hMarkTargetComponent) {
-                if (buffers[i]->hMarkTargetComponent == handle) {
-                    callbacks->EventHandler(handle, appdata, OMX_EventMark,
-                                            0, 0, buffers[i]->pMarkData);
-                    buffers[i]->hMarkTargetComponent = NULL;
-                    buffers[i]->pMarkData = NULL;
-                }
+            mark = ports[i]->PopMark();
+            if (mark) {
+                buffers[i]->hMarkTargetComponent =
+                    mark->hMarkTargetComponent;
+                buffers[i]->pMarkData = mark->pMarkData;
+                free(mark);
             }
+        }
+    }
+}
 
+inline void ComponentBase::FilterPostProcessBuffers(
+    OMX_BUFFERHEADERTYPE **buffers,
+    const buffer_retain_t *retain)
+{
+    OMX_MARKTYPE *mark;
+    OMX_U32 i, j;
+
+    for (i = 0; i < nr_ports; i++) {
+        if (ports[i]->GetPortDirection() == OMX_DirInput) {
             for (j = 0; j < nr_ports; j++) {
-                if (j == i)
+                if (ports[j]->GetPortDirection() != OMX_DirOutput)
                     continue;
 
-                if (ports[j]->GetPortDirection() == OMX_DirOutput) {
-                    if (buffers[i]->nFlags & OMX_BUFFERFLAG_EOS) {
+                /* propagates EOS flag */
+                /* clear input EOS at the end of this loop */
+                if (retain[i] != BUFFER_RETAIN_GETAGAIN) {
+                    if (buffers[i]->nFlags & OMX_BUFFERFLAG_EOS)
                         buffers[j]->nFlags |= OMX_BUFFERFLAG_EOS;
-                        buffers[i]->nFlags &= ~OMX_BUFFERFLAG_EOS;
-                        retain[i] = false;
-                        retain[j] = false;
-                    }
+                }
 
-                    if (!buffers[j]->hMarkTargetComponent) {
+                /* propagates marks */
+                /*
+                 * if hMarkTargetComponent == handle then the mark's not
+                 * propagated
+                 */
+                if (buffers[i]->hMarkTargetComponent &&
+                    (buffers[i]->hMarkTargetComponent != handle)) {
+                    if (buffers[j]->hMarkTargetComponent) {
+                        mark = (OMX_MARKTYPE *)malloc(sizeof(*mark));
+                        if (mark) {
+                            mark->hMarkTargetComponent =
+                                buffers[i]->hMarkTargetComponent;
+                            mark->pMarkData = buffers[i]->pMarkData;
+                            ports[j]->PushMark(mark);
+                            mark = NULL;
+                            buffers[i]->hMarkTargetComponent = NULL;
+                            buffers[i]->pMarkData = NULL;
+                        }
+                    }
+                    else {
                         mark = ports[j]->PopMark();
                         if (mark) {
                             buffers[j]->hMarkTargetComponent =
                                 mark->hMarkTargetComponent;
                             buffers[j]->pMarkData = mark->pMarkData;
                             free(mark);
-                            mark = NULL;
-                        }
 
-                        if (buffers[i]->hMarkTargetComponent) {
-                            if (buffers[j]->hMarkTargetComponent) {
-                                mark = (OMX_MARKTYPE *)
-                                    malloc(sizeof(*mark));
-                                if (mark) {
-                                    mark->hMarkTargetComponent =
-                                        buffers[i]->hMarkTargetComponent;
-                                    mark->pMarkData = buffers[i]->pMarkData;
-                                    ports[j]->PushMark(mark);
-                                    mark = NULL;
-                                    buffers[i]->hMarkTargetComponent = NULL;
-                                    buffers[i]->pMarkData = NULL;
-                                }
-                            }
-                            else {
-                                buffers[j]->hMarkTargetComponent =
-                                    buffers[i]->hMarkTargetComponent;
-                                buffers[j]->pMarkData = buffers[i]->pMarkData;
-                                buffers[i]->hMarkTargetComponent = NULL;
-                                buffers[i]->pMarkData = NULL;
-                            }
-                        }
-                    }
-                    else {
-                        if (buffers[i]->hMarkTargetComponent) {
                             mark = (OMX_MARKTYPE *)malloc(sizeof(*mark));
                             if (mark) {
                                 mark->hMarkTargetComponent =
@@ -1862,64 +1902,44 @@ void ComponentBase::PostProcessBuffer(OMX_BUFFERHEADERTYPE **buffers,
                                 buffers[i]->pMarkData = NULL;
                             }
                         }
-                    }
-                    is_sink_component = false;
-                }
-            }
-
-            if (is_sink_component) {
-                if (buffers[i]->nFlags & OMX_BUFFERFLAG_EOS) {
-                    callbacks->EventHandler(handle, appdata,
-                                            OMX_EventBufferFlag,
-                                            i, buffers[i]->nFlags, NULL);
-                    retain[i] = false;
-                }
-            }
-        }
-        else if (ports[i]->GetPortDirection() == OMX_DirOutput) {
-            bool is_source_component = true;
-            OMX_U32 j;
-
-            if (buffers[i]->nFlags & OMX_BUFFERFLAG_EOS) {
-                callbacks->EventHandler(handle, appdata,
-                                        OMX_EventBufferFlag,
-                                        i, buffers[i]->nFlags, NULL);
-                retain[i] = false;
-            }
-
-            for (j = 0; j < nr_ports; j++) {
-                if (j == i)
-                    continue;
-
-                if (ports[j]->GetPortDirection() == OMX_DirInput)
-                    is_source_component = false;
-            }
-
-            if (is_source_component) {
-                if (!retain[i]) {
-                    mark = ports[i]->PopMark();
-                    if (mark) {
-                        buffers[i]->hMarkTargetComponent =
-                            mark->hMarkTargetComponent;
-                        buffers[i]->pMarkData = mark->pMarkData;
-                        free(mark);
-                        mark = NULL;
-
-                        if (buffers[i]->hMarkTargetComponent == handle) {
-                            callbacks->EventHandler(handle, appdata,
-                                                    OMX_EventMark, 0, 0,
-                                                    buffers[i]->pMarkData);
+                        else {
+                            buffers[j]->hMarkTargetComponent =
+                                buffers[i]->hMarkTargetComponent;
+                            buffers[j]->pMarkData = buffers[i]->pMarkData;
                             buffers[i]->hMarkTargetComponent = NULL;
                             buffers[i]->pMarkData = NULL;
                         }
                     }
                 }
             }
+            /* clear input buffer's EOS */
+            if (retain[i] != BUFFER_RETAIN_GETAGAIN)
+                buffers[i]->nFlags &= ~OMX_BUFFERFLAG_EOS;
         }
-        else {
-            LOGE("%s(): fatal error unknown port direction (0x%08x)\n",
-                 __func__, ports[i]->GetPortDirection());
-        }
+    }
+}
+
+inline void ComponentBase::SinkPostProcessBuffers(
+    OMX_BUFFERHEADERTYPE **buffers,
+    const buffer_retain_t *retain)
+{
+    return;
+}
+
+void ComponentBase::PostProcessBuffers(OMX_BUFFERHEADERTYPE **buffers,
+                                       const buffer_retain_t *retain)
+{
+
+    if (cvariant == CVARIANT_SOURCE)
+        SourcePostProcessBuffers(buffers, retain);
+    else if (cvariant == CVARIANT_FILTER)
+        FilterPostProcessBuffers(buffers, retain);
+    else if (cvariant == CVARIANT_SINK) {
+        SinkPostProcessBuffers(buffers, retain);
+    }
+    else {
+        LOGE("%s(): fatal error unknown component variant (%d)\n",
+             __func__, cvariant);
     }
 }
 
@@ -1979,7 +1999,7 @@ void ComponentBase::DumpBuffer(const OMX_BUFFERHEADERTYPE *bufferheader,
     char prbuffer[8 + 3 * 0x10 + 2], *pp;
     OMX_U32 prbuffer_len;
 
-    LOGD("Componant %s DumpBuffer\n", name);
+    LOGD("Component %s DumpBuffer\n", name);
     LOGD("%s port index = %lu",
          (bufferheader->nInputPortIndex != 0x7fffffff) ? "input" : "output",
          (bufferheader->nInputPortIndex != 0x7fffffff) ?
@@ -1990,6 +2010,8 @@ void ComponentBase::DumpBuffer(const OMX_BUFFERHEADERTYPE *bufferheader,
          bufferheader->nTimeStamp,
          bufferheader->nTickCount);
     LOGD("nFlags = 0x%08lx\n", bufferheader->nFlags);
+    LOGD("hMarkTargetComponent = %p, pMarkData = %p\n",
+         bufferheader->hMarkTargetComponent, bufferheader->pMarkData);
 
     if (!pbuffer || !alloc_len || !filled_len)
         return;

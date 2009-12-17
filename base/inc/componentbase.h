@@ -18,6 +18,13 @@
 #include <queue.h>
 #include <workqueue.h>
 
+/* retain buffers */
+typedef enum buffer_retain_e {
+    BUFFER_RETAIN_NOT_RETAIN = 0,
+    BUFFER_RETAIN_GETAGAIN,
+    BUFFER_RETAIN_ACCUMULATE,
+} buffer_retain_t;
+
 /* ProcessCmdWork */
 struct cmd_s {
     OMX_COMMANDTYPE cmd;
@@ -382,10 +389,16 @@ private:
     bool IsAllBufferAvailable(void);
     /* bufferwork->ScheduleWork() if IsAllBufferAvailable is true */
     void ScheduleIfAllBufferAvailable(void);
+
     /* called in Work() after ProcessorProcess() */
-    void PostProcessBuffer(OMX_BUFFERHEADERTYPE **buffers,
-                           bool *retain,
-                           OMX_U32 nr_buffers);
+    void PostProcessBuffers(OMX_BUFFERHEADERTYPE **buffers,
+                            const buffer_retain_t *retain);
+    void SourcePostProcessBuffers(OMX_BUFFERHEADERTYPE **buffers,
+                                  const buffer_retain_t *retain);
+    void FilterPostProcessBuffers(OMX_BUFFERHEADERTYPE **buffers,
+                                  const buffer_retain_t *retain);
+    void SinkPostProcessBuffers(OMX_BUFFERHEADERTYPE **buffers,
+                                const buffer_retain_t *retain);
 
     /* processor callbacks */
     /* TransState */
@@ -397,7 +410,7 @@ private:
     virtual OMX_ERRORTYPE ProcessorResume(void);/* Pause to Executing */
     /* Work */
     virtual void ProcessorProcess(OMX_BUFFERHEADERTYPE **buffers,
-                                  bool *retain,
+                                  buffer_retain_t *retain,
                                   OMX_U32 nr_buffers) = 0;
 
     /* end of component methods & helpers */
@@ -407,6 +420,16 @@ private:
 
     /* buffer processing work */
     WorkQueue *bufferwork;
+
+    /* component variant */
+    typedef enum component_variant_e {
+        CVARIANT_NULL = 0,
+        CVARIANT_SOURCE,
+        CVARIANT_FILTER,
+        CVARIANT_SINK,
+    } component_variant_t;
+
+    component_variant_t cvariant;
 
     /* roles */
     OMX_U8 **roles;
