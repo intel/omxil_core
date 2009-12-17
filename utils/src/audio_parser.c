@@ -271,9 +271,51 @@ static const char *emphasis_string[4] = {
     "none", "50/15 ms", "reserved", "CCIT J.17"
 };
 
+/* index : layer */
+static const int one_slot_length_table[4] = {
+    [0] = -1,
+    [1] = 1,
+    [2] = 1,
+    [3] = 4,
+};
+
+static const int bitrate_coeff_table[4] = {
+    [0] = -1,
+    [1] = 144,
+    [2] = 144,
+    [3] = 12,
+};
+
+static inline int mp3_calculate_frame_length(int bitrate, int samplingrate,
+                                             int layer, int extraslot)
+{
+    int one_slot_length;
+    int coeff;
+    int frame_length;
+
+    if (layer < 1 || layer > 3)
+        return -1;
+
+    if (extraslot)
+        one_slot_length = one_slot_length_table[layer];
+    else
+        one_slot_length = 0;
+
+    coeff = bitrate_coeff_table[layer];
+
+    frame_length = coeff * bitrate * 1000 / samplingrate + one_slot_length;
+
+    /* layer I */
+    if (layer == 3)
+        frame_length *= 4;
+
+    return frame_length;
+}
+
 int mp3_header_parse(const unsigned char *buffer,
                      int *version, int *layer, int *crc, int *bitrate,
-                     int *frequency, int *channel, int *mode_extension)
+                     int *frequency, int *channel, int *mode_extension,
+                     int *frame_length)
 {
     const unsigned char *p = buffer;
     struct mp3_frame_header_s header;
@@ -304,7 +346,7 @@ int mp3_header_parse(const unsigned char *buffer,
     if ((version_index > 0x3) || (version_index == 0x1))
         return -1;
 
-    if (layer_index > 0x3 || !layer_index)
+    if (layer_index > 0x3 || layer_index < 0x1)
         return -1;
 
     if (bitrate_index > 0xe)
@@ -325,6 +367,8 @@ int mp3_header_parse(const unsigned char *buffer,
     *frequency = psampling_rate_table[samplingrate_index];
     *channel = header.channel_mode;
     *mode_extension = header.mode_extension;
+    *frame_length = mp3_calculate_frame_length(*bitrate, *frequency,
+                                               *layer, header.padding_bit);
 
     LOGV("mp3 frame header\n");
     LOGV("  sync: 0x%x\n", header.sync);
