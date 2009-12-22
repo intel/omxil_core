@@ -8,7 +8,7 @@
 
 #include <endian.h>
 
-#define LOG_NDEBUG 1
+//#define LOG_NDEBUG 0
 
 #define LOG_TAG "audio_parser"
 #include <log.h>
@@ -346,25 +346,35 @@ int mp3_header_parse(const unsigned char *buffer,
     header.h2 = *(p + 1);
     header.h3 = *(p + 0);
 
-    if (header.sync != 0x7ff)
+    if (header.sync != 0x7ff) {
+        LOGE("cannot find sync (0x%03x)\n", header.sync);
         return -1;
+    }
 
     version_index = header.version_index;
     layer_index = header.layer_index;
     bitrate_index = header.bitrate_index;
     samplingrate_index = header.samplingrate_index;
 
-    if ((version_index > 0x3) || (version_index == 0x1))
+    if ((version_index > 0x3) || (version_index == 0x1)) {
+        LOGE("invalid version index (%d)\n", version_index);
         return -1;
+    }
 
-    if (layer_index > 0x3 || layer_index < 0x1)
+    if (layer_index > 0x3 || layer_index < 0x1) {
+        LOGE("invalid layer index (%d)\n", layer_index);
         return -1;
+    }
 
-    if (bitrate_index > 0xe)
+    if (bitrate_index > 0xe) {
+        LOGE("invalid bitrate index (%d)\n", bitrate_index);
         return -1;
+    }
 
-    if (samplingrate_index > 0x2)
+    if (samplingrate_index > 0x2) {
+        LOGE("invalid sampling rate index (%d)\n", samplingrate_index);
         return -1;
+    }
 
     psampling_rate_table = sampling_rate_table[version_index];
 
@@ -406,6 +416,8 @@ int mp3_header_parse(const unsigned char *buffer,
          original_string[header.original]);
     LOGV("  emphasis: 0x%x, %s\n", header.emphasis,
          emphasis_string[header.emphasis]);
+    LOGV("  frame length: %d\n", *frame_length);
+    LOGV("  frame duration: %d\n", *frame_duration);
 
     return 0;
 }
