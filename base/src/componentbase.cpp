@@ -39,12 +39,13 @@ CmdProcessWork::CmdProcessWork(CmdHandlerInterface *ci)
 
 CmdProcessWork::~CmdProcessWork()
 {
+    struct cmd_s *temp;
+
     workq->StopWork();
     delete workq;
 
-    pthread_mutex_lock(&lock);
-    queue_free_all(&q);
-    pthread_mutex_unlock(&lock);
+    while ((temp = PopCmdQueue()))
+        free(temp);
 
     pthread_mutex_destroy(&lock);
 }
@@ -126,9 +127,9 @@ void ComponentBase::__ComponentBase(void)
 
     state = OMX_StateUnloaded;
 
-    cmdwork = new CmdProcessWork(this);
+    cmdwork = NULL;
 
-    bufferwork = new WorkQueue();
+    bufferwork = NULL;
 
     pthread_mutex_init(&ports_block, NULL);
 }
@@ -146,10 +147,6 @@ ComponentBase::ComponentBase(const OMX_STRING name)
 
 ComponentBase::~ComponentBase()
 {
-    delete cmdwork;
-
-    delete bufferwork;
-
     pthread_mutex_destroy(&ports_block);
 
     if (roles) {
@@ -244,9 +241,21 @@ OMX_ERRORTYPE ComponentBase::GetHandle(OMX_HANDLETYPE *pHandle,
     if (handle)
         return OMX_ErrorUndefined;
 
-    handle = (OMX_COMPONENTTYPE *)calloc(1, sizeof(*handle));
-    if (!handle)
+    cmdwork = new CmdProcessWork(this);
+    if (!cmdwork)
         return OMX_ErrorInsufficientResources;
+
+    bufferwork = new WorkQueue();
+    if (!bufferwork) {
+        ret = OMX_ErrorInsufficientResources;
+        goto free_cmdwork;
+    }
+
+    handle = (OMX_COMPONENTTYPE *)calloc(1, sizeof(*handle));
+    if (!handle) {
+        ret = OMX_ErrorInsufficientResources;
+        goto free_bufferwork;
+    }
 
     /* handle initialization */
     SetTypeHeader(handle, sizeof(*handle));
@@ -296,6 +305,12 @@ free_handle:
     callbacks = NULL;
     *pHandle = NULL;
 
+free_bufferwork:
+    delete bufferwork;
+
+free_cmdwork:
+    delete cmdwork;
+
     return ret;
 }
 
@@ -315,6 +330,9 @@ OMX_ERRORTYPE ComponentBase::FreeHandle(OMX_HANDLETYPE hComponent)
 
     appdata = NULL;
     callbacks = NULL;
+
+    delete cmdwork;
+    delete bufferwork;
 
     state = OMX_StateUnloaded;
     return OMX_ErrorNone;
