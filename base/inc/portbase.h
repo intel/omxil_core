@@ -101,6 +101,9 @@ public:
     /* SendCommand(OMX_CommandPortDisable/Enable) */
     OMX_ERRORTYPE TransState(OMX_U8 state);
 
+    /* EventHandler(OMX_EventPortSettingChanged) */
+    OMX_ERRORTYPE ReportPortSettingsChanged(void);
+
     /* end of component methods & helpers */
 
     /* TransState, state */

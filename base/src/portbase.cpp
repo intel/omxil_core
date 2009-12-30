@@ -761,6 +761,13 @@ unlock:
     return ret;
 }
 
+OMX_ERRORTYPE PortBase::ReportPortSettingsChanged(void)
+{
+    return callbacks->EventHandler(owner, appdata,
+                                   OMX_EventPortSettingsChanged,
+                                   portdefinition.nPortIndex, 0, NULL);
+}
+
 /* end of component methods & helpers */
 
 /* end of PortBase */
