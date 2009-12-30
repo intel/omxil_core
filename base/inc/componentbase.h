@@ -79,6 +79,9 @@ public:
     void SetName(const OMX_STRING name);
     const OMX_STRING GetName(void);
 
+    /* working role */
+    const OMX_STRING GetWorkingRole(void);
+
     /* cmodule */
     void SetCModule(CModule *cmodule);
     CModule *GetCModule(void);
@@ -299,7 +302,6 @@ public:
 
 protected:
     /* helpers for derived class */
-    const OMX_STRING GetWorkingRole(void);
     const OMX_COMPONENTTYPE *GetComponentHandle(void);
 
     void DumpBuffer(const OMX_BUFFERHEADERTYPE *bufferheader, bool dumpdata);
