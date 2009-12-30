@@ -19,6 +19,8 @@
 #include <queue.h>
 #include <workqueue.h>
 
+//#define LOG_NDEBUG 0
+
 #define LOG_TAG "componentbase"
 #include <log.h>
 
@@ -35,6 +37,8 @@ CmdProcessWork::CmdProcessWork(CmdHandlerInterface *ci)
     pthread_mutex_init(&lock, NULL);
 
     workq->StartWork(true);
+
+    LOGV("command process workqueue started\n");
 }
 
 CmdProcessWork::~CmdProcessWork()
@@ -48,6 +52,8 @@ CmdProcessWork::~CmdProcessWork()
         free(temp);
 
     pthread_mutex_destroy(&lock);
+
+    LOGV("command process workqueue stopped\n");
 }
 
 OMX_ERRORTYPE CmdProcessWork::PushCmdQueue(struct cmd_s *cmd)
@@ -1226,8 +1232,28 @@ OMX_ERRORTYPE ComponentBase::CBaseComponentRoleEnum(
 }
 
 /* implement CmdHandlerInterface */
+static const char *cmd_name[OMX_CommandMarkBuffer+2] = {
+    "OMX_CommandStateSet",
+    "OMX_CommandFlush",
+    "OMX_CommandPortDisable",
+    "OMX_CommandPortEnable",
+    "OMX_CommandMarkBuffer",
+    "Unknown Command",
+};
+
+static inline const char *GetCmdName(OMX_COMMANDTYPE cmd)
+{
+    if (cmd > OMX_CommandMarkBuffer)
+        cmd = (OMX_COMMANDTYPE)(OMX_CommandMarkBuffer+1);
+
+    return cmd_name[cmd];
+}
+
 void ComponentBase::CmdHandler(struct cmd_s *cmd)
 {
+    LOGD("%s:%s: handling %s command\n",
+         GetName(), GetWorkingRole(), GetCmdName(cmd->cmd));
+
     switch (cmd->cmd) {
     case OMX_CommandStateSet: {
         OMX_STATETYPE transition = (OMX_STATETYPE)cmd->param1;
@@ -1261,9 +1287,13 @@ void ComponentBase::CmdHandler(struct cmd_s *cmd)
         break;
     }
     default:
-        LOGE("receive command 0x%08x that cannot be handled\n", cmd->cmd);
+        LOGE("%s:%s:%s: exit failure, command %d cannot be handled\n",
+             GetName(), GetWorkingRole(), GetCmdName(cmd->cmd), cmd->cmd);
         break;
     } /* switch */
+
+    LOGD("%s:%s: command %s handling done\n",
+         GetName(), GetWorkingRole(), GetCmdName(cmd->cmd));
 }
 
 /*
@@ -1277,19 +1307,20 @@ void ComponentBase::CmdHandler(struct cmd_s *cmd)
  *   for now, we never notify OMX_ErrorInsufficientResources,
  *   so IL client doesn't try to set component' state OMX_StateWaitForResources
  */
-static const char *state_name[OMX_StateWaitForResources + 1] = {
+static const char *state_name[OMX_StateWaitForResources+2] = {
     "OMX_StateInvalid",
     "OMX_StateLoaded",
     "OMX_StateIdle",
     "OMX_StateExecuting",
     "OMX_StatePause",
     "OMX_StateWaitForResources",
+    "Unknown State",
 };
 
 static inline const char *GetStateName(OMX_STATETYPE state)
 {
     if (state > OMX_StateWaitForResources)
-        return "UnKnown";
+        state = (OMX_STATETYPE)(OMX_StateWaitForResources+1);
 
     return state_name[state];
 }
@@ -1301,18 +1332,23 @@ void ComponentBase::TransState(OMX_STATETYPE transition)
     OMX_U32 data1, data2;
     OMX_ERRORTYPE ret;
 
-    LOGD("%s: current state = %s, transition state = %s\n",
-         name, GetStateName(current), GetStateName(transition));
+    LOGD("%s:%s: try to transit state from %s to %s\n",
+         GetName(), GetWorkingRole(), GetStateName(current),
+         GetStateName(transition));
 
     /* same state */
     if (current == transition) {
         ret = OMX_ErrorSameState;
+        LOGE("%s:%s: exit failure, same state (%s)\n",
+             GetName(), GetWorkingRole(), GetStateName(current));
         goto notify_event;
     }
 
     /* invalid state */
     if (current == OMX_StateInvalid) {
         ret = OMX_ErrorInvalidState;
+        LOGE("%s:%s: exit failure, current state is OMX_StateInvalid\n",
+             GetName(), GetWorkingRole());
         goto notify_event;
     }
 
@@ -1338,8 +1374,9 @@ notify_event:
         data2 = transition;
 
         state = transition;
-        LOGD("%s: transition from %s to %s completed\n",
-             name, GetStateName(current), GetStateName(transition));
+        LOGD("%s:%s: transition from %s to %s completed",
+             GetName(), GetWorkingRole(),
+             GetStateName(current), GetStateName(transition));
     }
     else {
         event = OMX_EventError;
@@ -1348,9 +1385,10 @@ notify_event:
 
         if (transition == OMX_StateInvalid || ret == OMX_ErrorInvalidState) {
             state = OMX_StateInvalid;
-            LOGD("%s: failed transition from %s to %s, current state is %s\n",
-                 name, GetStateName(current), GetStateName(transition),
-                 GetStateName(state));
+            LOGE("%s:%s: exit failure, transition from %s to %s, "
+                 "current state is %s\n",
+                 GetName(), GetWorkingRole(), GetStateName(current),
+                 GetStateName(transition), GetStateName(state));
         }
     }
 
@@ -1374,14 +1412,16 @@ inline OMX_ERRORTYPE ComponentBase::TransStateToLoaded(OMX_STATETYPE current)
 
         ret = ProcessorDeinit();
         if (ret != OMX_ErrorNone) {
-            LOGE("failed to ProcessorDeinit() (ret = 0x%08x)\n", ret);
-            ret = OMX_ErrorInvalidState;
+            LOGE("%s:%s: ProcessorDeinit() failed "
+                 "(ret : 0x%08x)\n", GetName(), GetWorkingRole(),
+                 ret);
             goto out;
         }
     }
     else if (current == OMX_StateWaitForResources) {
-        LOGE("state transition's requested from WaitForResources to "
-             "Loaded\n");
+        LOGD("%s:%s: "
+             "state transition's requested from WaitForResources to Loaded\n",
+             GetName(), GetWorkingRole());
 
         /*
          * from WaitForResources to Loaded considered from Loaded to Loaded.
@@ -1406,8 +1446,8 @@ inline OMX_ERRORTYPE ComponentBase::TransStateToIdle(OMX_STATETYPE current)
 
         ret = ProcessorInit();
         if (ret != OMX_ErrorNone) {
-            LOGE("failed to ProcessorInit() (ret = 0x%08x)\n", ret);
-            ret = OMX_ErrorInvalidState;
+            LOGE("%s:%s: ProcessorInit() failed (ret : 0x%08x)\n",
+                 GetName(), GetWorkingRole(), ret);
             goto out;
         }
 
@@ -1418,23 +1458,33 @@ inline OMX_ERRORTYPE ComponentBase::TransStateToIdle(OMX_STATETYPE current)
     }
     else if ((current == OMX_StatePause) || (current == OMX_StateExecuting)) {
         FlushPort(OMX_ALL, 0);
+        LOGD("%s:%s: flushed all ports\n", GetName(), GetWorkingRole());
 
         bufferwork->CancelScheduledWork(this);
+        LOGD("%s:%s: discarded all scheduled buffer process work\n",
+             GetName(), GetWorkingRole());
 
-        if (current == OMX_StatePause)
+        if (current == OMX_StatePause) {
             bufferwork->ResumeWork();
+            LOGD("%s:%s: buffer process work resumed\n",
+                 GetName(), GetWorkingRole());
+        }
 
         bufferwork->StopWork();
+        LOGD("%s:%s: buffer process work stopped\n",
+             GetName(), GetWorkingRole());
 
         ret = ProcessorStop();
         if (ret != OMX_ErrorNone) {
-            LOGE("failed to ProcessorStop() (ret = 0x%08x)\n", ret);
-            ret = OMX_ErrorInvalidState;
+            LOGE("%s:%s: ProcessorStop() failed (ret : 0x%08x)\n",
+                 GetName(), GetWorkingRole(), ret);
             goto out;
         }
     }
     else if (current == OMX_StateWaitForResources) {
-        LOGE("state transition's requested from WaitForResources to Idle\n");
+        LOGD("%s:%s: "
+             "state transition's requested from WaitForResources to Idle\n",
+             GetName(), GetWorkingRole());
 
         /* same as Loaded to Idle BUT DO NOTHING for now */
 
@@ -1454,21 +1504,25 @@ ComponentBase::TransStateToExecuting(OMX_STATETYPE current)
 
     if (current == OMX_StateIdle) {
         bufferwork->StartWork(true);
+        LOGD("%s:%s: buffer process work started with executing state\n",
+             GetName(), GetWorkingRole());
 
         ret = ProcessorStart();
         if (ret != OMX_ErrorNone) {
-            LOGE("failed to ProcessorStart() (ret = 0x%08x)\n", ret);
-            ret = OMX_ErrorInvalidState;
+            LOGE("%s:%s: ProcessorStart() failed (ret : 0x%08x)\n",
+                 GetName(), GetWorkingRole(), ret);
             goto out;
         }
     }
     else if (current == OMX_StatePause) {
         bufferwork->ResumeWork();
+        LOGD("%s:%s: buffer process work resumed\n",
+             GetName(), GetWorkingRole());
 
         ret = ProcessorResume();
         if (ret != OMX_ErrorNone) {
-            LOGE("failed to ProcessorStart() (ret = 0x%08x)\n", ret);
-            ret = OMX_ErrorInvalidState;
+            LOGE("%s:%s: ProcessorResume() failed (ret : 0x%08x)\n",
+                 GetName(), GetWorkingRole(), ret);
             goto out;
         }
     }
@@ -1485,21 +1539,25 @@ inline OMX_ERRORTYPE ComponentBase::TransStateToPause(OMX_STATETYPE current)
 
     if (current == OMX_StateIdle) {
         bufferwork->StartWork(false);
+        LOGD("%s:%s: buffer process work started with paused state\n",
+             GetName(), GetWorkingRole());
 
         ret = ProcessorStart();
         if (ret != OMX_ErrorNone) {
-            LOGE("failed to ProcessorPause() (ret = 0x%08x)\n", ret);
-            ret = OMX_ErrorInvalidState;
+            LOGE("%s:%s: ProcessorSart() failed (ret : 0x%08x)\n",
+                 GetName(), GetWorkingRole(), ret);
             goto out;
         }
     }
     else if (current == OMX_StateExecuting) {
         bufferwork->PauseWork();
+        LOGD("%s:%s: buffer process work paused\n",
+             GetName(), GetWorkingRole());
 
         ret = ProcessorPause();
         if (ret != OMX_ErrorNone) {
-            LOGE("failed to ProcessorPause() (ret = 0x%08x)\n", ret);
-            ret = OMX_ErrorInvalidState;
+            LOGE("%s:%s: ProcessorPause() failed (ret : 0x%08x)\n",
+                 GetName(), GetWorkingRole(), ret);
             goto out;
         }
     }
@@ -1528,7 +1586,9 @@ ComponentBase::TransStateToWaitForResources(OMX_STATETYPE current)
     OMX_ERRORTYPE ret;
 
     if (current == OMX_StateLoaded) {
-        LOGE("state transition's requested from Loaded to WaitForResources\n");
+        LOGD("%s:%s: "
+             "state transition's requested from Loaded to WaitForResources\n",
+             GetName(), GetWorkingRole());
         ret = OMX_ErrorNone;
     }
     else
@@ -1592,6 +1652,9 @@ void ComponentBase::FlushPort(OMX_U32 port_index, bool notify)
         to_index = port_index;
     }
 
+    LOGV("%s:%s: flush ports (from index %lu to %lu)\n",
+         GetName(), GetWorkingRole(), from_index, to_index);
+
     pthread_mutex_lock(&ports_block);
     for (i = from_index; i <= to_index; i++) {
         ports[i]->FlushPort();
@@ -1600,7 +1663,11 @@ void ComponentBase::FlushPort(OMX_U32 port_index, bool notify)
                                     OMX_CommandFlush, i, NULL);
     }
     pthread_mutex_unlock(&ports_block);
+
+    LOGV("%s:%s: flush ports done\n", GetName(), GetWorkingRole());
 }
+
+extern const char *GetPortStateName(OMX_U8 state); //portbase.cpp
 
 void ComponentBase::TransStatePort(OMX_U32 port_index, OMX_U8 state)
 {
@@ -1620,6 +1687,10 @@ void ComponentBase::TransStatePort(OMX_U32 port_index, OMX_U8 state)
         from_index = port_index;
         to_index = port_index;
     }
+
+    LOGV("%s:%s: transit ports state to %s (from index %lu to %lu)\n",
+         GetName(), GetWorkingRole(), GetPortStateName(state),
+         from_index, to_index);
 
     pthread_mutex_lock(&ports_block);
     for (i = from_index; i <= to_index; i++) {
@@ -1641,6 +1712,9 @@ void ComponentBase::TransStatePort(OMX_U32 port_index, OMX_U8 state)
                                 OMX_CommandPortDisable, data2, NULL);
     }
     pthread_mutex_unlock(&ports_block);
+
+    LOGV("%s:%s: transit ports state to %s completed\n",
+         GetName(), GetWorkingRole(), GetPortStateName(state));
 }
 
 /* set working role */
@@ -1663,7 +1737,7 @@ OMX_ERRORTYPE ComponentBase::SetWorkingRole(const OMX_STRING role)
         }
     }
 
-    LOGE("cannot find %s role in %s\n", role, name);
+    LOGE("%s: cannot find %s role\n", GetName(), role);
     return OMX_ErrorBadParameter;
 }
 
@@ -1694,6 +1768,7 @@ OMX_ERRORTYPE ComponentBase::ApplyWorkingRole(void)
         ports[i]->SetCallbacks(handle, callbacks, appdata);
     }
 
+    LOGI("%s: set working role %s:", GetName(), GetWorkingRole());
     return OMX_ErrorNone;
 }
 
