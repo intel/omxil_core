@@ -878,9 +878,15 @@ unlock:
 
 OMX_ERRORTYPE PortBase::ReportPortSettingsChanged(void)
 {
-    return callbacks->EventHandler(owner, appdata,
-                                   OMX_EventPortSettingsChanged,
-                                   portdefinition.nPortIndex, 0, NULL);
+    OMX_ERRORTYPE ret;
+
+    ret = callbacks->EventHandler(owner, appdata,
+                                  OMX_EventPortSettingsChanged,
+                                  portdefinition.nPortIndex, 0, NULL);
+
+    FlushPort();
+
+    return ret;
 }
 
 /* end of component methods & helpers */
