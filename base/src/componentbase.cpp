@@ -1709,7 +1709,7 @@ void ComponentBase::TransStatePort(OMX_U32 port_index, OMX_U8 state)
             data2 = 0;
         }
         callbacks->EventHandler(handle, appdata, OMX_EventCmdComplete,
-                                OMX_CommandPortDisable, data2, NULL);
+                                data1, data2, NULL);
     }
     pthread_mutex_unlock(&ports_block);
 
