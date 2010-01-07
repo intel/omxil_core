@@ -449,7 +449,7 @@ struct audio_specific_config_s {
         struct {
             unsigned int
                 object_type : 5,
-                frequecy_index : 4,
+                frequency_index : 4,
                 channel_config : 4,
                 frame_length_flag : 1,
                 dependson_corecoder : 1,
@@ -576,6 +576,42 @@ int audio_specific_config_parse(const unsigned char *buffer,
     LOGV("  frequency: 0x%x, %u\n", config.frequency_index,
          frequency_table[config.frequency_index]);
     LOGV("  channel: %d, %s\n", config.channel_config,
+         channel_string[config.channel_config]);
+
+    return 0;
+}
+
+int audio_specific_config_bitcoding(unsigned char *buffer,
+                                    int aot, int frequency, int channel)
+{
+    unsigned char *p = buffer;
+    struct audio_specific_config_s config;
+    int i;
+
+    if (!p)
+        return -1;
+
+    for (i = 0; i < 16; i++) {
+        if ((int)frequency_table[i] == frequency) {
+            frequency = i;
+            break;
+        }
+    }
+    if (i > 12)
+        return -1;
+
+    config.object_type = aot;
+    config.frequency_index = frequency;
+    config.channel_config = channel;
+
+    *(p + 0) = config.h1;
+    *(p + 1) = config.h0;
+
+    LOGV("bitfield coding for audio specific config\n");
+    LOGV("  aot : %d, %s\n", config.object_type,
+         aot_string[config.object_type]);
+    LOGV("  frequency : %d\n", frequency_table[config.frequency_index]);
+    LOGV("  channel : %d, %s\n", config.channel_config,
          channel_string[config.channel_config]);
 
     return 0;

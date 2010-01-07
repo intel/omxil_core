@@ -47,6 +47,9 @@ int mp3_header_parse(const unsigned char *buffer,
 int audio_specific_config_parse(const unsigned char *buffer,
                                 int *aot, int *frequency, int *channel);
 
+int audio_specific_config_bitcoding(unsigned char *buffer,
+                                    int aot, int frequency, int channel);
+
 /* end of MP4 */
 
 #ifdef __cplusplus
