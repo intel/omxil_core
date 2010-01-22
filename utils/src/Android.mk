@@ -15,7 +15,8 @@ LOCAL_SRC_FILES := \
 	module.c \
 	thread.cpp \
 	workqueue.cpp \
-	audio_parser.c
+	audio_parser.c \
+	h264_parser.c
 
 LOCAL_MODULE := libwrs_omxil_utils
 
