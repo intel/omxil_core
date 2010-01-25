@@ -172,6 +172,7 @@ typedef struct _SPS_t {
 
 int nal_sps_parse(unsigned char *buffer, unsigned int len,
 		  unsigned int *width, unsigned int *height,
+		  unsigned int *stride, unsigned int *sliceheight,
 		  unsigned int *framerate);
 
 #ifdef __cplusplus

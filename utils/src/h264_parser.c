@@ -534,11 +534,13 @@ static int _vui_parse(nal_stream *pstream, SPS *sps)
 
 int nal_sps_parse(unsigned char *buffer, unsigned int len,
 		  unsigned int *width, unsigned int *height,
+		  unsigned int *stride, unsigned int *sliceheight,
 		  unsigned int *framerate)
 {
 	SPS sps;
 	VUI vui;
 	nal_stream nalst;
+	unsigned int crop_left, crop_right, crop_top, crop_bottom;
 	unsigned int val;
 	int status = H264_SPS_ERROR;
 
@@ -572,11 +574,39 @@ int nal_sps_parse(unsigned char *buffer, unsigned int len,
 		goto vui_error;
 	}
 
-	/* calculate width, height, framerate */
+	/* calculate width, height, stride, sliceheight, framerate */
 	*width = (sps.pic_width_in_mbs_minus1 + 1) * 16;
 	*height = (sps.pic_height_in_map_units_minus1 + 1) * 16;
+	LOGV("%s: width = %d", __func__, *width);
+	LOGV("%s: height = %d", __func__, *height);
+
+	if (sps.frame_cropping_flag) {
+		crop_left = 2 * sps.frame_crop_left_offset;
+		crop_right = *width - (2 * sps.frame_crop_right_offset + 1);
+
+		if (sps.frame_mbs_only_flag) {
+			crop_top = 2 * sps.frame_crop_top_offset;
+			crop_bottom = *height - (2 * sps.frame_crop_bottom_offset + 1);
+		} else {
+			crop_top = 4 * sps.frame_crop_top_offset;
+			crop_bottom = *height - (4 * sps.frame_crop_bottom_offset + 1);
+		}
+	} else {
+		crop_bottom = *height - 1;
+		crop_right = *width - 1;
+		crop_top = crop_left = 0;
+	}
+	*width = crop_right - crop_left + 1;
+	*height = crop_bottom - crop_top + 1;
+
+	/* FIXME: same as frame width,height */
+	*stride = *width;
+	*sliceheight = *height;
+
 	LOGV("%s: frame width = %d", __func__, *width);
 	LOGV("%s: frame height = %d", __func__, *height);
+	LOGV("%s: stride = %d", __func__, *stride);
+	LOGV("%s: sliceheight = %d", __func__, *sliceheight);
 
 	/* FIXME: Generally framerate is in container header */
 	if (vui.fixed_frame_rate_flag) {
