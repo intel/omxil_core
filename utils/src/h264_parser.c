@@ -532,6 +532,42 @@ static int _vui_parse(nal_stream *pstream, SPS *sps)
 	return H264_STATUS_OK;
 }
 
+static int calculate_stride(unsigned int width,
+                            unsigned int height,
+                            unsigned int *stride)
+{
+    if ((width <= 0) || (width > 4096) || (height <= 0) || (height > 4096))
+    {
+        return -1;
+    }
+
+    if (512 >= width)
+    {
+        *stride = 512;
+    }
+    else if (1024 >= width)
+    {
+        *stride = 1024;
+    }
+    else if (1280 >= width)
+    {
+        *stride = 1280;
+    }
+    else if (2048 >= width)
+    {
+        *stride = 2048;
+    }
+    else if (4096 >= width)
+    {
+        *stride = 4096;
+    }
+    else
+    {
+        return -1;
+    }
+    return 0;
+}
+
 int nal_sps_parse(unsigned char *buffer, unsigned int len,
 		  unsigned int *width, unsigned int *height,
 		  unsigned int *stride, unsigned int *sliceheight,
@@ -599,24 +635,26 @@ int nal_sps_parse(unsigned char *buffer, unsigned int len,
 	*width = crop_right - crop_left + 1;
 	*height = crop_bottom - crop_top + 1;
 
-	/* FIXME: same as frame width,height */
+#if 0
+	/* NOTE: calculating method from psb_video library */
+	calculate_stride(*width, *height, stride);
+	*sliceheight = (*height + 0x1F) & ~0x1F;
+#else
 	*stride = *width;
 	*sliceheight = *height;
+#endif
 
 	LOGV("%s: frame width = %d", __func__, *width);
 	LOGV("%s: frame height = %d", __func__, *height);
 	LOGV("%s: stride = %d", __func__, *stride);
 	LOGV("%s: sliceheight = %d", __func__, *sliceheight);
 
-	/* FIXME: Generally framerate is in container header */
-	if (vui.fixed_frame_rate_flag) {
-		*framerate = 30;
-		LOGV("%s: frame rate = %d", __func__, *framerate);
-	} else {
-		*framerate = 30;
-		//*framerate = 0;
-		LOGV("%s: fixed_frame_rate_flag = 0 framerate=%d", __func__, *framerate);
-	}
+	/*
+         * FIXME: Generally framerate is in container header
+         * set static value 30 to framerate.
+         */
+	*framerate = 30;
+	LOGV("%s: frame rate = %d", __func__, *framerate);
 	return H264_STATUS_OK;
 
  sps_error:
@@ -631,4 +669,3 @@ int nal_sps_parse(unsigned char *buffer, unsigned int len,
  init_error:
 	return status;
 }
-
