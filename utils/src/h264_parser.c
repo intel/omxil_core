@@ -570,8 +570,7 @@ static int calculate_stride(unsigned int width,
 
 int nal_sps_parse(unsigned char *buffer, unsigned int len,
 		  unsigned int *width, unsigned int *height,
-		  unsigned int *stride, unsigned int *sliceheight,
-		  unsigned int *framerate)
+		  unsigned int *stride, unsigned int *sliceheight)
 {
 	SPS sps;
 	VUI vui;
@@ -601,6 +600,7 @@ int nal_sps_parse(unsigned char *buffer, unsigned int len,
 	status = _sps_parse(&nalst, &sps);
 	if (status) goto sps_error;
 
+#if USE_VUI_PARSER
 	if (sps.vui_parameters_present_flag) {
 		/* parse VUI */
 		status = _vui_parse(&nalst, &sps);
@@ -609,8 +609,9 @@ int nal_sps_parse(unsigned char *buffer, unsigned int len,
 		LOGE("%s: VUI parameters present flag is OFF from SPS", __func__);
 		goto vui_error;
 	}
+#endif
 
-	/* calculate width, height, stride, sliceheight, framerate */
+	/* calculate width, height, stride, sliceheight */
 	*width = (sps.pic_width_in_mbs_minus1 + 1) * 16;
 	*height = (sps.pic_height_in_map_units_minus1 + 1) * 16;
 	LOGV("%s: width = %d", __func__, *width);
@@ -649,19 +650,12 @@ int nal_sps_parse(unsigned char *buffer, unsigned int len,
 	LOGV("%s: stride = %d", __func__, *stride);
 	LOGV("%s: sliceheight = %d", __func__, *sliceheight);
 
-	/*
-         * FIXME: Generally framerate is in container header
-         * set static value 30 to framerate.
-         */
-	*framerate = 30;
-	LOGV("%s: frame rate = %d", __func__, *framerate);
 	return H264_STATUS_OK;
 
  sps_error:
 	*width = 0;
 	*height = 0;
  vui_error:
-	*framerate = 0;
 	if (sps.seq_scaling_list_present_flag)
 		free(sps.seq_scaling_list_present_flag);
 	if (sps.offset_for_ref_frame)

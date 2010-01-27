@@ -15,6 +15,7 @@ extern "C" {
 
 #define USE_PV_BITOPS	1
 #define USE_MIXVBP_DEF	1
+#define USE_VUI_PARSER  0
 
 #if USE_PV_BITOPS
 /* Port from PV OpenCORE 2.02 */
@@ -172,8 +173,7 @@ typedef struct _SPS_t {
 
 int nal_sps_parse(unsigned char *buffer, unsigned int len,
 		  unsigned int *width, unsigned int *height,
-		  unsigned int *stride, unsigned int *sliceheight,
-		  unsigned int *framerate);
+		  unsigned int *stride, unsigned int *sliceheight);
 
 #ifdef __cplusplus
 } /* extern "C" */
