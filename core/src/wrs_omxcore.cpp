@@ -56,6 +56,11 @@ static struct list *construct_components(const char *config_file_name)
         OMX_ERRORTYPE ret;
 
         library_name[OMX_MAX_STRINGNAME_SIZE-1] = '\0';
+
+        /* skip libraries starting with # */
+        if (library_name[0] == '#')
+            continue;
+
         cmodule = new CModule(&library_name[0]);
         if (!cmodule)
             continue;
