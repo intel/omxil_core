@@ -1855,6 +1855,7 @@ void ComponentBase::Work(void)
     buffer_retain_t retain[nr_ports];
     OMX_U32 i;
     bool avail = false;
+    OMX_ERRORTYPE ret;
 
     pthread_mutex_lock(&ports_block);
 
@@ -1865,17 +1866,30 @@ void ComponentBase::Work(void)
             retain[i] = BUFFER_RETAIN_NOT_RETAIN;
         }
 
-        ProcessorProcess(buffers, &retain[0], nr_ports);
+        ret = ProcessorProcess(buffers, &retain[0], nr_ports);
 
-        PostProcessBuffers(buffers, &retain[0]);
+        if (ret == OMX_ErrorNone) {
+            PostProcessBuffers(buffers, &retain[0]);
 
-        for (i = 0; i < nr_ports; i++) {
-            if (retain[i] == BUFFER_RETAIN_GETAGAIN)
-                ports[i]->RetainThisBuffer(buffers[i], false);
-            else if (retain[i] == BUFFER_RETAIN_ACCUMULATE)
-                ports[i]->RetainThisBuffer(buffers[i], true);
-            else
+            for (i = 0; i < nr_ports; i++) {
+                if (retain[i] == BUFFER_RETAIN_GETAGAIN)
+                    ports[i]->RetainThisBuffer(buffers[i], false);
+                else if (retain[i] == BUFFER_RETAIN_ACCUMULATE)
+                    ports[i]->RetainThisBuffer(buffers[i], true);
+                else
+                    ports[i]->ReturnThisBuffer(buffers[i]);
+            }
+        }
+        else {
+            callbacks->EventHandler(handle, appdata, OMX_EventError, ret,
+                                    0, NULL);
+
+            for (i = 0; i < nr_ports; i++) {
+                /* return buffers by hands, these buffers're not in queue */
                 ports[i]->ReturnThisBuffer(buffers[i]);
+                /* flush ports */
+                ports[i]->FlushPort();
+            }
         }
     }
     ScheduleIfAllBufferAvailable();
