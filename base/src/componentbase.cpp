@@ -1251,7 +1251,7 @@ static inline const char *GetCmdName(OMX_COMMANDTYPE cmd)
 
 void ComponentBase::CmdHandler(struct cmd_s *cmd)
 {
-    LOGD("%s:%s: handling %s command\n",
+    LOGV("%s:%s: handling %s command\n",
          GetName(), GetWorkingRole(), GetCmdName(cmd->cmd));
 
     switch (cmd->cmd) {
@@ -1292,7 +1292,7 @@ void ComponentBase::CmdHandler(struct cmd_s *cmd)
         break;
     } /* switch */
 
-    LOGD("%s:%s: command %s handling done\n",
+    LOGV("%s:%s: command %s handling done\n",
          GetName(), GetWorkingRole(), GetCmdName(cmd->cmd));
 }
 
@@ -1332,7 +1332,7 @@ void ComponentBase::TransState(OMX_STATETYPE transition)
     OMX_U32 data1, data2;
     OMX_ERRORTYPE ret;
 
-    LOGD("%s:%s: try to transit state from %s to %s\n",
+    LOGV("%s:%s: try to transit state from %s to %s\n",
          GetName(), GetWorkingRole(), GetStateName(current),
          GetStateName(transition));
 
@@ -1419,7 +1419,7 @@ inline OMX_ERRORTYPE ComponentBase::TransStateToLoaded(OMX_STATETYPE current)
         }
     }
     else if (current == OMX_StateWaitForResources) {
-        LOGD("%s:%s: "
+        LOGV("%s:%s: "
              "state transition's requested from WaitForResources to Loaded\n",
              GetName(), GetWorkingRole());
 
@@ -1458,20 +1458,20 @@ inline OMX_ERRORTYPE ComponentBase::TransStateToIdle(OMX_STATETYPE current)
     }
     else if ((current == OMX_StatePause) || (current == OMX_StateExecuting)) {
         FlushPort(OMX_ALL, 0);
-        LOGD("%s:%s: flushed all ports\n", GetName(), GetWorkingRole());
+        LOGV("%s:%s: flushed all ports\n", GetName(), GetWorkingRole());
 
         bufferwork->CancelScheduledWork(this);
-        LOGD("%s:%s: discarded all scheduled buffer process work\n",
+        LOGV("%s:%s: discarded all scheduled buffer process work\n",
              GetName(), GetWorkingRole());
 
         if (current == OMX_StatePause) {
             bufferwork->ResumeWork();
-            LOGD("%s:%s: buffer process work resumed\n",
+            LOGV("%s:%s: buffer process work resumed\n",
                  GetName(), GetWorkingRole());
         }
 
         bufferwork->StopWork();
-        LOGD("%s:%s: buffer process work stopped\n",
+        LOGV("%s:%s: buffer process work stopped\n",
              GetName(), GetWorkingRole());
 
         ret = ProcessorStop();
@@ -1482,7 +1482,7 @@ inline OMX_ERRORTYPE ComponentBase::TransStateToIdle(OMX_STATETYPE current)
         }
     }
     else if (current == OMX_StateWaitForResources) {
-        LOGD("%s:%s: "
+        LOGV("%s:%s: "
              "state transition's requested from WaitForResources to Idle\n",
              GetName(), GetWorkingRole());
 
@@ -1504,7 +1504,7 @@ ComponentBase::TransStateToExecuting(OMX_STATETYPE current)
 
     if (current == OMX_StateIdle) {
         bufferwork->StartWork(true);
-        LOGD("%s:%s: buffer process work started with executing state\n",
+        LOGV("%s:%s: buffer process work started with executing state\n",
              GetName(), GetWorkingRole());
 
         ret = ProcessorStart();
@@ -1516,7 +1516,7 @@ ComponentBase::TransStateToExecuting(OMX_STATETYPE current)
     }
     else if (current == OMX_StatePause) {
         bufferwork->ResumeWork();
-        LOGD("%s:%s: buffer process work resumed\n",
+        LOGV("%s:%s: buffer process work resumed\n",
              GetName(), GetWorkingRole());
 
         ret = ProcessorResume();
@@ -1539,7 +1539,7 @@ inline OMX_ERRORTYPE ComponentBase::TransStateToPause(OMX_STATETYPE current)
 
     if (current == OMX_StateIdle) {
         bufferwork->StartWork(false);
-        LOGD("%s:%s: buffer process work started with paused state\n",
+        LOGV("%s:%s: buffer process work started with paused state\n",
              GetName(), GetWorkingRole());
 
         ret = ProcessorStart();
@@ -1551,7 +1551,7 @@ inline OMX_ERRORTYPE ComponentBase::TransStateToPause(OMX_STATETYPE current)
     }
     else if (current == OMX_StateExecuting) {
         bufferwork->PauseWork();
-        LOGD("%s:%s: buffer process work paused\n",
+        LOGV("%s:%s: buffer process work paused\n",
              GetName(), GetWorkingRole());
 
         ret = ProcessorPause();
@@ -1586,7 +1586,7 @@ ComponentBase::TransStateToWaitForResources(OMX_STATETYPE current)
     OMX_ERRORTYPE ret;
 
     if (current == OMX_StateLoaded) {
-        LOGD("%s:%s: "
+        LOGV("%s:%s: "
              "state transition's requested from Loaded to WaitForResources\n",
              GetName(), GetWorkingRole());
         ret = OMX_ErrorNone;
