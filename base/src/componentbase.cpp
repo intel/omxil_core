@@ -1892,7 +1892,7 @@ void ComponentBase::Work(void)
             }
         }
     }
-    ScheduleIfAllBufferAvailable();
+
     pthread_mutex_unlock(&ports_block);
 }
 
@@ -1915,15 +1915,6 @@ bool ComponentBase::IsAllBufferAvailable(void)
         return true;
     else
         return false;
-}
-
-void ComponentBase::ScheduleIfAllBufferAvailable(void)
-{
-    bool avail;
-
-    avail = IsAllBufferAvailable();
-    if (avail)
-        bufferwork->ScheduleWork(this);
 }
 
 inline void ComponentBase::SourcePostProcessBuffers(

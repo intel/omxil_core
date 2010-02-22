@@ -389,8 +389,6 @@ private:
     virtual void Work(void); /* handle this->ports, hold ports_block */
     /* check if all port has own pending buffer */
     bool IsAllBufferAvailable(void);
-    /* bufferwork->ScheduleWork() if IsAllBufferAvailable is true */
-    void ScheduleIfAllBufferAvailable(void);
 
     /* called in Work() after ProcessorProcess() */
     void PostProcessBuffers(OMX_BUFFERHEADERTYPE **buffers,
