@@ -52,8 +52,6 @@ private:
 
     virtual void Work(void); /* call ci->CmdHandler() */
 
-    void ScheduleIfAvailable(void);
-
     WorkQueue *workq;
 
     struct queue q;

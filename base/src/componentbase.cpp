@@ -84,18 +84,6 @@ struct cmd_s *CmdProcessWork::PopCmdQueue(void)
     return cmd;
 }
 
-void CmdProcessWork::ScheduleIfAvailable(void)
-{
-    bool avail;
-
-    pthread_mutex_lock(&lock);
-    avail = queue_length(&q) ? true : false;
-    pthread_mutex_unlock(&lock);
-
-    if (avail)
-        workq->ScheduleWork(this);
-}
-
 void CmdProcessWork::Work(void)
 {
     struct cmd_s *cmd;
@@ -105,7 +93,6 @@ void CmdProcessWork::Work(void)
         ci->CmdHandler(cmd);
         free(cmd);
     }
-    ScheduleIfAvailable();
 }
 
 /* end of CmdProcessWork */
