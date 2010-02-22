@@ -38,7 +38,11 @@ CModule::CModule(const OMX_STRING lname)
 
 CModule::~CModule()
 {
-    Unload();
+    if (module) {
+        int ref_count;
+
+        while ((ref_count = Unload()));
+    }
 
     if (roles) {
         if (roles[0])
@@ -56,14 +60,14 @@ OMX_ERRORTYPE CModule::Load(int flag)
 {
     struct module *m;
 
-    if (module)
-        return OMX_ErrorNone;
-
     m = module_open(lname, flag);
     if (!m) {
         LOGE("module not founded (%s)\n", lname);
         return OMX_ErrorComponentNotFound;
     }
+
+    if (m == module)
+        return OMX_ErrorNone;
 
     wrs_omxil_cmodule = (struct wrs_omxil_cmodule_s *)
         module_symbol(m, WRS_OMXIL_CMODULE_SYMBOL_STRING);
@@ -83,16 +87,17 @@ OMX_ERRORTYPE CModule::Load(int flag)
 
 OMX_U32 CModule::Unload(void)
 {
-    if (!module)
-        return 0;
+    int ref_count;
 
-    module_close(module);
+    ref_count = module_close(module);
+    if (!ref_count) {
+        module = NULL;
+        wrs_omxil_cmodule = NULL;
 
-    module = NULL;
-    wrs_omxil_cmodule = NULL;
+        LOGI("module %s successfully unloaded\n", lname);
+    }
 
-    LOGI("module %s successfully unloaded\n", lname);
-    return 0;
+    return ref_count;
 }
 
 /* end of library loading / unloading */
