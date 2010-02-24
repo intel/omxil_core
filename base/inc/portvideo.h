@@ -43,5 +43,19 @@ private:
 };
 
 /* end of PortAvc */
+class PortMpeg4 : public PortVideo
+{
+public:
+    PortMpeg4();
+
+    OMX_ERRORTYPE SetPortMpeg4Param(const OMX_VIDEO_PARAM_MPEG4TYPE *p,
+                                  bool overwrite_readonly);
+    const OMX_VIDEO_PARAM_MPEG4TYPE *GetPortMpeg4Param(void);
+
+private:
+    OMX_VIDEO_PARAM_MPEG4TYPE mpeg4param;
+};
+
+/* end of PortMpeg4 */
 
 #endif /* __PORTVIDEO_H */

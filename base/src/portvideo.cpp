@@ -127,3 +127,65 @@ const OMX_VIDEO_PARAM_AVCTYPE *PortAvc::GetPortAvcParam(void)
 }
 
 /* end of PortAvc */
+
+PortMpeg4::PortMpeg4()
+{
+    OMX_VIDEO_PARAM_PORTFORMATTYPE videoparam;
+
+    memcpy(&videoparam, GetPortVideoParam(), sizeof(videoparam));
+    videoparam.eCompressionFormat = OMX_VIDEO_CodingMPEG4;
+    videoparam.eColorFormat = OMX_COLOR_FormatUnused;
+    videoparam.xFramerate = 15 << 16;
+    SetPortVideoParam(&videoparam, false);
+
+    memset(&mpeg4param, 0, sizeof(mpeg4param));
+    ComponentBase::SetTypeHeader(&mpeg4param, sizeof(mpeg4param));
+}
+
+OMX_ERRORTYPE PortMpeg4::SetPortMpeg4Param(
+    const OMX_VIDEO_PARAM_MPEG4TYPE *p, bool overwrite_readonly)
+{
+    if (!overwrite_readonly) {
+        OMX_ERRORTYPE ret;
+
+        ret = ComponentBase::CheckTypeHeader((void *)p, sizeof(*p));
+        if (ret != OMX_ErrorNone)
+            return ret;
+        if (mpeg4param.nPortIndex != p->nPortIndex)
+            return OMX_ErrorBadPortIndex;
+    }
+    else {
+        OMX_VIDEO_PARAM_PORTFORMATTYPE videoparam;
+
+        memcpy(&videoparam, GetPortVideoParam(), sizeof(videoparam));
+        videoparam.nPortIndex = p->nPortIndex;
+        SetPortVideoParam(&videoparam, true);
+
+        mpeg4param.nPortIndex = p->nPortIndex;
+    }
+
+    mpeg4param.nSliceHeaderSpacing = p->nSliceHeaderSpacing;
+    mpeg4param.bSVH = p->bSVH;
+    mpeg4param.bGov = p->bGov;
+    mpeg4param.nPFrames = p->nPFrames;
+    mpeg4param.nBFrames = p->nBFrames;
+    mpeg4param.nIDCVLCThreshold = p->nIDCVLCThreshold;
+    mpeg4param.bACPred = p->bACPred;
+    mpeg4param.nMaxPacketSize = p->nMaxPacketSize;
+    mpeg4param.nTimeIncRes = p->nTimeIncRes;
+    mpeg4param.eProfile = p->eProfile;
+    mpeg4param.eLevel = p->eLevel;
+    mpeg4param.nAllowedPictureTypes = p->nAllowedPictureTypes;
+    mpeg4param.nHeaderExtension = p->nHeaderExtension;
+    mpeg4param.bReversibleVLC = p->bReversibleVLC;
+
+    return OMX_ErrorNone;
+}
+
+const OMX_VIDEO_PARAM_MPEG4TYPE *PortMpeg4::GetPortMpeg4Param(void)
+{
+    return &mpeg4param;
+}
+
+/* end of PortMpeg4 */
+
