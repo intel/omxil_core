@@ -1,11 +1,3 @@
-/*
- * Copyright (c) 2009-2010 Wind River Systems, Inc.
- *
- * The right to copy, distribute, modify, or otherwise make use
- * of this software may be licensed only pursuant to the terms
- * of an applicable Wind River license agreement.
- */
-
 /* ------------------------------------------------------------------
  * Copyright (C) 1998-2009 PacketVideo
  *
@@ -23,10 +15,15 @@
  * and limitations under the License.
  * -------------------------------------------------------------------
  */
+
+/* Contains changes by Wind River Systems, 2009-2010 */
+
 #include "pvlogger.h"
 
 #include "pv_omxcore.h"
 #include "omx_interface.h"
+
+
 
 class PVOMXInterface : public OMXInterface
 {
@@ -69,7 +66,7 @@ class PVOMXInterface : public OMXInterface
             pOMX_GetRolesOfComponent = OMX_GetRolesOfComponent;
             pOMX_SetupTunnel = OMX_SetupTunnel;
             pOMX_GetContentPipe = OMX_GetContentPipe;
-            //pOMXConfigParser = OMXConfigParser;
+            /* pOMXConfigParser = OMXConfigParser; */
         };
 
 };
@@ -81,13 +78,12 @@ extern "C"
     {
         return PVOMXInterface::Instance();
     }
-    OSCL_EXPORT_REF void PVReleaseInterface(void* aInterface)
+    OSCL_EXPORT_REF void PVReleaseInterface(void* interface)
     {
-        PVOMXInterface* pInterface = (PVOMXInterface*)aInterface;
+        PVOMXInterface* pInterface = (PVOMXInterface*)interface;
         if (pInterface)
         {
             OSCL_DELETE(pInterface);
         }
     }
-
 }

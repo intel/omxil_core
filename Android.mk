@@ -1,11 +1,3 @@
-#
-# Copyright (c) 2009-2010 Wind River Systems, Inc.
-#
-# The right to copy, distribute, modify, or otherwise make use
-# of this software may be licensed only pursuant to the terms
-# of an applicable Wind River license agreement.
-#
-
 ifeq ($(strip $(BOARD_USES_WRS_OMXIL_CORE)),true)
 
 LOCAL_PATH := $(call my-dir)
