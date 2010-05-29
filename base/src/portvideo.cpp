@@ -37,6 +37,12 @@ PortVideo::PortVideo()
     videoparam.eCompressionFormat = OMX_VIDEO_CodingUnused;
     videoparam.eColorFormat = OMX_COLOR_FormatYUV420Planar;
     videoparam.xFramerate = 15 << 16;
+
+    memset(&bitrateparam, 0, sizeof(bitrateparam));
+    ComponentBase::SetTypeHeader(&bitrateparam, sizeof(bitrateparam));
+
+    bitrateparam.eControlRate = OMX_Video_ControlRateConstant;
+    bitrateparam.nTargetBitrate = 64000;
 }
 
 OMX_ERRORTYPE PortVideo::SetPortVideoParam(
@@ -65,6 +71,32 @@ OMX_ERRORTYPE PortVideo::SetPortVideoParam(
 const OMX_VIDEO_PARAM_PORTFORMATTYPE *PortVideo::GetPortVideoParam(void)
 {
     return &videoparam;
+}
+
+OMX_ERRORTYPE PortVideo::SetPortBitrateParam(
+    const OMX_VIDEO_PARAM_BITRATETYPE *p, bool internal)
+{
+    if (!internal) {
+        OMX_ERRORTYPE ret;
+
+        ret = ComponentBase::CheckTypeHeader((void *)p, sizeof(*p));
+        if (ret != OMX_ErrorNone)
+            return ret;
+        if (bitrateparam.nPortIndex != p->nPortIndex)
+            return OMX_ErrorBadPortIndex;
+    }
+    else
+        bitrateparam.nPortIndex = p->nPortIndex;
+
+    bitrateparam.eControlRate = p->eControlRate;
+    bitrateparam.nTargetBitrate = p->nTargetBitrate;
+
+    return OMX_ErrorNone;
+}
+
+const OMX_VIDEO_PARAM_BITRATETYPE *PortVideo::GetPortBitrateParam(void)
+{
+    return &bitrateparam;
 }
 
 /* end of PortVideo */

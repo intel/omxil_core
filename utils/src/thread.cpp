@@ -48,12 +48,7 @@ int Thread::Start(void)
 
     pthread_mutex_lock(&lock);
     if (!created) {
-        pthread_attr_t attr;
-
-        pthread_attr_init(&attr);
-        pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-
-        ret = pthread_create(&id, &attr, Instance, this);
+        ret = pthread_create(&id, NULL, Instance, this);
         if (!ret)
             created = true;
     }

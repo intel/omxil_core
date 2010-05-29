@@ -22,6 +22,7 @@ WorkQueue::WorkQueue()
 {
     stop = false;
     executing = true;
+    wait_for_works = false;
     works = NULL;
 
     pthread_mutex_init(&wlock, NULL);
@@ -29,34 +30,46 @@ WorkQueue::WorkQueue()
 
     pthread_mutex_init(&executing_lock, NULL);
     pthread_cond_init(&executing_wait, NULL);
+    pthread_cond_init(&paused_wait, NULL);
 }
 
 WorkQueue::~WorkQueue()
 {
     StopWork();
 
-    pthread_mutex_lock(&wlock);
-    while (works)
-        works = __list_delete(works, works);
-    pthread_mutex_unlock(&wlock);
-
     pthread_cond_destroy(&wcond);
     pthread_mutex_destroy(&wlock);
+
+    pthread_cond_destroy(&paused_wait);
+    pthread_cond_destroy(&executing_wait);
+    pthread_mutex_destroy(&executing_lock);
 }
 
 int WorkQueue::StartWork(bool executing)
 {
-    if (!executing)
-        PauseWork();
+    this->executing = executing;
 
     return Start();
 }
 
 void WorkQueue::StopWork(void)
 {
-    ResumeWork();
+    /* discard all scheduled works */
+    pthread_mutex_lock(&wlock);
+    while (works)
+        works = __list_delete(works, works);
+    pthread_mutex_unlock(&wlock);
 
-    FlushWork();
+    /*  wakeup DoWork() if it's sleeping */
+    /*
+     * FIXME
+     *
+     * if DoWork() is sleeping, Work()'s called one more time at this moment.
+     * if DoWork()::wi->Work() called ScheduleWork() (self-rescheduling),
+     * this function would be sleeping forever at Join() because works list
+     * never be empty.
+     */
+    ResumeWork();
 
     pthread_mutex_lock(&wlock);
     stop = true;
@@ -66,10 +79,14 @@ void WorkQueue::StopWork(void)
     Join();
 }
 
+/* it returns when Run() is sleeping at executing_wait or at wcond */
 void WorkQueue::PauseWork(void)
 {
     pthread_mutex_lock(&executing_lock);
     executing = false;
+    /* this prevents deadlock if Run() is sleeping with locking wcond */
+    if (!wait_for_works)
+        pthread_cond_wait(&paused_wait, &executing_lock); /* wokeup by Run() */
     pthread_mutex_unlock(&executing_lock);
 }
 
@@ -85,12 +102,24 @@ void WorkQueue::Run(void)
 {
     while (!stop) {
         pthread_mutex_lock(&wlock);
-        /*
-         * sleeps until works're available.
-         * wokeup by ScheduleWork() or FlushWork() or ~WorkQueue()
-         */
-        if (!works)
+
+        if (!works) {
+            pthread_mutex_lock(&executing_lock);
+            wait_for_works = true;
+            /* wake up PauseWork() if it's sleeping */
+            pthread_cond_signal(&paused_wait);
+            pthread_mutex_unlock(&executing_lock);
+
+            /*
+             * sleeps until works're available.
+             * wokeup by ScheduleWork() or FlushWork() or ~WorkQueue()
+             */
             pthread_cond_wait(&wcond, &wlock);
+
+            pthread_mutex_lock(&executing_lock);
+            wait_for_works = false;
+            pthread_mutex_unlock(&executing_lock);
+        }
 
         while (works) {
             struct list *entry = works;
@@ -99,24 +128,35 @@ void WorkQueue::Run(void)
 
             works = __list_delete(works, entry);
             pthread_mutex_unlock(&wlock);
+
+            /*
+             * 1. if PauseWork() locks executing_lock right before Run() locks
+             *    the lock, Run() sends the paused signal and go to sleep.
+             * 2. if Run() locks executing_lock first, DoWork() is called and
+             *    PausedWork() waits for paused_wait signal. Run() sends the
+             *    signal during next loop processing or at the end of loop
+             *    in case of works're not available.
+             */
+            pthread_mutex_lock(&executing_lock);
+            if (!executing) {
+                pthread_cond_signal(&paused_wait);
+                pthread_cond_wait(&executing_wait, &executing_lock);
+            }
+            pthread_mutex_unlock(&executing_lock);
+
             DoWork(wi);
+
             pthread_mutex_lock(&wlock);
         }
+
         pthread_mutex_unlock(&wlock);
     }
 }
 
 void WorkQueue::DoWork(WorkableInterface *wi)
 {
-    if (wi) {
-        pthread_mutex_lock(&executing_lock);
-        if (!executing)
-            pthread_cond_wait(&executing_wait, &executing_lock);
-
+    if (wi)
         wi->Work();
-
-        pthread_mutex_unlock(&executing_lock);
-    }
 }
 
 void WorkQueue::Work(void)

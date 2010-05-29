@@ -102,9 +102,12 @@ private:
     pthread_cond_t wcond;
 
     /* executing & pause */
+    bool wait_for_works;
     bool executing;
+
     pthread_mutex_t executing_lock;
     pthread_cond_t executing_wait;
+    pthread_cond_t paused_wait;
 
     int stop;
 };

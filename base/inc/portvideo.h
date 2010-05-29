@@ -33,8 +33,14 @@ public:
         const OMX_VIDEO_PARAM_PORTFORMATTYPE *videoparam, bool internal);
     const OMX_VIDEO_PARAM_PORTFORMATTYPE *GetPortVideoParam(void);
 
+    OMX_ERRORTYPE SetPortBitrateParam(
+        const OMX_VIDEO_PARAM_BITRATETYPE *bitrateparam, bool internal);
+    const OMX_VIDEO_PARAM_BITRATETYPE *GetPortBitrateParam(void);
+
 private:
     OMX_VIDEO_PARAM_PORTFORMATTYPE videoparam;
+
+    OMX_VIDEO_PARAM_BITRATETYPE bitrateparam;
 };
 
 /* end of PortVideo */
