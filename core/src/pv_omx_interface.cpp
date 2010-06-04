@@ -22,6 +22,7 @@
 
 #include "pv_omxcore.h"
 #include "omx_interface.h"
+#include "intel_omx_config_parser.h"
 
 
 
@@ -66,7 +67,7 @@ class PVOMXInterface : public OMXInterface
             pOMX_GetRolesOfComponent = OMX_GetRolesOfComponent;
             pOMX_SetupTunnel = OMX_SetupTunnel;
             pOMX_GetContentPipe = OMX_GetContentPipe;
-            /* pOMXConfigParser = OMXConfigParser; */
+            pOMXConfigParser = Intel_OMXConfigParser; 
         };
 
 };
