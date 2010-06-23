@@ -711,7 +711,7 @@ OMX_ERRORTYPE ComponentBase::CBaseSetConfig(
     OMX_IN  OMX_PTR pComponentConfigStructure)
 {
     OMX_ERRORTYPE ret;
-
+ 
     if (hComponent != handle)
         return OMX_ErrorBadParameter;
 
@@ -1262,6 +1262,9 @@ void ComponentBase::CmdHandler(struct cmd_s *cmd)
         OMX_U32 port_index = cmd->param1;
 
         FlushPort(port_index, 1);
+        pthread_mutex_lock(&ports_block);
+        ProcessorFlush();
+        pthread_mutex_unlock(&ports_block);
         break;
     }
     case OMX_CommandPortDisable: {
@@ -2064,6 +2067,11 @@ OMX_ERRORTYPE ComponentBase::ProcessorPause(void)
 }
 
 OMX_ERRORTYPE ComponentBase::ProcessorResume(void)
+{
+    return OMX_ErrorNone;
+}
+
+OMX_ERRORTYPE ComponentBase::ProcessorFlush(void)
 {
     return OMX_ErrorNone;
 }

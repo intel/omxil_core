@@ -368,10 +368,8 @@ private:
     /* SendCommand:OMX_CommandMarkBuffer */
     /* called in CmdHandler() thread context */
     void PushThisMark(OMX_U32 portindex, OMX_MARKTYPE *mark);
-
     /* SendCommand:OMX_CommandFlush (notify:1) or other parts (notify:0) */
     void FlushPort(OMX_U32 port_index, bool notify);
-
     /* SendCommand:OMX_CommandPortDisable/Enable */
     /* state: PortBase::OMX_PortEnabled/Disabled */
     void TransStatePort(OMX_U32 port_index, OMX_U8 state);
@@ -416,6 +414,7 @@ private:
     virtual OMX_ERRORTYPE ProcessorStop(void);  /* Executing/Pause to Idle */
     virtual OMX_ERRORTYPE ProcessorPause(void); /* Executing to Pause */
     virtual OMX_ERRORTYPE ProcessorResume(void);/* Pause to Executing */
+    virtual OMX_ERRORTYPE ProcessorFlush(void); /* Flush */
     /* Work */
     virtual OMX_ERRORTYPE ProcessorProcess(OMX_BUFFERHEADERTYPE **buffers,
                                            buffer_retain_t *retain,
