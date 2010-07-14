@@ -414,7 +414,8 @@ private:
     virtual OMX_ERRORTYPE ProcessorStop(void);  /* Executing/Pause to Idle */
     virtual OMX_ERRORTYPE ProcessorPause(void); /* Executing to Pause */
     virtual OMX_ERRORTYPE ProcessorResume(void);/* Pause to Executing */
-    virtual OMX_ERRORTYPE ProcessorFlush(void); /* Flush */
+    virtual OMX_ERRORTYPE ProcessorFlush(OMX_U32 port_index); /* Flush */
+
     /* Work */
     virtual OMX_ERRORTYPE ProcessorProcess(OMX_BUFFERHEADERTYPE **buffers,
                                            buffer_retain_t *retain,

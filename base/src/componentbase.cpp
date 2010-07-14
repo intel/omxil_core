@@ -1263,7 +1263,7 @@ void ComponentBase::CmdHandler(struct cmd_s *cmd)
 
         FlushPort(port_index, 1);
         pthread_mutex_lock(&ports_block);
-        ProcessorFlush();
+        ProcessorFlush(port_index);
         pthread_mutex_unlock(&ports_block);
         break;
     }
@@ -2071,7 +2071,7 @@ OMX_ERRORTYPE ComponentBase::ProcessorResume(void)
     return OMX_ErrorNone;
 }
 
-OMX_ERRORTYPE ComponentBase::ProcessorFlush(void)
+OMX_ERRORTYPE ComponentBase::ProcessorFlush(OMX_U32 port_index)
 {
     return OMX_ErrorNone;
 }
