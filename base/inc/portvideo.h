@@ -28,6 +28,7 @@ class PortVideo : public PortBase
 {
 public:
     PortVideo();
+    //~PortVideo();
 
     OMX_ERRORTYPE SetPortVideoParam(
         const OMX_VIDEO_PARAM_PORTFORMATTYPE *videoparam, bool internal);
@@ -36,11 +37,23 @@ public:
     OMX_ERRORTYPE SetPortBitrateParam(
         const OMX_VIDEO_PARAM_BITRATETYPE *bitrateparam, bool internal);
     const OMX_VIDEO_PARAM_BITRATETYPE *GetPortBitrateParam(void);
+    
+    OMX_ERRORTYPE SetPortPrivateInfoParam(
+         const OMX_VIDEO_CONFIG_PRI_INFOTYPE *privateinfoparam, bool internal);
+    const OMX_VIDEO_CONFIG_PRI_INFOTYPE *GetPortPrivateInfoParam(void);
+
+    OMX_ERRORTYPE SetPortBufferSharingInfo(OMX_BOOL isbufsharing);
+    const OMX_BOOL *GetPortBufferSharingInfo(void);
+
 
 private:
     OMX_VIDEO_PARAM_PORTFORMATTYPE videoparam;
 
     OMX_VIDEO_PARAM_BITRATETYPE bitrateparam;
+    
+    OMX_VIDEO_CONFIG_PRI_INFOTYPE  privateinfoparam;
+
+    OMX_BOOL mbufsharing;
 };
 
 /* end of PortVideo */

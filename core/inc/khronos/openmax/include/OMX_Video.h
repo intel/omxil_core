@@ -1049,6 +1049,25 @@ typedef struct OMX_VIDEO_CONFIG_NALSIZE {
     OMX_U32 nNaluBytes;
 } OMX_VIDEO_CONFIG_NALSIZE;
 
+/**
+ * Vendor Private Configs
+ *
+ * STRUCT MEMBERS:
+ *  nSize      : Size of the structure in bytes
+ *  nVersion   : OMX specification version information
+ *  nPortIndex : Port that this structure applies to
+ *  nCapacity  : Specifies the private unit size
+ *  nHolder    : Pointer to private unit address 
+ */
+typedef struct OMX_VIDEO_CONFIG_PRI_INFOTYPE {
+    OMX_U32 nSize;
+    OMX_VERSIONTYPE nVersion;
+    OMX_U32 nPortIndex;
+    OMX_U32 nCapacity;
+    OMX_PTR nHolder;
+} OMX_VIDEO_CONFIG_PRI_INFOTYPE;
+
+
 /** @} */
 
 #ifdef __cplusplus

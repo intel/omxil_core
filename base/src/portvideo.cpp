@@ -43,7 +43,23 @@ PortVideo::PortVideo()
 
     bitrateparam.eControlRate = OMX_Video_ControlRateConstant;
     bitrateparam.nTargetBitrate = 64000;
+
+    memset(&privateinfoparam, 0, sizeof(privateinfoparam));
+    ComponentBase::SetTypeHeader(&privateinfoparam, sizeof(privateinfoparam));
+
+    privateinfoparam.nCapacity = 0;
+    privateinfoparam.nHolder = NULL;
+
+    mbufsharing = OMX_FALSE;
 }
+
+//PortVideo::~PortVideo()
+//{
+//    if(privateinfoparam.nHolder != NULL) {
+//        free(privateinfoparam.nHolder);
+//        privateinfoparam.nHolder = NULL;
+//    }
+//}
 
 OMX_ERRORTYPE PortVideo::SetPortVideoParam(
     const OMX_VIDEO_PARAM_PORTFORMATTYPE *p, bool internal)
@@ -99,6 +115,59 @@ const OMX_VIDEO_PARAM_BITRATETYPE *PortVideo::GetPortBitrateParam(void)
     return &bitrateparam;
 }
 
+OMX_ERRORTYPE PortVideo::SetPortBufferSharingInfo(OMX_BOOL isbufsharing)
+{
+    mbufsharing = isbufsharing;
+
+    return OMX_ErrorNone;
+}
+
+const OMX_BOOL *PortVideo::GetPortBufferSharingInfo(void)
+{
+    return &mbufsharing;
+}
+
+
+OMX_ERRORTYPE PortVideo::SetPortPrivateInfoParam(
+    const OMX_VIDEO_CONFIG_PRI_INFOTYPE *p, bool internal)
+{
+    if (!internal) {
+        OMX_ERRORTYPE ret;
+
+        ret = ComponentBase::CheckTypeHeader((void *)p, sizeof(*p));
+        if (ret != OMX_ErrorNone)
+            return ret;
+        if (privateinfoparam.nPortIndex != p->nPortIndex)
+            return OMX_ErrorBadPortIndex;
+    }
+    else
+        privateinfoparam.nPortIndex = p->nPortIndex;
+
+    const OMX_BOOL *isbufsharing = GetPortBufferSharingInfo();
+    if(*isbufsharing) {
+        //if(privateinfoparam.nHolder != NULL) {
+        //    free(privateinfoparam.nHolder);
+        //    privateinfoparam.nHolder = NULL;
+        //}
+        if(p->nHolder != NULL) {
+            privateinfoparam.nCapacity = p->nCapacity;
+            privateinfoparam.nHolder = (OMX_PTR)malloc(sizeof(OMX_U32) * (p->nCapacity));
+            memcpy(privateinfoparam.nHolder, p->nHolder, sizeof(OMX_U32) * (p->nCapacity));
+        } else {
+            privateinfoparam.nCapacity = 0;
+            privateinfoparam.nHolder = NULL;
+        }
+    }
+    
+    return OMX_ErrorNone;
+}
+
+const OMX_VIDEO_CONFIG_PRI_INFOTYPE *PortVideo::GetPortPrivateInfoParam(void)
+{
+    return &privateinfoparam;
+}
+
+
 /* end of PortVideo */
 
 PortAvc::PortAvc()
@@ -112,6 +181,12 @@ PortAvc::PortAvc()
     SetPortVideoParam(&videoparam, false);
 
     memset(&avcparam, 0, sizeof(avcparam));
+
+    //set buffer sharing mode
+    SetPortBufferSharingInfo(OMX_TRUE);
+    avcparam.eProfile = OMX_VIDEO_AVCProfileVendorStartUnused;
+    avcparam.eLevel = OMX_VIDEO_AVCLevelVendorStartUnused;
+
     ComponentBase::SetTypeHeader(&avcparam, sizeof(avcparam));
 }
 
