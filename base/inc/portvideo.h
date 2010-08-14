@@ -87,4 +87,20 @@ private:
 
 /* end of PortMpeg4 */
 
+
+class PortH263 : public PortVideo
+{
+public:
+    PortH263();
+
+    OMX_ERRORTYPE SetPortH263Param(const OMX_VIDEO_PARAM_H263TYPE *p,
+                                  bool overwrite_readonly);
+    const OMX_VIDEO_PARAM_H263TYPE *GetPortH263Param(void);
+
+private:
+    OMX_VIDEO_PARAM_H263TYPE h263param;
+};
+
+/* end of PortH263 */
+
 #endif /* __PORTVIDEO_H */

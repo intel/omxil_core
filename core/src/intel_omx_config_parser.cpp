@@ -132,8 +132,10 @@ OSCL_EXPORT_REF OMX_BOOL Intel_OMXConfigParser(
                 return OMX_FALSE;
             }
 
-            if(aInputs.iMimeType == PVMF_MIME_H264_VIDEO) 
-            {
+            if(aInputs.iMimeType == PVMF_MIME_H264_VIDEO || 
+                    aInputs.iMimeType == PVMF_MIME_H2632000 || 
+                    aInputs.iMimeType == PVMF_MIME_H2631998) 
+	    {
                 LOGV("--- intel_video_config_parser() ---\n");
                 Status = intel_video_config_parser(&aInputs, (pvVideoConfigParserOutputs *)aOutputParameters);
             }

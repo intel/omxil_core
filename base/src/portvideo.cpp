@@ -306,3 +306,66 @@ const OMX_VIDEO_PARAM_MPEG4TYPE *PortMpeg4::GetPortMpeg4Param(void)
 
 /* end of PortMpeg4 */
 
+PortH263::PortH263()
+{
+    OMX_VIDEO_PARAM_PORTFORMATTYPE videoparam;
+
+    memcpy(&videoparam, GetPortVideoParam(), sizeof(videoparam));
+    videoparam.eCompressionFormat = OMX_VIDEO_CodingH263;
+    videoparam.eColorFormat = OMX_COLOR_FormatUnused;
+    videoparam.xFramerate = 15 << 16;
+    SetPortVideoParam(&videoparam, false);
+
+    memset(&h263param, 0, sizeof(h263param));
+
+    //set buffer sharing mode
+    SetPortBufferSharingInfo(OMX_TRUE);
+    h263param.eProfile = OMX_VIDEO_H263ProfileVendorStartUnused;
+    h263param.eLevel = OMX_VIDEO_H263LevelVendorStartUnused;
+
+    ComponentBase::SetTypeHeader(&h263param, sizeof(h263param));
+}
+
+OMX_ERRORTYPE PortH263::SetPortH263Param(
+    const OMX_VIDEO_PARAM_H263TYPE *p, bool overwrite_readonly)
+{
+    if (!overwrite_readonly) {
+        OMX_ERRORTYPE ret;
+
+        ret = ComponentBase::CheckTypeHeader((void *)p, sizeof(*p));
+        if (ret != OMX_ErrorNone)
+            return ret;
+        if (h263param.nPortIndex != p->nPortIndex)
+            return OMX_ErrorBadPortIndex;
+    }
+    else {
+        OMX_VIDEO_PARAM_PORTFORMATTYPE videoparam;
+
+        memcpy(&videoparam, GetPortVideoParam(), sizeof(videoparam));
+        videoparam.nPortIndex = p->nPortIndex;
+        SetPortVideoParam(&videoparam, true);
+
+        h263param.nPortIndex = p->nPortIndex;
+    }
+
+    h263param.nPFrames = p->nPFrames;
+    h263param.nBFrames = p->nBFrames;
+//    h263param.eProfile = p->eProfile;
+//    h263param.eLevel   = p->eLevel;
+    h263param.bPLUSPTYPEAllowed        = p->bPLUSPTYPEAllowed;
+    h263param.nAllowedPictureTypes     = p->nAllowedPictureTypes;
+    h263param.bForceRoundingTypeToZero = p->bForceRoundingTypeToZero;
+    h263param.nPictureHeaderRepetition = p->nPictureHeaderRepetition;
+    h263param.nGOBHeaderInterval       = p->nGOBHeaderInterval;
+
+    return OMX_ErrorNone;
+}
+
+const OMX_VIDEO_PARAM_H263TYPE *PortH263::GetPortH263Param(void)
+{
+    return &h263param;
+}
+
+/* end of PortH263 */
+
+
