@@ -1854,13 +1854,12 @@ void ComponentBase::Work(void)
     OMX_BUFFERHEADERTYPE *buffers[nr_ports];
     buffer_retain_t retain[nr_ports];
     OMX_U32 i;
-    bool avail = false;
     OMX_ERRORTYPE ret;
 
     pthread_mutex_lock(&ports_block);
 
-    avail = IsAllBufferAvailable();
-    if (avail) {
+    while(IsAllBufferAvailable())
+    {
         for (i = 0; i < nr_ports; i++) {
             buffers[i] = ports[i]->PopBuffer();
             retain[i] = BUFFER_RETAIN_NOT_RETAIN;
