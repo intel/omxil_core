@@ -1408,7 +1408,11 @@ inline OMX_ERRORTYPE ComponentBase::TransStateToLoaded(OMX_STATETYPE current)
         OMX_U32 i;
 
         for (i = 0; i < nr_ports; i++)
-            ports[i]->WaitPortBufferCompletion();
+	{
+            if (ports[i]->GetPortBufferCount() > 0) {
+                ports[i]->WaitPortBufferCompletion();
+	    };
+	};
 
         ret = ProcessorDeinit();
         if (ret != OMX_ErrorNone) {
