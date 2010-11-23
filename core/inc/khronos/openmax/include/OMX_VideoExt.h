@@ -64,9 +64,65 @@ typedef struct OMX_VIDEO_PARAM_BYTESTREAMTYPE {
      OMX_U32 nSize;                 // Size of the structure
      OMX_VERSIONTYPE nVersion;      // OMX specification version
      OMX_U32 nPortIndex;            // Port that this structure applies to
-     OMX_BOOL bBytestream;          // Enable/disable bytestream support 
+     OMX_BOOL bBytestream;          // Enable/disable bytestream support
 } OMX_VIDEO_PARAM_BYTESTREAMTYPE;
 
+typedef struct OMX_VIDEO_CONFIG_INTEL_BITRATETYPE {
+     OMX_U32 nSize;
+     OMX_VERSIONTYPE nVersion;
+     OMX_U32 nPortIndex;
+     OMX_U32 nMaxEncodeBitrate;    // Maximum bitrate
+     OMX_U32 nTargetPercentage;    // Target bitrate as percentage of maximum bitrate; e.g. 95 is 95%
+     OMX_U32 nWindowSize;          // Window size in milliseconds allowed for bitrate to reach target
+     OMX_U32 nInitialQP;           // Initial QP for I frames
+     OMX_U32 nMinQP;
+} OMX_VIDEO_CONFIG_INTEL_BITRATETYPE;
+
+typedef enum OMX_VIDEO_INTEL_CONTROLRATETYPE {
+    OMX_Video_Intel_ControlRateDisable,
+    OMX_Video_Intel_ControlRateVariable,
+    OMX_Video_Intel_ControlRateConstant,
+    OMX_Video_Intel_ControlRateVideoConferencingMode,
+    OMX_Video_Intel_ControlRateMax = 0x7FFFFFFF
+} OMX_VIDEO_INTEL_CONTROLRATETYPE;
+
+typedef struct OMX_VIDEO_PARAM_INTEL_BITRATETYPE {
+     OMX_U32 nSize;
+     OMX_VERSIONTYPE nVersion;
+     OMX_U32 nPortIndex;
+     OMX_VIDEO_INTEL_CONTROLRATETYPE eControlRate;
+     OMX_U32 nTargetBitrate;
+} OMX_VIDEO_PARAM_INTEL_BITRATETYPE;
+
+typedef struct OMX_VIDEO_PARAM_INTEL_AVC_DECODE_SETTINGS {
+     OMX_U32 nSize;                       // Size of the structure
+     OMX_VERSIONTYPE nVersion;            // OMX specification version
+     OMX_U32 nPortIndex;                  // Port that this structure applies to
+     OMX_U32 nMaxNumberOfReferenceFrame;  // Maximum number of reference frames
+     OMX_U32 nMaxWidth;                   // Maximum width of video
+     OMX_U32 nMaxHeight;                  // Maximum height of video
+} OMX_VIDEO_PARAM_INTEL_AVC_DECODE_SETTINGS;
+
+
+typedef struct OMX_VIDEO_CONFIG_INTEL_SLICE_NUMBERS {
+     OMX_U32 nSize;                       // Size of the structure
+     OMX_VERSIONTYPE nVersion;            // OMX specification version
+     OMX_U32 nPortIndex;                  // Port that this structure applies to
+     OMX_U32 nISliceNumber;               // I frame slice number
+     OMX_U32 nPSliceNumber;               // P frame slice number
+} OMX_VIDEO_CONFIG_INTEL_SLICE_NUMBERS;
+
+
+typedef struct OMX_VIDEO_CONFIG_INTEL_AIR {
+     OMX_U32 nSize;                       // Size of the structure
+     OMX_VERSIONTYPE nVersion;            // OMX specification version
+     OMX_U32 nPortIndex;                  // Port that this structure applies to
+     OMX_BOOL bAirEnable;                 // Enable AIR
+     OMX_BOOL bAirAuto;                   // AIR auto
+     OMX_U32 nAirMBs;                     // Number of AIR MBs
+     OMX_U32 nAirThreshold;               // AIR Threshold
+
+} OMX_VIDEO_CONFIG_INTEL_AIR;
 
 #ifdef __cplusplus
 }

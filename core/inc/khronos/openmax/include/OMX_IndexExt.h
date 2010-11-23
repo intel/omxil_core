@@ -1,28 +1,28 @@
 /*
- * Copyright (c) 2010 The Khronos Group Inc. 
- * 
+ * Copyright (c) 2010 The Khronos Group Inc.
+ *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
  * without limitation the rights to use, copy, modify, merge, publish,
  * distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject
- * to the following conditions: 
+ * to the following conditions:
  * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software. 
- * 
+ * in all copies or substantial portions of the Software.
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
  * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
  * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
 
 /** @file OMX_IndexExt.h - OpenMax IL version 1.1.2
- * The OMX_IndexExt header file contains extensions to the definitions 
+ * The OMX_IndexExt header file contains extensions to the definitions
  * for both applications and components .
  */
 
@@ -66,7 +66,12 @@ typedef enum OMX_INDEXEXTTYPE {
     OMX_IndexParamNalStreamFormatSupported,         /**< reference: OMX_NALSTREAMFORMATTYPE */
     OMX_IndexParamNalStreamFormat,                  /**< reference: OMX_NALSTREAMFORMATTYPE */
     OMX_IndexParamNalStreamFormatSelect,            /**< reference: OMX_NALSTREAMFORMATTYPE */
-    OMX_IndexParamVideoBytestream,                  /**< reference: OMX_VIDEO_PARAM_BYTESTREAMTYPE */	
+    OMX_IndexParamVideoBytestream,                  /**< reference: OMX_VIDEO_PARAM_BYTESTREAMTYPE */
+    OMX_IndexParamIntelBitrate,                     /**< reference: OMX_VIDEO_PARAM_INTEL_BITRATETYPE */
+    OMX_IndexConfigIntelBitrate,                    /**< reference: OMX_VIDEO_CONFIG_INTEL_BITRATETYPE */
+    OMX_IndexParamIntelAVCDecodeSettings,           /**< reference: OMX_VIDEO_PARAM_INTEL_AVC_DECODE_SETTINGS */
+    OMX_IndexConfigIntelSliceNumbers,               /**< reference: OMX_VIDEO_CONFIG_INTEL_SLICE_NUMBERS */
+    OMX_IndexConfigIntelAIR,                         /**< reference: OMX_VIDEO_CONFIG_INTEL_AIR */
 
     /* Image & Video common configurations */
     OMX_IndexExtCommonStartUnused = OMX_IndexKhronosExtensions + 0x00700000,
