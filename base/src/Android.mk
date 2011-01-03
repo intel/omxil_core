@@ -11,6 +11,7 @@ LOCAL_SRC_FILES := \
 	portother.cpp
 
 LOCAL_MODULE := libwrs_omxil_base
+LOCAL_MODULE_TAGS := optional
 
 LOCAL_CPPFLAGS :=
 
@@ -26,6 +27,7 @@ include $(BUILD_STATIC_LIBRARY)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := libwrs_omxil_common
+LOCAL_MODULE_TAGS := optional
 
 LOCAL_WHOLE_STATIC_LIBRARIES := \
 	libwrs_omxil_utils \

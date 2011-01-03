@@ -10,6 +10,7 @@ LOCAL_SRC_FILES := \
 	audio_parser.c
 
 LOCAL_MODULE := libwrs_omxil_utils
+LOCAL_MODULE_TAGS := optional
 
 LOCAL_CFLAGS :=
 
