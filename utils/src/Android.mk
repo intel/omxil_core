@@ -9,8 +9,8 @@ LOCAL_SRC_FILES := \
 	workqueue.cpp \
 	audio_parser.c
 
-LOCAL_MODULE := libwrs_omxil_utils
 LOCAL_MODULE_TAGS := optional
+LOCAL_MODULE := libwrs_omxil_utils
 
 LOCAL_CFLAGS :=
 

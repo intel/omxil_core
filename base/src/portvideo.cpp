@@ -183,9 +183,15 @@ PortAvc::PortAvc()
     memset(&avcparam, 0, sizeof(avcparam));
 
     //set buffer sharing mode
+#ifdef COMPONENT_USE_BUFFERSHARING
     SetPortBufferSharingInfo(OMX_TRUE);
     avcparam.eProfile = OMX_VIDEO_AVCProfileVendorStartUnused;
     avcparam.eLevel = OMX_VIDEO_AVCLevelVendorStartUnused;
+#else
+    SetPortBufferSharingInfo(OMX_FALSE);
+//    avcparam.eProfile = OMX_VIDEO_AVCProfileVendorStartUnused;
+//    avcparam.eLevel = OMX_VIDEO_AVCLevelVendorStartUnused;
+#endif
 
     ComponentBase::SetTypeHeader(&avcparam, sizeof(avcparam));
 }
@@ -257,6 +263,16 @@ PortMpeg4::PortMpeg4()
 
     memset(&mpeg4param, 0, sizeof(mpeg4param));
     ComponentBase::SetTypeHeader(&mpeg4param, sizeof(mpeg4param));
+
+#ifdef COMPONENT_USE_BUFFERSHARING
+    SetPortBufferSharingInfo(OMX_TRUE);
+    mpeg4param.eProfile = OMX_VIDEO_MPEG4ProfileVendorStartUnused;
+    mpeg4param.eLevel = OMX_VIDEO_MPEG4LevelVendorStartUnused;
+#else
+    SetPortBufferSharingInfo(OMX_FALSE);
+//  mpeg4param.eProfile = OMX_VIDEO_MPEG4ProfileVendorStartUnused;
+//  mpeg4param.eLevel = OMX_VIDEO_MPEG4LevelVendorStartUnused;
+#endif
 }
 
 OMX_ERRORTYPE PortMpeg4::SetPortMpeg4Param(
@@ -319,9 +335,15 @@ PortH263::PortH263()
     memset(&h263param, 0, sizeof(h263param));
 
     //set buffer sharing mode
+#ifdef COMPONENT_USE_BUFFERSHARING
     SetPortBufferSharingInfo(OMX_TRUE);
     h263param.eProfile = OMX_VIDEO_H263ProfileVendorStartUnused;
     h263param.eLevel = OMX_VIDEO_H263LevelVendorStartUnused;
+#else
+    SetPortBufferSharingInfo(OMX_FALSE);
+//    h263param.eProfile = OMX_VIDEO_H263ProfileVendorStartUnused;
+//    h263param.eLevel = OMX_VIDEO_H263LevelVendorStartUnused;
+#endif
 
     ComponentBase::SetTypeHeader(&h263param, sizeof(h263param));
 }
