@@ -26,7 +26,7 @@
 #include <portvideo.h>
 
 #define LOG_TAG "portvideo"
-#include <log.h>
+#include <utils/Log.h>
 
 PortVideo::PortVideo()
 {
@@ -181,6 +181,7 @@ PortAvc::PortAvc()
     SetPortVideoParam(&videoparam, false);
 
     memset(&avcparam, 0, sizeof(avcparam));
+    memset(&avcprofilelevel, 0, sizeof(avcprofilelevel));
 
     //set buffer sharing mode
 #ifdef COMPONENT_USE_BUFFERSHARING
@@ -189,11 +190,14 @@ PortAvc::PortAvc()
     avcparam.eLevel = OMX_VIDEO_AVCLevelVendorStartUnused;
 #else
     SetPortBufferSharingInfo(OMX_FALSE);
-//    avcparam.eProfile = OMX_VIDEO_AVCProfileVendorStartUnused;
-//    avcparam.eLevel = OMX_VIDEO_AVCLevelVendorStartUnused;
+    avcparam.eProfile = OMX_VIDEO_AVCProfileBaseline;
+    avcparam.eLevel = OMX_VIDEO_AVCLevel1;
+    avcprofilelevel.eProfile = avcparam.eProfile;
+    avcprofilelevel.eLevel = avcparam.eLevel;
 #endif
 
     ComponentBase::SetTypeHeader(&avcparam, sizeof(avcparam));
+    /*ComponentBase::SetTypeHeader(&avcprofilelevel, sizeof(avcprofilelevel));*/
 }
 
 OMX_ERRORTYPE PortAvc::SetPortAvcParam(
@@ -249,6 +253,10 @@ const OMX_VIDEO_PARAM_AVCTYPE *PortAvc::GetPortAvcParam(void)
     return &avcparam;
 }
 
+const OMX_VIDEO_PARAM_PROFILELEVELTYPE *PortAvc::GetPortAvcProfileLevel(void)
+{
+    return &avcprofilelevel;
+}
 /* end of PortAvc */
 
 PortMpeg4::PortMpeg4()

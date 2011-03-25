@@ -66,9 +66,11 @@ public:
     OMX_ERRORTYPE SetPortAvcParam(const OMX_VIDEO_PARAM_AVCTYPE *p,
                                   bool overwrite_readonly);
     const OMX_VIDEO_PARAM_AVCTYPE *GetPortAvcParam(void);
+    const OMX_VIDEO_PARAM_PROFILELEVELTYPE *GetPortAvcProfileLevel(void);
 
 private:
     OMX_VIDEO_PARAM_AVCTYPE avcparam;
+    OMX_VIDEO_PARAM_PROFILELEVELTYPE avcprofilelevel;
 };
 
 /* end of PortAvc */
