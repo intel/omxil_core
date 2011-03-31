@@ -197,7 +197,7 @@ PortAvc::PortAvc()
 #endif
 
     ComponentBase::SetTypeHeader(&avcparam, sizeof(avcparam));
-    /*ComponentBase::SetTypeHeader(&avcprofilelevel, sizeof(avcprofilelevel));*/
+    ComponentBase::SetTypeHeader(&avcprofilelevel, sizeof(avcprofilelevel));
 }
 
 OMX_ERRORTYPE PortAvc::SetPortAvcParam(
