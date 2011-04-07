@@ -139,6 +139,22 @@ OMX_ERRORTYPE PortBase::SetCallbacks(OMX_HANDLETYPE hComponent,
     return OMX_ErrorNone;
 }
 
+
+OMX_U32 PortBase::getFrameBufSize(OMX_COLOR_FORMATTYPE colorFormat, OMX_U32 width, OMX_U32 height)
+{
+    switch (colorFormat) {
+    case OMX_COLOR_FormatYCbYCr:
+    case OMX_COLOR_FormatCbYCrY:
+        return width * height * 2;
+    case OMX_COLOR_FormatYUV420Planar:
+    case OMX_COLOR_FormatYUV420SemiPlanar:
+        return (width * height * 3) >> 1;
+    default:
+        LOGV("unsupport color format !");
+        return -1;
+    }
+}
+
 /* end of accessor */
 
 /*
@@ -162,7 +178,6 @@ OMX_ERRORTYPE PortBase::SetPortDefinition(
         if (temp.nBufferCountActual != p->nBufferCountActual) {
             if (temp.nBufferCountMin > p->nBufferCountActual)
                 return OMX_ErrorBadParameter;
-
             temp.nBufferCountActual = p->nBufferCountActual;
         }
     }
@@ -186,7 +201,7 @@ OMX_ERRORTYPE PortBase::SetPortDefinition(
         OMX_U32 mimetype_len = strlen(pformat->cMIMEType);
 
         mimetype_len = OMX_MAX_STRINGNAME_SIZE-1 > mimetype_len ?
-            mimetype_len : OMX_MAX_STRINGNAME_SIZE-1;
+                       mimetype_len : OMX_MAX_STRINGNAME_SIZE-1;
 
         strncpy(format->cMIMEType, pformat->cMIMEType,
                 mimetype_len);
@@ -203,7 +218,7 @@ OMX_ERRORTYPE PortBase::SetPortDefinition(
         OMX_U32 mimetype_len = strlen(pformat->cMIMEType);
 
         mimetype_len = OMX_MAX_STRINGNAME_SIZE-1 > mimetype_len ?
-            mimetype_len : OMX_MAX_STRINGNAME_SIZE-1;
+                       mimetype_len : OMX_MAX_STRINGNAME_SIZE-1;
 
         strncpy(format->cMIMEType, pformat->cMIMEType,
                 mimetype_len);
@@ -217,7 +232,9 @@ OMX_ERRORTYPE PortBase::SetPortDefinition(
         format->eCompressionFormat = pformat->eCompressionFormat;
         format->eColorFormat = pformat->eColorFormat;
         format->pNativeWindow = pformat->pNativeWindow;
-
+        OMX_U32 nFrameSize = getFrameBufSize(format->eColorFormat,format->nFrameWidth,format->nFrameHeight);
+        if(nFrameSize!=-1)
+            temp.nBufferSize = nFrameSize;
         if (overwrite_readonly) {
             format->nStride = pformat->nStride;
             format->nSliceHeight = pformat->nSliceHeight;
@@ -231,7 +248,7 @@ OMX_ERRORTYPE PortBase::SetPortDefinition(
         OMX_U32 mimetype_len = strlen(pformat->cMIMEType);
 
         mimetype_len = OMX_MAX_STRINGNAME_SIZE-1 > mimetype_len ?
-            mimetype_len : OMX_MAX_STRINGNAME_SIZE-1;
+                       mimetype_len : OMX_MAX_STRINGNAME_SIZE-1;
 
         strncpy(format->cMIMEType, pformat->cMIMEType,
                 mimetype_len+1);
@@ -376,7 +393,7 @@ OMX_ERRORTYPE PortBase::AllocateBuffer(OMX_BUFFERHEADERTYPE **ppBuffer,
     }
 
     buffer_hdr = (OMX_BUFFERHEADERTYPE *)
-        calloc(1, sizeof(*buffer_hdr) + nSizeBytes);
+                 calloc(1, sizeof(*buffer_hdr) + nSizeBytes);
     if (!buffer_hdr) {
         pthread_mutex_unlock(&hdrs_lock);
         LOGE("%s(): %s:%s:PortIndex %lu: exit failure, "
@@ -642,7 +659,7 @@ OMX_ERRORTYPE PortBase::ReturnThisBuffer(OMX_BUFFERHEADERTYPE *pBuffer)
 
 /* retain buffer */
 OMX_ERRORTYPE PortBase::RetainThisBuffer(OMX_BUFFERHEADERTYPE *pBuffer,
-                                         bool accumulate)
+        bool accumulate)
 {
     int ret;
 
@@ -663,7 +680,7 @@ OMX_ERRORTYPE PortBase::RetainThisBuffer(OMX_BUFFERHEADERTYPE *pBuffer,
 
         pthread_mutex_lock(&retainedbufferq_lock);
         if ((OMX_U32)queue_length(&retainedbufferq) <
-            portdefinition.nBufferCountActual)
+                portdefinition.nBufferCountActual)
             ret = queue_push_tail(&retainedbufferq, pBuffer);
         else {
             ret = OMX_ErrorInsufficientResources;
