@@ -2,12 +2,15 @@ ifeq ($(strip $(BOARD_USES_WRS_OMXIL_CORE)),true)
 
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
+LOCAL_MODULE := 10_wrs_omxil_core.cfg
+LOCAL_SRC_FILES := 10_wrs_omxil_core.cfg
+LOCAL_MODULE_CLASS := ETC
+LOCAL_MODULE_TAGS := optional
+include $(BUILD_PREBUILT)
+
+include $(CLEAR_VARS)
 
 WRS_OMXIL_CORE_ROOT := $(LOCAL_PATH)
-
-PRODUCT_COPY_FILES += \
-	$(LOCAL_PATH)/10_wrs_omxil_core.cfg:system/etc/10_wrs_omxil_core.cfg
-#$(call add-prebuilt-files, ETC, 10_wrs_omxil_core.cfg)
 
 COMPONENT_USE_BUFFERSHARING := false
 
