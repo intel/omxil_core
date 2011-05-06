@@ -100,4 +100,20 @@ private:
 
 /* end of PortPcm */
 
+class PortAmr : public PortAudio
+{
+public:
+    PortAmr();
+
+    OMX_ERRORTYPE SetPortAmrParam(const OMX_AUDIO_PARAM_AMRTYPE *p,
+                                  bool overwrite_readonly);
+    const OMX_AUDIO_PARAM_AMRTYPE*GetPortAmrParam(void);
+
+private:
+    OMX_AUDIO_PARAM_AMRTYPE amrparam;
+};
+
+/* end of PortAmr */
+
+
 #endif /* __PORTAUDIO_H */

@@ -274,3 +274,53 @@ const OMX_AUDIO_PARAM_PCMMODETYPE *PortPcm::GetPortPcmParam(void)
 }
 
 /* end of PortPcm */
+
+PortAmr::PortAmr()
+{
+    OMX_AUDIO_PARAM_PORTFORMATTYPE audioparam;
+
+    memcpy(&audioparam, GetPortAudioParam(), sizeof(audioparam));
+    audioparam.eEncoding = OMX_AUDIO_CodingAMR;
+    SetPortAudioParam(&audioparam, false);
+
+    memset(&amrparam, 0, sizeof(amrparam));
+    ComponentBase::SetTypeHeader(&amrparam, sizeof(amrparam));
+}
+
+OMX_ERRORTYPE PortAmr::SetPortAmrParam(const OMX_AUDIO_PARAM_AMRTYPE *p,
+                                       bool overwrite_readonly)
+{
+    if (!overwrite_readonly) {
+        OMX_ERRORTYPE ret;
+
+        ret = ComponentBase::CheckTypeHeader((void *)p, sizeof(*p));
+        if (ret != OMX_ErrorNone)
+            return ret;
+        if (amrparam.nPortIndex != p->nPortIndex)
+            return OMX_ErrorBadPortIndex;
+    }
+    else {
+        OMX_AUDIO_PARAM_PORTFORMATTYPE audioparam;
+
+        memcpy(&audioparam, GetPortAudioParam(), sizeof(audioparam));
+        audioparam.nPortIndex = p->nPortIndex;
+        SetPortAudioParam(&audioparam, true);
+
+        amrparam.nPortIndex = p->nPortIndex;
+    }
+
+    amrparam.nChannels       = p->nChannels;
+    amrparam.nBitRate        = p->nBitRate;
+    amrparam.eAMRBandMode    = p->eAMRBandMode;
+    amrparam.eAMRDTXMode     = p->eAMRDTXMode;
+    amrparam.eAMRFrameFormat = p->eAMRFrameFormat;
+
+    return OMX_ErrorNone;
+}
+
+const OMX_AUDIO_PARAM_AMRTYPE *PortAmr::GetPortAmrParam(void)
+{
+    return &amrparam;
+}
+
+/* end of PortAmr */
