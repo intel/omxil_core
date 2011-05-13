@@ -72,6 +72,11 @@ typedef enum OMX_INDEXEXTTYPE {
     OMX_IndexParamIntelAVCDecodeSettings,           /**< reference: OMX_VIDEO_PARAM_INTEL_AVC_DECODE_SETTINGS */
     OMX_IndexConfigIntelSliceNumbers,               /**< reference: OMX_VIDEO_CONFIG_INTEL_SLICE_NUMBERS */
     OMX_IndexConfigIntelAIR,                         /**< reference: OMX_VIDEO_CONFIG_INTEL_AIR */
+    OMX_IndexParamGoogleNativeBuffers,
+    OMX_IndexParamGoogleNativeBufferUsage,
+    OMX_IndexParamGoogleMetaDataInBuffers,
+    OMX_IndexParamGoogleUseNativeBuffers,
+
 
     /* Image & Video common configurations */
     OMX_IndexExtCommonStartUnused = OMX_IndexKhronosExtensions + 0x00700000,
