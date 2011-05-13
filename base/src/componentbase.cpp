@@ -747,11 +747,25 @@ OMX_ERRORTYPE ComponentBase::CBaseGetExtensionIndex(
     OMX_IN  OMX_STRING cParameterName,
     OMX_OUT OMX_INDEXTYPE* pIndexType)
 {
-    /*
-     * Todo
-     */
-
-    return OMX_ErrorNotImplemented;
+    OMX_ERRORTYPE err= OMX_ErrorNone;
+    if (!strcmp(cParameterName, "OMX.google.android.index.enableAndroidNativeBuffers")) {
+        *pIndexType=(OMX_INDEXTYPE)OMX_IndexParamGoogleNativeBuffers;
+    }
+    else if (!strcmp(cParameterName, "OMX.google.android.index.storeMetaDataInBuffers")){
+        *pIndexType=(OMX_INDEXTYPE)OMX_IndexParamGoogleMetaDataInBuffers;
+    }
+    else if (!strcmp(cParameterName, "OMX.google.android.index.useAndroidNativeBuffer2")){
+        *pIndexType=(OMX_INDEXTYPE)NULL;
+    }
+    else if (!strcmp(cParameterName, "OMX.google.android.index.getAndroidNativeBufferUsage")) {
+        *pIndexType=(OMX_INDEXTYPE)OMX_IndexParamGoogleNativeBufferUsage;
+    }
+    else {
+        LOGE ("Error not implemented %s", cParameterName);
+        err= OMX_ErrorNotImplemented;
+    }
+    LOGV ("%s: exit error %8x", __FUNCTION__, err);
+    return err;
 }
 
 OMX_ERRORTYPE ComponentBase::GetState(

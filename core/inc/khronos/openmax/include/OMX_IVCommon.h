@@ -243,7 +243,40 @@ typedef struct OMX_CONFIG_COLORKEYTYPE {
     OMX_U32 nARGBMask;
 } OMX_CONFIG_COLORKEYTYPE;
 
+/*
+** A pointer to this struct is passed to the OMX_SetParameter when the extension
+** index for the 'OMX.google.android.index.enableAndroidNativeBuffers' extension
+** is given.
+**
+** When Android native buffer use is disabled for a port (the default state),
+** the OMX node should operate as normal, and expect UseBuffer calls to set its
+** buffers.  This is the mode that will be used when CPU access to the buffer is
+** required.
+**
+** When Android native buffer use has been enabled for a given port, the video
+** color format for the port is to be interpreted as an Android pixel format
+** rather than an OMX color format.  The node should then expect to receive
+** UseAndroidNativeBuffer calls (via OMX_SetParameter) rather than UseBuffer
+** calls for that port.
+*/
+typedef struct OMX_GOOGLE_ENABLE_ANDROID_BUFFERS{
+    OMX_U32 nSize;
+    OMX_VERSIONTYPE nVersion;
+    OMX_U32 nPortIndex;
+    OMX_BOOL enable;
+}OMX_GOOGLE_ENABLE_ANDROID_BUFFERS;
 
+// A pointer to this struct is passed to OMX_GetParameter when the extension
+// index for the 'OMX.google.android.index.getAndroidNativeBufferUsage'
+// extension is given.  The usage bits returned from this query will be used to
+// allocate the Gralloc buffers that get passed to the useAndroidNativeBuffer
+// command.
+typedef struct OMX_GOOGLE_ANDROID_BUFFERS_USAGE {
+    OMX_U32 nSize;              // IN
+    OMX_VERSIONTYPE nVersion;   // IN
+    OMX_U32 nPortIndex;         // IN
+    OMX_U32 nUsage;             // OUT
+}OMX_GOOGLE_ANDROID_BUFFERS_USAGE;
 /**
  * List of color blend types for pre/post processing
  *

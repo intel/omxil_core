@@ -23,7 +23,8 @@
 
 #include <OMX_Core.h>
 #include <OMX_Component.h>
-
+#include <ui/android_native_buffer.h>
+#include <utils/RefBase.h>
 #include <list.h>
 #include <queue.h>
 

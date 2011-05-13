@@ -21,6 +21,7 @@
 
 #include <OMX_Core.h>
 #include <OMX_Component.h>
+#include <OMX_IndexExt.h>
 
 #include <cmodule.h>
 #include <portbase.h>
