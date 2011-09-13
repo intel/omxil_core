@@ -183,19 +183,12 @@ PortAvc::PortAvc()
     memset(&avcparam, 0, sizeof(avcparam));
     memset(&avcprofilelevel, 0, sizeof(avcprofilelevel));
 
-    //set buffer sharing mode
-#ifdef COMPONENT_SUPPORT_BUFFER_SHARING
-#ifdef COMPONENT_SUPPORT_OPENCORE
-    SetPortBufferSharingInfo(OMX_TRUE);
     avcparam.eProfile = OMX_VIDEO_AVCProfileVendorStartUnused;
     avcparam.eLevel = OMX_VIDEO_AVCLevelVendorStartUnused;
-#endif
-#else
-    SetPortBufferSharingInfo(OMX_FALSE);
-    avcparam.eProfile = OMX_VIDEO_AVCProfileBaseline;
-    avcparam.eLevel = OMX_VIDEO_AVCLevel1;
-    avcprofilelevel.eProfile = avcparam.eProfile;
-    avcprofilelevel.eLevel = avcparam.eLevel;
+   
+//set buffer sharing mode
+#ifdef COMPONENT_SUPPORT_BUFFER_SHARING
+    SetPortBufferSharingInfo(OMX_TRUE);
 #endif
 
     ComponentBase::SetTypeHeader(&avcparam, sizeof(avcparam));
@@ -247,6 +240,17 @@ OMX_ERRORTYPE PortAvc::SetPortAvcParam(
     avcparam.nCabacInitIdc = p->nCabacInitIdc;
     avcparam.eLoopFilterMode = p->eLoopFilterMode;
 
+#ifdef COMPONENT_SUPPORT_OPENCORE
+#ifdef COMPONENT_SUPPORT_BUFFER_SHARING
+// sepcial case ,not change default profile and level for opencore buffer sharing.
+#else
+    avcparam.eProfile = p->eProfile;
+    avcparam.eLevel = p->eLevel;
+#endif
+#else
+    avcparam.eProfile = p->eProfile;
+    avcparam.eLevel = p->eLevel;
+#endif
     return OMX_ErrorNone;
 }
 
@@ -274,16 +278,11 @@ PortMpeg4::PortMpeg4()
     memset(&mpeg4param, 0, sizeof(mpeg4param));
     ComponentBase::SetTypeHeader(&mpeg4param, sizeof(mpeg4param));
 
-#ifdef COMPONENT_SUPPORT_BUFFER_SHARING
-#ifdef COMPONENT_SUPPORT_OPENCORE
-    SetPortBufferSharingInfo(OMX_TRUE);
     mpeg4param.eProfile = OMX_VIDEO_MPEG4ProfileVendorStartUnused;
     mpeg4param.eLevel = OMX_VIDEO_MPEG4LevelVendorStartUnused;
-#endif
-#else
-    SetPortBufferSharingInfo(OMX_FALSE);
-//  mpeg4param.eProfile = OMX_VIDEO_MPEG4ProfileVendorStartUnused;
-//  mpeg4param.eLevel = OMX_VIDEO_MPEG4LevelVendorStartUnused;
+
+#ifdef COMPONENT_SUPPORT_BUFFER_SHARING
+    SetPortBufferSharingInfo(OMX_TRUE);
 #endif
 }
 
@@ -318,8 +317,17 @@ OMX_ERRORTYPE PortMpeg4::SetPortMpeg4Param(
     mpeg4param.bACPred = p->bACPred;
     mpeg4param.nMaxPacketSize = p->nMaxPacketSize;
     mpeg4param.nTimeIncRes = p->nTimeIncRes;
+#ifdef COMPONENT_SUPPORT_OPENCORE
+#ifdef COMPONENT_SUPPORT_BUFFER_SHARING
+// sepcial case ,not change default profile and level for opencore buffer sharing.
+#else
     mpeg4param.eProfile = p->eProfile;
     mpeg4param.eLevel = p->eLevel;
+#endif
+#else
+    mpeg4param.eProfile = p->eProfile;
+    mpeg4param.eLevel = p->eLevel;
+#endif
     mpeg4param.nAllowedPictureTypes = p->nAllowedPictureTypes;
     mpeg4param.nHeaderExtension = p->nHeaderExtension;
     mpeg4param.bReversibleVLC = p->bReversibleVLC;
@@ -345,21 +353,16 @@ PortH263::PortH263()
     SetPortVideoParam(&videoparam, false);
 
     memset(&h263param, 0, sizeof(h263param));
+    ComponentBase::SetTypeHeader(&h263param, sizeof(h263param));
 
     //set buffer sharing mode
-#ifdef COMPONENT_SUPPORT_BUFFER_SHARING
-#ifdef COMPONENT_SUPPORT_OPENCORE
-    SetPortBufferSharingInfo(OMX_TRUE);
     h263param.eProfile = OMX_VIDEO_H263ProfileVendorStartUnused;
     h263param.eLevel = OMX_VIDEO_H263LevelVendorStartUnused;
-#endif
-#else
-    SetPortBufferSharingInfo(OMX_FALSE);
-//    h263param.eProfile = OMX_VIDEO_H263ProfileVendorStartUnused;
-//    h263param.eLevel = OMX_VIDEO_H263LevelVendorStartUnused;
-#endif
 
-    ComponentBase::SetTypeHeader(&h263param, sizeof(h263param));
+#ifdef COMPONENT_SUPPORT_BUFFER_SHARING
+    SetPortBufferSharingInfo(OMX_TRUE);
+#endif
+	
 }
 
 OMX_ERRORTYPE PortH263::SetPortH263Param(
@@ -386,8 +389,16 @@ OMX_ERRORTYPE PortH263::SetPortH263Param(
 
     h263param.nPFrames = p->nPFrames;
     h263param.nBFrames = p->nBFrames;
-//    h263param.eProfile = p->eProfile;
-//    h263param.eLevel   = p->eLevel;
+#ifdef COMPONENT_SUPPORT_OPENCORE
+#ifdef COMPONENT_SUPPORT_BUFFER_SHARING
+#else
+    h263param.eProfile = p->eProfile;
+    h263param.eLevel = p->eLevel;
+#endif
+#else
+    h263param.eProfile = p->eProfile;
+    h263param.eLevel = p->eLevel;
+#endif
     h263param.bPLUSPTYPEAllowed        = p->bPLUSPTYPEAllowed;
     h263param.nAllowedPictureTypes     = p->nAllowedPictureTypes;
     h263param.bForceRoundingTypeToZero = p->bForceRoundingTypeToZero;
