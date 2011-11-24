@@ -52,7 +52,7 @@ typedef struct param_struct {
     } param_struct_t;
 
 enum {
-  NUM_EXT_PARAMS = 5,  // number of parameter extensions we are supporting right now.
+  NUM_EXT_PARAMS = 6,  // number of parameter extensions we are supporting right now.
 };
 
 // Parameter Extension Array.
@@ -63,6 +63,10 @@ const param_struct_t PARAMEXT[NUM_EXT_PARAMS] = {
      },
      { "OMX.google.android.index.getAndroidNativeBufferUsage",
        static_cast<OMX_INDEXTYPE>(OMX_IndexParamGoogleNativeBufferUsage),
+       OMX_ErrorNone
+     },
+     { "OMX.google.android.index.storeMetaDataInBuffers",
+       static_cast<OMX_INDEXTYPE>(OMX_IndexParamGoogleMetaDataInBuffers),
        OMX_ErrorNone
      },
      { "OMX.google.android.index.useAndroidNativeBuffer2",
