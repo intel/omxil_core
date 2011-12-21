@@ -909,7 +909,7 @@ OMX_ERRORTYPE PortBase::ReportPortSettingsChanged(void)
 
     ret = callbacks->EventHandler(owner, appdata,
                                   OMX_EventPortSettingsChanged,
-                                  portdefinition.nPortIndex, 0, NULL);
+                                  portdefinition.nPortIndex, OMX_IndexParamPortDefinition, NULL);
 
     FlushPort();
 

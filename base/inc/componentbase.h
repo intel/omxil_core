@@ -29,6 +29,7 @@
 #include <queue.h>
 #include <workqueue.h>
 
+
 /* retain buffers */
 typedef enum buffer_retain_e {
     BUFFER_RETAIN_NOT_RETAIN = 0,
@@ -308,7 +309,6 @@ public:
                                           OMX_U32 *nr_roles, OMX_U8 **roles);
 
     /* end of helper method for queury_roles() */
-
 protected:
     /* helpers for derived class */
     const OMX_COMPONENTTYPE *GetComponentHandle(void);
@@ -421,6 +421,15 @@ private:
     virtual OMX_ERRORTYPE ProcessorProcess(OMX_BUFFERHEADERTYPE **buffers,
                                            buffer_retain_t *retain,
                                            OMX_U32 nr_buffers) = 0;
+
+    /* invoked when buffer is to be freed */
+    virtual OMX_ERRORTYPE ProcessorPreFreeBuffer(OMX_U32 nPortIndex, OMX_BUFFERHEADERTYPE* pBuffer);
+
+    /* invoked when buffer is to be filled */
+    virtual  OMX_ERRORTYPE ProcessorPreFillBuffer(OMX_BUFFERHEADERTYPE* pBuffer);
+
+    /* pass NativeBuffers to Lower levels at initialization only */
+    virtual  OMX_ERRORTYPE ProcessorUseNativeBuffer(OMX_U32 nPortIndex, OMX_BUFFERHEADERTYPE* pBuffer);
 
     /* end of component methods & helpers */
 

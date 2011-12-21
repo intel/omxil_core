@@ -34,6 +34,8 @@
 #define LOG_TAG "componentbase"
 #include <log.h>
 
+#define DUMP 0
+
 /*
  * CmdProcessWork
  */
@@ -748,24 +750,30 @@ OMX_ERRORTYPE ComponentBase::CBaseGetExtensionIndex(
     OMX_OUT OMX_INDEXTYPE* pIndexType)
 {
     OMX_ERRORTYPE err= OMX_ErrorNone;
-    if (!strcmp(cParameterName, "OMX.google.android.index.enableAndroidNativeBuffers")) {
-        *pIndexType=(OMX_INDEXTYPE)OMX_IndexParamGoogleNativeBuffers;
-    }
-    else if (!strcmp(cParameterName, "OMX.google.android.index.storeMetaDataInBuffers")){
-        *pIndexType=(OMX_INDEXTYPE)OMX_IndexParamGoogleMetaDataInBuffers;
-    }
-    else if (!strcmp(cParameterName, "OMX.google.android.index.useAndroidNativeBuffer2")){
-        *pIndexType=(OMX_INDEXTYPE)NULL;
-    }
-    else if (!strcmp(cParameterName, "OMX.google.android.index.getAndroidNativeBufferUsage")) {
-        *pIndexType=(OMX_INDEXTYPE)OMX_IndexParamGoogleNativeBufferUsage;
-    }
-    else {
-        LOGE ("Error not implemented %s", cParameterName);
-        err= OMX_ErrorNotImplemented;
-    }
-    LOGV ("%s: exit error %8x", __FUNCTION__, err);
-    return err;
+    if (hComponent != handle) {
+        return OMX_ErrorBadParameter;
+    };
+
+    if(!strncmp(cParameterName,"OMX.google.android.index.enableAndroidNativeBuffers", sizeof("OMX.google.android.index.enableAndroidNativeBuffers") - 1)) {
+         *pIndexType = static_cast<OMX_INDEXTYPE>(OMX_IndexParamGoogleNativeBuffers);
+         LOGI("ComponentBase::CBaseGetExtensionIndex() parameter = %s, pIndexType = %p(%p)", cParameterName, pIndexType, OMX_IndexParamGoogleNativeBuffers);
+         return OMX_ErrorNone;
+     } else if(!strncmp(cParameterName,"OMX.google.android.index.getAndroidNativeBufferUsage", sizeof("OMX.google.android.index.getAndroidNativeBufferUsage") - 1)) {
+        *pIndexType = static_cast<OMX_INDEXTYPE>(OMX_IndexParamGoogleNativeBufferUsage);
+         LOGI("ComponentBase::CBaseGetExtensionIndex() parameter = %s, pIndexType = %p(%p)", cParameterName, pIndexType, OMX_IndexParamGoogleNativeBufferUsage);
+         return OMX_ErrorNone;
+     } else if (!strncmp(cParameterName,"OMX.google.android.index.useAndroidNativeBuffer2", sizeof("OMX.google.android.index.useAndroidNativeBuffer2") - 1)){
+        *pIndexType = static_cast<OMX_INDEXTYPE>(NULL);
+         LOGI("ComponentBase::CBaseGetExtensionIndex() parameter = %s,returning Dummy Index", cParameterName);
+        return OMX_ErrorNone;
+     } else if(!strncmp(cParameterName,"OMX.google.android.index.useAndroidNativeBuffer", sizeof("OMX.google.android.index.useAndroidNativeBuffer") - 1)) {
+        *pIndexType = static_cast<OMX_INDEXTYPE>(NULL);
+         return OMX_ErrorNotImplemented;
+     } else {
+         LOGE ("Error Parameter Extension not implemented %s", cParameterName);
+         return OMX_ErrorNotImplemented;
+     }
+    return OMX_ErrorUnsupportedIndex;
 }
 
 OMX_ERRORTYPE ComponentBase::GetState(
@@ -887,8 +895,13 @@ OMX_ERRORTYPE ComponentBase::CBaseUseBuffer(
             return OMX_ErrorIncorrectStateOperation;
     }
 
-    return port->UseBuffer(ppBufferHdr, nPortIndex, pAppPrivate, nSizeBytes,
+
+   ret = port->UseBuffer(ppBufferHdr, nPortIndex, pAppPrivate, nSizeBytes,
                            pBuffer);
+   LOGV("ComponentBase::CBaseUseBuffer() port->UseBuffer() returned %p, calling ProcessorUseNativeBuffer() nPortIndex = %d", ret, nPortIndex);
+   ProcessorUseNativeBuffer(nPortIndex, *ppBufferHdr);
+   return ret;
+
 }
 
 OMX_ERRORTYPE ComponentBase::AllocateBuffer(
@@ -982,6 +995,8 @@ OMX_ERRORTYPE ComponentBase::CBaseFreeBuffer(
 
     if (!port)
         return OMX_ErrorBadParameter;
+
+    ProcessorPreFreeBuffer(nPortIndex, pBuffer);
 
     return port->FreeBuffer(nPortIndex, pBuffer);
 }
@@ -1107,6 +1122,9 @@ OMX_ERRORTYPE ComponentBase::CBaseFillThisBuffer(
             state != OMX_StatePause)
             return OMX_ErrorIncorrectStateOperation;
     }
+     LOGI("CBaseFillThisBuffer , sending %p", pBuffer->pBuffer);
+    ProcessorPreFillBuffer(pBuffer);
+
 
     ret = port->PushThisBuffer(pBuffer);
     if (ret == OMX_ErrorNone)
@@ -2091,6 +2109,21 @@ OMX_ERRORTYPE ComponentBase::ProcessorResume(void)
 OMX_ERRORTYPE ComponentBase::ProcessorFlush(OMX_U32 port_index)
 {
     return OMX_ErrorNone;
+}
+
+OMX_ERRORTYPE ComponentBase::ProcessorPreFreeBuffer(OMX_U32 nPortIndex, OMX_BUFFERHEADERTYPE* pBuffer)
+{
+    return OMX_ErrorNone;
+}
+
+OMX_ERRORTYPE ComponentBase::ProcessorPreFillBuffer(OMX_BUFFERHEADERTYPE* pBuffer)
+{
+    return OMX_ErrorNone;
+}
+
+OMX_ERRORTYPE ComponentBase::ProcessorUseNativeBuffer(OMX_U32 nPortIndex, OMX_BUFFERHEADERTYPE* pBuffer)
+{
+ return OMX_ErrorNone;
 }
 
 /* end of processor callbacks */
