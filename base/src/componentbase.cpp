@@ -1122,9 +1122,9 @@ OMX_ERRORTYPE ComponentBase::CBaseFillThisBuffer(
             state != OMX_StatePause)
             return OMX_ErrorIncorrectStateOperation;
     }
-     LOGI("CBaseFillThisBuffer , sending %p", pBuffer->pBuffer);
-    ProcessorPreFillBuffer(pBuffer);
 
+    LOGI("CBaseFillThisBuffer , sending %p", pBuffer->pBuffer);
+    ProcessorPreFillBuffer(pBuffer);
 
     ret = port->PushThisBuffer(pBuffer);
     if (ret == OMX_ErrorNone)

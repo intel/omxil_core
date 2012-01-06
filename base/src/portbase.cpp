@@ -578,6 +578,26 @@ OMX_U32 PortBase::BufferQueueLength(void)
     return length;
 }
 
+OMX_ERRORTYPE PortBase::RemoveThisBuffer(OMX_BUFFERHEADERTYPE *pBuffer)
+{
+    void *data;
+
+    LOGV_IF(pBuffer != NULL, "%s(): %s:%s:PortIndex %lu:pBuffer %p:\n",
+            __FUNCTION__, cbase->GetName(), cbase->GetWorkingRole(),
+            portdefinition.nPortIndex, pBuffer);
+
+    pthread_mutex_lock(&bufferq_lock);
+    data = queue_remove(&bufferq, pBuffer);
+    pthread_mutex_unlock(&bufferq_lock);
+
+    if (NULL == data) {
+        LOGE("%s(): Did not find the data %p", __FUNCTION__, pBuffer);
+        return OMX_ErrorBadParameter;
+    }
+
+    return OMX_ErrorNone;
+}
+
 OMX_ERRORTYPE PortBase::ReturnThisBuffer(OMX_BUFFERHEADERTYPE *pBuffer)
 {
     OMX_DIRTYPE direction = portdefinition.eDir;
