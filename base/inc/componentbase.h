@@ -431,6 +431,9 @@ private:
     /* pass NativeBuffers to Lower levels at initialization only */
     virtual  OMX_ERRORTYPE ProcessorUseNativeBuffer(OMX_U32 nPortIndex, OMX_BUFFERHEADERTYPE* pBuffer);
 
+    /* release lock held by libmix */
+    virtual OMX_ERRORTYPE ProcessorReleaseLock(void);
+
     /* end of component methods & helpers */
 
     /* process component's commands work */
