@@ -754,26 +754,20 @@ OMX_ERRORTYPE ComponentBase::CBaseGetExtensionIndex(
         return OMX_ErrorBadParameter;
     };
 
-    if(!strncmp(cParameterName,"OMX.google.android.index.enableAndroidNativeBuffers", sizeof("OMX.google.android.index.enableAndroidNativeBuffers") - 1)) {
-         *pIndexType = static_cast<OMX_INDEXTYPE>(OMX_IndexParamGoogleNativeBuffers);
-         LOGI("ComponentBase::CBaseGetExtensionIndex() parameter = %s, pIndexType = %p(%p)", cParameterName, pIndexType, OMX_IndexParamGoogleNativeBuffers);
-         return OMX_ErrorNone;
-     } else if(!strncmp(cParameterName,"OMX.google.android.index.getAndroidNativeBufferUsage", sizeof("OMX.google.android.index.getAndroidNativeBufferUsage") - 1)) {
-        *pIndexType = static_cast<OMX_INDEXTYPE>(OMX_IndexParamGoogleNativeBufferUsage);
-         LOGI("ComponentBase::CBaseGetExtensionIndex() parameter = %s, pIndexType = %p(%p)", cParameterName, pIndexType, OMX_IndexParamGoogleNativeBufferUsage);
-         return OMX_ErrorNone;
-     } else if (!strncmp(cParameterName,"OMX.google.android.index.useAndroidNativeBuffer2", sizeof("OMX.google.android.index.useAndroidNativeBuffer2") - 1)){
-        *pIndexType = static_cast<OMX_INDEXTYPE>(NULL);
-         LOGI("ComponentBase::CBaseGetExtensionIndex() parameter = %s,returning Dummy Index", cParameterName);
-        return OMX_ErrorNone;
-     } else if(!strncmp(cParameterName,"OMX.google.android.index.useAndroidNativeBuffer", sizeof("OMX.google.android.index.useAndroidNativeBuffer") - 1)) {
-        *pIndexType = static_cast<OMX_INDEXTYPE>(NULL);
-         return OMX_ErrorNotImplemented;
-     } else {
-         LOGE ("Error Parameter Extension not implemented %s", cParameterName);
-         return OMX_ErrorNotImplemented;
-     }
-    return OMX_ErrorUnsupportedIndex;
+    int i =0;
+    while (i < NUM_EXT_PARAMS) {
+        if(!strncmp(cParameterName,PARAMEXT[i].sParamString, strlen(PARAMEXT[i].sParamString))) {
+            *pIndexType =  PARAMEXT[i].sIndex;
+            err = PARAMEXT[i].sRetValue;
+            break;
+        } else {
+           i++;
+        }
+    }
+    if(i == NUM_EXT_PARAMS) {
+        err = OMX_ErrorUnsupportedIndex;
+    }
+    return err;
 }
 
 OMX_ERRORTYPE ComponentBase::GetState(
@@ -1493,6 +1487,7 @@ inline OMX_ERRORTYPE ComponentBase::TransStateToIdle(OMX_STATETYPE current)
         }
     }
     else if ((current == OMX_StatePause) || (current == OMX_StateExecuting)) {
+        ProcessorReleaseLock();
         FlushPort(OMX_ALL, 0);
         LOGV("%s:%s: flushed all ports\n", GetName(), GetWorkingRole());
 

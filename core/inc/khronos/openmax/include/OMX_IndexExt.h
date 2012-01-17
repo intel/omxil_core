@@ -75,6 +75,7 @@ typedef enum OMX_INDEXEXTTYPE {
     OMX_IndexParamGoogleNativeBuffers,               /**< reference: EnableAndroidNativeBuffersParams in Android */
     OMX_IndexParamGoogleNativeBufferUsage,           /**< reference: GetAndroidNativeBufferUsageParams */
     OMX_IndexParamGoogleMetaDataInBuffers,
+    OMX_IndexParamGoogleThumbNail,
     /* Image & Video common configurations */
     OMX_IndexExtCommonStartUnused = OMX_IndexKhronosExtensions + 0x00700000,
 

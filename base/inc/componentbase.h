@@ -44,6 +44,40 @@ struct cmd_s {
     OMX_PTR cmddata;
 };
 
+typedef struct param_struct {
+         OMX_STRING sParamString;
+         OMX_INDEXTYPE sIndex;
+         OMX_ERRORTYPE sRetValue;
+    } param_struct_t;
+
+enum {
+  NUM_EXT_PARAMS = 5,  // number of parameter extensions we are supporting right now.
+};
+
+// Parameter Extension Array.
+const param_struct_t PARAMEXT[NUM_EXT_PARAMS] = {
+     { "OMX.google.android.index.enableAndroidNativeBuffers",
+       static_cast<OMX_INDEXTYPE>(OMX_IndexParamGoogleNativeBuffers),
+       OMX_ErrorNone
+     },
+     { "OMX.google.android.index.getAndroidNativeBufferUsage",
+       static_cast<OMX_INDEXTYPE>(OMX_IndexParamGoogleNativeBufferUsage),
+       OMX_ErrorNone
+     },
+     { "OMX.google.android.index.useAndroidNativeBuffer2",
+       static_cast<OMX_INDEXTYPE>(NULL),
+       OMX_ErrorNone
+     },
+     {"OMX.google.android.index.useAndroidNativeBuffer",
+       static_cast<OMX_INDEXTYPE>(NULL),
+       OMX_ErrorNotImplemented
+     },
+     {"OMX.Intel.index.ThumbnailMode",
+       static_cast<OMX_INDEXTYPE>(OMX_IndexParamGoogleThumbNail),
+       OMX_ErrorNone
+     }
+};
+
 class CmdHandlerInterface
 {
 public:
