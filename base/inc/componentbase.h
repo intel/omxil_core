@@ -35,6 +35,7 @@ typedef enum buffer_retain_e {
     BUFFER_RETAIN_NOT_RETAIN = 0,
     BUFFER_RETAIN_GETAGAIN,
     BUFFER_RETAIN_ACCUMULATE,
+    BUFFER_RETAIN_PUSHBACK,
 } buffer_retain_t;
 
 /* ProcessCmdWork */
@@ -455,9 +456,6 @@ private:
     virtual OMX_ERRORTYPE ProcessorProcess(OMX_BUFFERHEADERTYPE **buffers,
                                            buffer_retain_t *retain,
                                            OMX_U32 nr_buffers) = 0;
-
-    /* invoked when buffer is to be freed */
-    virtual OMX_ERRORTYPE ProcessorPreFreeBuffer(OMX_U32 nPortIndex, OMX_BUFFERHEADERTYPE* pBuffer);
 
     /* invoked when buffer is to be filled */
     virtual  OMX_ERRORTYPE ProcessorPreFillBuffer(OMX_BUFFERHEADERTYPE* pBuffer);

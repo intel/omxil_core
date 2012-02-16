@@ -713,7 +713,7 @@ OMX_ERRORTYPE ComponentBase::CBaseSetConfig(
     OMX_IN  OMX_PTR pComponentConfigStructure)
 {
     OMX_ERRORTYPE ret;
- 
+
     if (hComponent != handle)
         return OMX_ErrorBadParameter;
 
@@ -989,9 +989,6 @@ OMX_ERRORTYPE ComponentBase::CBaseFreeBuffer(
 
     if (!port)
         return OMX_ErrorBadParameter;
-
-    ProcessorPreFreeBuffer(nPortIndex, pBuffer);
-
     return port->FreeBuffer(nPortIndex, pBuffer);
 }
 
@@ -1117,7 +1114,7 @@ OMX_ERRORTYPE ComponentBase::CBaseFillThisBuffer(
             return OMX_ErrorIncorrectStateOperation;
     }
 
-    LOGI("CBaseFillThisBuffer , sending %p", pBuffer->pBuffer);
+    LOGV("CBaseFillThisBuffer , sending %p", pBuffer->pBuffer);
     ProcessorPreFillBuffer(pBuffer);
 
     ret = port->PushThisBuffer(pBuffer);
@@ -1295,13 +1292,13 @@ void ComponentBase::CmdHandler(struct cmd_s *cmd)
     }
     case OMX_CommandPortDisable: {
         OMX_U32 port_index = cmd->param1;
-	ProcessorReleaseLock();
+	    ProcessorReleaseLock();
         TransStatePort(port_index, PortBase::OMX_PortDisabled);
         break;
     }
     case OMX_CommandPortEnable: {
         OMX_U32 port_index = cmd->param1;
-	ProcessorReleaseLock();
+	    ProcessorReleaseLock();
         TransStatePort(port_index, PortBase::OMX_PortEnabled);
         break;
     }
@@ -1906,6 +1903,8 @@ void ComponentBase::Work(void)
                     ports[i]->RetainThisBuffer(buffers[i], false);
                 else if (retain[i] == BUFFER_RETAIN_ACCUMULATE)
                     ports[i]->RetainThisBuffer(buffers[i], true);
+                else if (retain[i] == BUFFER_RETAIN_PUSHBACK)
+                    ports[i]->PushThisBuffer(buffers[i]);
                 else
                     ports[i]->ReturnThisBuffer(buffers[i]);
             }
@@ -2102,11 +2101,6 @@ OMX_ERRORTYPE ComponentBase::ProcessorResume(void)
 }
 
 OMX_ERRORTYPE ComponentBase::ProcessorFlush(OMX_U32 port_index)
-{
-    return OMX_ErrorNone;
-}
-
-OMX_ERRORTYPE ComponentBase::ProcessorPreFreeBuffer(OMX_U32 nPortIndex, OMX_BUFFERHEADERTYPE* pBuffer)
 {
     return OMX_ErrorNone;
 }
