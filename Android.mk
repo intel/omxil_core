@@ -16,12 +16,12 @@ COMPONENT_SUPPORT_BUFFER_SHARING := false
 COMPONENT_SUPPORT_OPENCORE := false
 
 # core
--include $(WRS_OMXIL_CORE_ROOT)/core/src/Android.mk
+include $(WRS_OMXIL_CORE_ROOT)/core/src/Android.mk
 
 # base class
--include $(WRS_OMXIL_CORE_ROOT)/base/src/Android.mk
+include $(WRS_OMXIL_CORE_ROOT)/base/src/Android.mk
 
 # utility
--include $(WRS_OMXIL_CORE_ROOT)/utils/src/Android.mk
+include $(WRS_OMXIL_CORE_ROOT)/utils/src/Android.mk
 
 endif
