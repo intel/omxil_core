@@ -232,9 +232,14 @@ OMX_ERRORTYPE PortBase::SetPortDefinition(
         format->eCompressionFormat = pformat->eCompressionFormat;
         format->eColorFormat = pformat->eColorFormat;
         format->pNativeWindow = pformat->pNativeWindow;
-        OMX_U32 nFrameSize = getFrameBufSize(format->eColorFormat,format->nFrameWidth,format->nFrameHeight);
-        if(nFrameSize!=-1)
-            temp.nBufferSize = nFrameSize;
+        if(!overwrite_readonly || temp.nBufferSize<=0){
+            //only overwite buffer size using color format and geometry as needed
+            //in meta buffer case, size does not have to match format and geometry.
+            OMX_U32 nFrameSize = getFrameBufSize(format->eColorFormat,
+                format->nFrameWidth,format->nFrameHeight);
+            if(nFrameSize!=-1)
+                temp.nBufferSize = nFrameSize;
+        }
         if (overwrite_readonly) {
             format->nStride = pformat->nStride;
             format->nSliceHeight = pformat->nSliceHeight;
