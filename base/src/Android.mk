@@ -5,10 +5,7 @@ LOCAL_SRC_FILES := \
 	cmodule.cpp \
 	componentbase.cpp \
 	portbase.cpp \
-	portaudio.cpp \
 	portvideo.cpp \
-	portimage.cpp \
-	portother.cpp
 
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := libwrs_omxil_base
@@ -16,6 +13,8 @@ LOCAL_MODULE := libwrs_omxil_base
 LOCAL_CPPFLAGS :=
 
 LOCAL_LDFLAGS :=
+
+LOCAL_CFLAGS := $(OMXLOG_CFLAGS) -DLOG_TAG=\"omxil-base\"
 
 ifeq ($(strip $(COMPONENT_SUPPORT_BUFFER_SHARING)), true)
 LOCAL_CFLAGS += -DCOMPONENT_SUPPORT_BUFFER_SHARING
@@ -36,6 +35,7 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := libwrs_omxil_common
+
 
 LOCAL_WHOLE_STATIC_LIBRARIES := \
 	libwrs_omxil_utils \

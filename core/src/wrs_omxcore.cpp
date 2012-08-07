@@ -29,11 +29,6 @@
 #include <cmodule.h>
 #include <componentbase.h>
 
-//#define LOG_NDEBUG 0
-
-#define LOG_TAG "wrs-omxil-core"
-#include <log.h>
-
 static unsigned int g_initialized = 0;
 static unsigned int g_nr_instances = 0;
 
@@ -55,7 +50,7 @@ static struct list *construct_components(const char *config_file_name)
         strncat(config_file_path, config_file_name, 256);
         config_file = fopen(config_file_path, "r");
         if (!config_file) {
-            LOGE("not found file %s\n", config_file_name);
+            omx_errorLog("not found file %s\n", config_file_name);
             return NULL;
         }
     }
@@ -75,7 +70,7 @@ static struct list *construct_components(const char *config_file_name)
         if (!cmodule)
             continue;
 
-        LOGI("found component library %s\n", library_name);
+        omx_infoLog("found component library %s\n", library_name);
 
         ret = cmodule->Load(MODULE_LAZY);
         if (ret != OMX_ErrorNone)
@@ -91,7 +86,7 @@ static struct list *construct_components(const char *config_file_name)
         head = __list_add_tail(head, entry);
 
         cmodule->Unload();
-        LOGI("module %s:%s added to component list\n",
+        omx_infoLog("module %s:%s added to component list\n",
              cmodule->GetLibraryName(), cmodule->GetComponentName());
 
         continue;
@@ -124,14 +119,14 @@ OMX_API OMX_ERRORTYPE OMX_APIENTRY OMX_Init(void)
 {
     int ret;
 
-    LOGV("%s(): enter", __FUNCTION__);
+    omx_verboseLog("%s(): enter", __FUNCTION__);
 
     pthread_mutex_lock(&g_module_lock);
     if (!g_initialized) {
         g_module_list = construct_components("wrs_omxil_components.list");
         if (!g_module_list) {
             pthread_mutex_unlock(&g_module_lock);
-            LOGE("%s(): exit failure, construct_components failed",
+            omx_errorLog("%s(): exit failure, construct_components failed",
                  __FUNCTION__);
             return OMX_ErrorInsufficientResources;
         }
@@ -140,7 +135,7 @@ OMX_API OMX_ERRORTYPE OMX_APIENTRY OMX_Init(void)
     }
     pthread_mutex_unlock(&g_module_lock);
 
-    LOGV("%s(): exit done", __FUNCTION__);
+    omx_verboseLog("%s(): exit done", __FUNCTION__);
     return OMX_ErrorNone;
 }
 
@@ -148,7 +143,7 @@ OMX_API OMX_ERRORTYPE OMX_APIENTRY OMX_Deinit(void)
 {
     OMX_ERRORTYPE ret = OMX_ErrorNone;
 
-    LOGV("%s(): enter", __FUNCTION__);
+    omx_verboseLog("%s(): enter", __FUNCTION__);
 
     pthread_mutex_lock(&g_module_lock);
     if (!g_nr_instances)
@@ -157,7 +152,7 @@ OMX_API OMX_ERRORTYPE OMX_APIENTRY OMX_Deinit(void)
         ret = OMX_ErrorUndefined;
     pthread_mutex_unlock(&g_module_lock);
 
-    LOGV("%s(): exit done (ret : 0x%08x)", __FUNCTION__, ret);
+    omx_verboseLog("%s(): exit done (ret : 0x%08x)", __FUNCTION__, ret);
     return ret;
 }
 
@@ -184,7 +179,7 @@ OMX_API OMX_ERRORTYPE OMX_APIENTRY OMX_ComponentNameEnum(
 
     strncpy(cComponentName, cname, nNameLength);
 
-    LOGV("%s(): found %luth component %s", __FUNCTION__, nIndex, cname);
+    omx_verboseLog("%s(): found %luth component %s", __FUNCTION__, nIndex, cname);
     return OMX_ErrorNone;
 }
 
@@ -197,7 +192,7 @@ OMX_API OMX_ERRORTYPE OMX_APIENTRY OMX_GetHandle(
     struct list *entry;
     OMX_ERRORTYPE ret;
 
-    LOGV("%s(): enter, try to get %s", __FUNCTION__, cComponentName);
+    omx_verboseLog("%s(): enter, try to get %s", __FUNCTION__, cComponentName);
 
     pthread_mutex_lock(&g_module_lock);
     list_foreach(g_module_list, entry) {
@@ -212,21 +207,21 @@ OMX_API OMX_ERRORTYPE OMX_APIENTRY OMX_GetHandle(
 
             ret = cmodule->Load(MODULE_NOW);
             if (ret != OMX_ErrorNone) {
-                LOGE("%s(): exit failure, cmodule->Load failed\n",
+                omx_errorLog("%s(): exit failure, cmodule->Load failed\n",
                      __FUNCTION__);
                 goto unlock_list;
             }
 
             ret = cmodule->InstantiateComponent(&cbase);
             if (ret != OMX_ErrorNone){
-                LOGE("%s(): exit failure, cmodule->Instantiate failed\n",
+                omx_errorLog("%s(): exit failure, cmodule->Instantiate failed\n",
                      __FUNCTION__);
                 goto unload_cmodule;
             }
 
             ret = cbase->GetHandle(pHandle, pAppData, pCallBacks);
             if (ret != OMX_ErrorNone) {
-                LOGE("%s(): exit failure, cbase->GetHandle failed\n",
+                omx_errorLog("%s(): exit failure, cbase->GetHandle failed\n",
                      __FUNCTION__);
                 goto delete_cbase;
             }
@@ -236,8 +231,8 @@ OMX_API OMX_ERRORTYPE OMX_APIENTRY OMX_GetHandle(
             g_nr_instances++;
             pthread_mutex_unlock(&g_module_lock);
 
-            LOGI("get handle of component %s successfully", cComponentName);
-            LOGV("%s(): exit done\n", __FUNCTION__);
+            omx_infoLog("get handle of component %s successfully", cComponentName);
+            omx_verboseLog("%s(): exit done\n", __FUNCTION__);
             return OMX_ErrorNone;
 
         delete_cbase:
@@ -247,13 +242,13 @@ OMX_API OMX_ERRORTYPE OMX_APIENTRY OMX_GetHandle(
         unlock_list:
             pthread_mutex_unlock(&g_module_lock);
 
-            LOGE("%s(): exit failure, (ret : 0x%08x)\n", __FUNCTION__, ret);
+            omx_errorLog("%s(): exit failure, (ret : 0x%08x)\n", __FUNCTION__, ret);
             return ret;
         }
     }
     pthread_mutex_unlock(&g_module_lock);
 
-    LOGE("%s(): exit failure, %s not found", __FUNCTION__, cComponentName);
+    omx_errorLog("%s(): exit failure, %s not found", __FUNCTION__, cComponentName);
     return OMX_ErrorInvalidComponent;
 }
 
@@ -271,18 +266,18 @@ OMX_API OMX_ERRORTYPE OMX_APIENTRY OMX_FreeHandle(
     cbase = static_cast<ComponentBase *>
         (((OMX_COMPONENTTYPE *)hComponent)->pComponentPrivate);
     if (!cbase) {
-        LOGE("%s(): exit failure, cannot find cbase pointer\n",
+        omx_errorLog("%s(): exit failure, cannot find cbase pointer\n",
              __FUNCTION__);
         return OMX_ErrorBadParameter;
     }
     strcpy(&cname[0], cbase->GetName());
 
-    LOGV("%s(): enter, try to free %s", __FUNCTION__, cbase->GetName());
+    omx_verboseLog("%s(): enter, try to free %s", __FUNCTION__, cbase->GetName());
 
 
     ret = cbase->FreeHandle(hComponent);
     if (ret != OMX_ErrorNone) {
-        LOGE("%s(): exit failure, cbase->FreeHandle() failed (ret = 0x%08x)\n",
+        omx_errorLog("%s(): exit failure, cbase->FreeHandle() failed (ret = 0x%08x)\n",
              __FUNCTION__, ret);
         return ret;
     }
@@ -293,15 +288,15 @@ OMX_API OMX_ERRORTYPE OMX_APIENTRY OMX_FreeHandle(
 
     cmodule = cbase->GetCModule();
     if (!cmodule)
-        LOGE("fatal error, %s does not have cmodule\n", cbase->GetName());
+        omx_errorLog("fatal error, %s does not have cmodule\n", cbase->GetName());
 
     delete cbase;
 
     if (cmodule)
         cmodule->Unload();
 
-    LOGI("free handle of component %s successfully", cname);
-    LOGV("%s(): exit done", __FUNCTION__);
+    omx_infoLog("free handle of component %s successfully", cname);
+    omx_verboseLog("%s(): exit done", __FUNCTION__);
     return OMX_ErrorNone;
 }
 
@@ -344,7 +339,7 @@ OMX_API OMX_ERRORTYPE OMX_GetComponentsOfRole (
                 strncpy((OMX_STRING)&compNames[nr_comps][0], cname,
                         OMX_MAX_STRINGNAME_SIZE);
                 copied_nr_comps++;
-                LOGV("%s(): component %s has %s role", __FUNCTION__,
+                omx_verboseLog("%s(): component %s has %s role", __FUNCTION__,
                      cname, role);
             }
             nr_comps++;
@@ -389,7 +384,7 @@ OMX_API OMX_ERRORTYPE OMX_GetRolesOfComponent (
                 OMX_U32 i;
 
                 for (i = 0; i < *pNumRoles; i++) {
-                    LOGV("%s(): component %s has %s role", __FUNCTION__,
+                    omx_verboseLog("%s(): component %s has %s role", __FUNCTION__,
                          compName, &roles[i][0]);
                 }
             }

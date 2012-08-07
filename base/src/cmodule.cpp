@@ -25,9 +25,6 @@
 #include <cmodule.h>
 #include <componentbase.h>
 
-#define LOG_TAG "cmodule"
-#include <log.h>
-
 /*
  * constructor / deconstructor
  */
@@ -72,7 +69,7 @@ OMX_ERRORTYPE CModule::Load(int flag)
 
     m = module_open(lname, flag);
     if (!m) {
-        LOGE("module not founded (%s)\n", lname);
+        omx_errorLog("module not founded (%s)\n", lname);
         return OMX_ErrorComponentNotFound;
     }
 
@@ -82,7 +79,7 @@ OMX_ERRORTYPE CModule::Load(int flag)
     wrs_omxil_cmodule = (struct wrs_omxil_cmodule_s *)
         module_symbol(m, WRS_OMXIL_CMODULE_SYMBOL_STRING);
     if (!wrs_omxil_cmodule) {
-        LOGE("module %s symbol not founded (%s)\n",
+        omx_errorLog("module %s symbol not founded (%s)\n",
              lname, WRS_OMXIL_CMODULE_SYMBOL_STRING);
 
         module_close(m);
@@ -90,7 +87,7 @@ OMX_ERRORTYPE CModule::Load(int flag)
     }
 
     module = m;
-    LOGI("module %s successfully loaded\n", lname);
+    omx_infoLog("module %s successfully loaded\n", lname);
 
     return OMX_ErrorNone;
 }
@@ -104,7 +101,7 @@ OMX_U32 CModule::Unload(void)
         module = NULL;
         wrs_omxil_cmodule = NULL;
 
-        LOGI("module %s successfully unloaded\n", lname);
+        omx_infoLog("module %s successfully unloaded\n", lname);
     }
 
     return ref_count;
@@ -189,7 +186,7 @@ OMX_ERRORTYPE CModule::InstantiateComponent(ComponentBase **instance)
 
     ret = wrs_omxil_cmodule->ops->instantiate((void **)&cbase);
     if (ret != OMX_ErrorNone) {
-        LOGE("%s failed to instantiate()\n", lname);
+        omx_errorLog("%s failed to instantiate()\n", lname);
         return ret;
     }
 

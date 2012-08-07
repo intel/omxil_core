@@ -20,6 +20,7 @@
 #define __CMODULE_H
 
 #include <module.h>
+#include <sysdeps.h>
 
 /*
  * WRS OMX-IL Component Module Symbol

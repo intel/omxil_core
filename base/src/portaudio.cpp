@@ -25,9 +25,6 @@
 #include <componentbase.h>
 #include <portaudio.h>
 
-#define LOG_TAG "portaudio"
-#include <log.h>
-
 PortAudio::PortAudio()
 {
     memset(&audioparam, 0, sizeof(audioparam));

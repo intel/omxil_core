@@ -22,8 +22,7 @@
 
 #include <module.h>
 
-#define LOG_TAG "module"
-#include <log.h>
+#include <sysdeps.h>
 
 static struct module *g_module_head;
 static char *g_module_err;
@@ -131,7 +130,7 @@ struct module *module_open(const char *file, int flag)
 
     existing = module_find_with_name(g_module_head, file);
     if (existing) {
-        LOGE("found opened module %s\n", existing->name);
+        omx_errorLog("found opened module %s\n", existing->name);
         existing->ref_count++;
         pthread_mutex_unlock(&g_lock);
         return existing;
@@ -151,7 +150,7 @@ struct module *module_open(const char *file, int flag)
     new->handle = dlopen(file, flag);
     dlerr = dlerror();
     if (dlerr) {
-        LOGE("dlopen failed (%s)\n", dlerr);
+        omx_errorLog("dlopen failed (%s)\n", dlerr);
         module_set_error(dlerr);
         pthread_mutex_unlock(&g_lock);
         goto free_new;
@@ -159,7 +158,7 @@ struct module *module_open(const char *file, int flag)
 
     existing = module_find_with_handle(g_module_head, new->handle);
     if (existing) {
-        LOGE("found opened module %s\n", existing->name);
+        omx_errorLog("found opened module %s\n", existing->name);
         existing->ref_count++;
 
         free(new);
@@ -171,12 +170,12 @@ struct module *module_open(const char *file, int flag)
     new->init = dlsym(new->handle, "module_init");
     dlerr = dlerror();
     if (!dlerr) {
-        LOGE("module %s has init(), call the symbol\n", new->name);
+        omx_errorLog("module %s has init(), call the symbol\n", new->name);
         init_ret = new->init(new);
     }
 
     if (init_ret) {
-        LOGE("module %s init() failed (%d)\n", new->name, init_ret);
+        omx_errorLog("module %s init() failed (%d)\n", new->name, init_ret);
         pthread_mutex_unlock(&g_lock);
         goto free_handle;
     }
@@ -222,7 +221,7 @@ int module_close(struct module *module)
     module->ref_count--;
     ret = module->ref_count;
 
-    LOGV("module %s decrease refcont (%d)\n", module->name, module->ref_count);
+    omx_verboseLog("module %s decrease refcont (%d)\n", module->name, module->ref_count);
 
     if (!module->ref_count) {
         if (module->exit)
@@ -238,7 +237,7 @@ int module_close(struct module *module)
 
         g_module_head = module_del_list(g_module_head, module);
 
-        LOGV("module %s closed\n", module->name);
+        omx_verboseLog("module %s closed\n", module->name);
 
         free(module->name);
         free(module);
@@ -262,13 +261,13 @@ void *module_symbol(struct module *module, const char *string)
     symbol = dlsym(module->handle, string);
     dlerr = dlerror();
     if (dlerr) {
-        LOGE("not founded symbol %s in module %s (%s)\n",
+        omx_errorLog("not founded symbol %s in module %s (%s)\n",
              string, module->name, dlerr);
         module_set_error(dlerr);
         symbol = NULL;
     }
     else
-        LOGV("found symbol %s in module %s\n", string, module->name);
+        omx_verboseLog("found symbol %s in module %s\n", string, module->name);
 
     pthread_mutex_unlock(&g_lock);
     return symbol;
