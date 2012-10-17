@@ -29,6 +29,7 @@ AC_FUNC_MALLOC
 AC_CHECK_FUNCS([memset strdup])
 
 AC_CONFIG_FILES([Makefile
+                 ilcore/src/Makefile
                  base/src/Makefile
 		 utils/src/Makefile
                  pkgconfig/Makefile])
