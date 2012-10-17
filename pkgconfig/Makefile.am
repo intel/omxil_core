@@ -1,5 +1,6 @@
 pkg_config_files = \
 	libomxil_base.pc \
+	libomxil_utils.pc \
 	$(NULL)
 
 pkgconfigdir = @pkgconfigdir@

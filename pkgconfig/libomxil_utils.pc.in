@@ -1,0 +1,10 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: libomxil_utils
+Description: Intel OMX IL Core
+Version: @OMXIL_VERSION@
+Libs: -L${libdir}
+Cflags: -I${includedir}
