@@ -28,6 +28,28 @@
 #define omx_warnLog(...) LOGV(__VA_ARGS__);
 #define omx_debugLog(...) LOGV(__VA_ARGS__);
 #endif
+#else
+
+#define omx_errorLog(...) do { \
+	fprintf(stderr, "omxil-core error: %s", __VA_ARGS__); \
+}while (0)
+
+#define omx_infoLog(...) do { \
+	fprintf(stderr, "omxil-core info: %s", __VA_ARGS__); \
+}while (0)
+
+#define omx_verboseLog(...) do { \
+	fprintf(stderr, "omxil-core verbose: %s", __VA_ARGS__); \
+}while (0)
+
+#define omx_warnLog(...) do { \
+	fprintf(stderr, "omxil-core warning: %s", __VA_ARGS__); \
+}while (0)
+
+#define omx_debugLog(...) do { \
+	fprintf(stderr, "omxil-core debug: %s", __VA_ARGS__); \
+}while (0)
+
 #endif //ANDROID
 #endif//OMX_SYSDEPS_H_
 

@@ -25,8 +25,10 @@
 #include <componentbase.h>
 #include <portvideo.h>
 
+#ifdef ANDROID
 #define LOG_TAG "portvideo"
 #include <utils/Log.h>
+#endif
 
 PortVideo::PortVideo()
 {

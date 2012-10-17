@@ -23,7 +23,9 @@
 
 #include <OMX_Core.h>
 #include <OMX_Component.h>
+#ifdef ANDROID
 #include <utils/RefBase.h>
+#endif
 #include <list.h>
 #include <queue.h>
 
