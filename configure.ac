@@ -20,6 +20,7 @@ AC_CHECK_HEADERS([stdint.h stdlib.h string.h])
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
 AC_C_INLINE
+AC_DISABLE_STATIC
 
 pkgconfigdir=${libdir}/pkgconfig
 AC_SUBST(pkgconfigdir)

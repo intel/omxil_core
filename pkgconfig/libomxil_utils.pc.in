@@ -5,6 +5,7 @@ includedir=@includedir@
 
 Name: libomxil_utils
 Description: Intel OMX IL Core
+#TODO define a version
 Version: @OMXIL_VERSION@
-Libs: -L${libdir}
-Cflags: -I${includedir}
+Libs: -L${libdir} -llibomxil_utils -ldl
+Cflags: -I${includedir} -I${includedir}/omx

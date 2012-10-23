@@ -6,6 +6,10 @@ libomxil_base_source_cpp = \
 	$(NULL)
 
 libomxil_base_source_h = \
+        ../inc/cmodule.h \
+	../inc/portbase.h \
+	../inc/portvideo.h \
+	../inc/componentbase.h \
 	$(NULL)
 
 libomxil_base_source_priv_h = \
@@ -16,7 +20,7 @@ libomxil_base_ldflags = \
 	$(NULL)
 
 lib_LTLIBRARIES			= libomxil_base.la
-libomxil_baseincludedir		= ${includedir}
+libomxil_baseincludedir		= ${includedir}/omx
 libomxil_baseinclude_HEADERS	= $(libomxil_base_source_h)
 noinst_HEADERS			= $(libomxil_base_source_h_priv)
 libomxil_base_la_SOURCES	= $(libomxil_base_source_cpp)
