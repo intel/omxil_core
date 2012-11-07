@@ -32,5 +32,6 @@ noinst_HEADERS			= $(libOmxCore_source_h_priv)
 libOmxCore_la_SOURCES		= $(libOmxCore_source_cpp)
 libOmxCore_la_LDFLAGS		= $(libOmxCore_ldflags)
 libOmxCore_la_CPPFLAGS       	= -I../inc -I../../utils/inc -I../../base/inc -I../inc/khronos/openmax/include
+libOmxCore_la_LIBADD		= -ldl
 
 DISTCLEANFILES = Makefile.in
