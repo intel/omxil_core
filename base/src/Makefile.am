@@ -25,6 +25,6 @@ libomxil_baseinclude_HEADERS	= $(libomxil_base_source_h)
 noinst_HEADERS			= $(libomxil_base_source_h_priv)
 libomxil_base_la_SOURCES	= $(libomxil_base_source_cpp)
 libomxil_base_la_LDFLAGS	= $(libomxil_base_ldflags)
-libomxil_base_la_CPPFLAGS       = -I../inc -I../../utils/inc -I../../ilcore/inc/khronos/openmax/include
+libomxil_base_la_CPPFLAGS       = -I../inc -I$(top_srcdir)/utils/inc -I$(top_srcdir)/ilcore/inc/khronos/openmax/include
 
 DISTCLEANFILES = Makefile.in

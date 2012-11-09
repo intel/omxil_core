@@ -23,6 +23,18 @@ libOmxCore_source_priv_h = \
 	
 libOmxCore_ldflags = \
 	-version-info 0:1:0 \
+	-no-undefined \
+	$(NULL)
+
+libOmxCore_deps_libs = \
+	$(top_srcdir)/base/src/libomxil_base.la \
+	$(top_srcdir)/utils/src/libomxil_utils.la \
+	-ldl -lpthread \
+	$(NULL)
+
+libOmxCore_deps = \
+	$(top_srcdir)/base/src/libomxil_base.la \
+	$(top_srcdir)/utils/src/libomxil_utils.la \
 	$(NULL)
 
 lib_LTLIBRARIES			= libOmxCore.la
@@ -31,7 +43,8 @@ libOmxCoreinclude_HEADERS	= $(libOmxCore_source_h)
 noinst_HEADERS			= $(libOmxCore_source_h_priv)
 libOmxCore_la_SOURCES		= $(libOmxCore_source_cpp)
 libOmxCore_la_LDFLAGS		= $(libOmxCore_ldflags)
-libOmxCore_la_CPPFLAGS       	= -I../inc -I../../utils/inc -I../../base/inc -I../inc/khronos/openmax/include
-libOmxCore_la_LIBADD		= -ldl
+libOmxCore_la_CPPFLAGS       	= -I../inc -I$(top_srcdir)/utils/inc -I$(top_srcdir)/base/inc -I../inc/khronos/openmax/include
+libOmxCore_la_DEPENDENCIES	= $(libOmxCore_deps)
+libOmxCore_la_LIBADD		= $(libOmxCore_deps_libs)
 
 DISTCLEANFILES = Makefile.in
