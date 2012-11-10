@@ -30,24 +30,24 @@
 #endif
 #else
 
-#define omx_errorLog(...) do { \
-	fprintf(stderr, "omxil-core error: %s", __VA_ARGS__); \
+#define omx_errorLog(format, ...) do { \
+	fprintf(stderr, "omxil-core error: "format, ##__VA_ARGS__); \
 }while (0)
 
-#define omx_infoLog(...) do { \
-	fprintf(stderr, "omxil-core info: %s", __VA_ARGS__); \
+#define omx_infoLog(format, ...) do { \
+	fprintf(stderr, "omxil-core info: "format, ##__VA_ARGS__); \
 }while (0)
 
-#define omx_verboseLog(...) do { \
-	fprintf(stderr, "omxil-core verbose: %s", __VA_ARGS__); \
+#define omx_verboseLog(format, ...) do { \
+	fprintf(stderr, "omxil-core verbose: "format, ##__VA_ARGS__); \
 }while (0)
 
-#define omx_warnLog(...) do { \
-	fprintf(stderr, "omxil-core warning: %s", __VA_ARGS__); \
+#define omx_warnLog(format, ...) do { \
+	fprintf(stderr, "omxil-core warning: "format, ##__VA_ARGS__); \
 }while (0)
 
-#define omx_debugLog(...) do { \
-	fprintf(stderr, "omxil-core debug: %s", __VA_ARGS__); \
+#define omx_debugLog(format, ...) do { \
+	fprintf(stderr, "omxil-core debug: "format, ##__VA_ARGS__); \
 }while (0)
 
 #endif //ANDROID
