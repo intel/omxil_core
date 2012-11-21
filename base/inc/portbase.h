@@ -173,7 +173,7 @@ private:
 
     /* omx standard callbacks */
     OMX_PTR appdata;
-    OMX_CALLBACKTYPE *callbacks;
+    OMX_CALLBACKTYPE callbacks;
 
     /* wrs component handle */
     class ComponentBase *cbase;

@@ -507,7 +507,8 @@ private:
 
     /* omx standard callbacks */
     OMX_PTR appdata;
-    OMX_CALLBACKTYPE *callbacks;
+    OMX_CALLBACKTYPE callbacks;
+
 
     /* component name */
     char name[OMX_MAX_STRINGNAME_SIZE];

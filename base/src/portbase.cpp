@@ -60,7 +60,6 @@ void PortBase::__PortBase(void)
 
     owner = NULL;
     appdata = NULL;
-    callbacks = NULL;
 
     cbase = NULL;
 }
@@ -129,7 +128,10 @@ OMX_ERRORTYPE PortBase::SetCallbacks(OMX_HANDLETYPE hComponent,
         return OMX_ErrorBadParameter;
 
     appdata = pAppData;
-    callbacks = pCallbacks;
+    callbacks.EventHandler=pCallbacks->EventHandler;
+    callbacks.EmptyBufferDone=pCallbacks->EmptyBufferDone;
+    callbacks.FillBufferDone=pCallbacks->FillBufferDone;
+
 
     return OMX_ErrorNone;
 }
@@ -621,11 +623,11 @@ OMX_ERRORTYPE PortBase::ReturnThisBuffer(OMX_BUFFERHEADERTYPE *pBuffer)
 
     if (direction == OMX_DirInput) {
         port_index = pBuffer->nInputPortIndex;
-        bufferdone_callback = callbacks->EmptyBufferDone;
+        bufferdone_callback = callbacks.EmptyBufferDone;
     }
     else if (direction == OMX_DirOutput) {
         port_index = pBuffer->nOutputPortIndex;
-        bufferdone_callback = callbacks->FillBufferDone;
+        bufferdone_callback = callbacks.FillBufferDone;
     }
     else {
         omx_errorLog("%s(): %s:%s:PortIndex %lu:pBuffer %p: exit failure, "
@@ -650,7 +652,7 @@ OMX_ERRORTYPE PortBase::ReturnThisBuffer(OMX_BUFFERHEADERTYPE *pBuffer)
              __FUNCTION__, cbase->GetName(), cbase->GetWorkingRole(),
              portdefinition.nPortIndex, pBuffer);
 
-        callbacks->EventHandler(owner, appdata,
+        callbacks.EventHandler(owner, appdata,
                                 OMX_EventBufferFlag,
                                 port_index, pBuffer->nFlags, NULL);
     }
@@ -661,7 +663,7 @@ OMX_ERRORTYPE PortBase::ReturnThisBuffer(OMX_BUFFERHEADERTYPE *pBuffer)
              __FUNCTION__, cbase->GetName(), cbase->GetWorkingRole(),
              portdefinition.nPortIndex, pBuffer);
 
-        callbacks->EventHandler(owner, appdata, OMX_EventMark,
+        callbacks.EventHandler(owner, appdata, OMX_EventMark,
                                 0, 0, pBuffer->pMarkData);
         pBuffer->hMarkTargetComponent = NULL;
         pBuffer->pMarkData = NULL;
@@ -927,7 +929,7 @@ OMX_ERRORTYPE PortBase::ReportPortSettingsChanged(void)
 {
     OMX_ERRORTYPE ret;
 
-    ret = callbacks->EventHandler(owner, appdata,
+    ret = callbacks.EventHandler(owner, appdata,
                                   OMX_EventPortSettingsChanged,
                                   portdefinition.nPortIndex, OMX_IndexParamPortDefinition, NULL);
 
@@ -940,7 +942,7 @@ OMX_ERRORTYPE PortBase::ReportConfigOutputCrop(void)
 {
     OMX_ERRORTYPE ret;
 
-    ret = callbacks->EventHandler(owner, appdata,
+    ret = callbacks.EventHandler(owner, appdata,
             OMX_EventPortSettingsChanged,
             portdefinition.nPortIndex,
             OMX_IndexConfigCommonOutputCrop,

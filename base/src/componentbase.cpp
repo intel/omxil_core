@@ -283,7 +283,9 @@ OMX_ERRORTYPE ComponentBase::GetHandle(OMX_HANDLETYPE *pHandle,
     handle->ComponentRoleEnum = ComponentRoleEnum;
 
     appdata = pAppData;
-    callbacks = pCallBacks;
+    callbacks.EventHandler=pCallBacks->EventHandler;
+    callbacks.EmptyBufferDone=pCallBacks->EmptyBufferDone;
+    callbacks.FillBufferDone=pCallBacks->FillBufferDone;
 
     if (nr_roles == 1) {
         SetWorkingRole((OMX_STRING)&roles[0][0]);
@@ -302,7 +304,6 @@ free_handle:
     free(handle);
 
     appdata = NULL;
-    callbacks = NULL;
     *pHandle = NULL;
 
 free_bufferwork:
@@ -329,7 +330,6 @@ OMX_ERRORTYPE ComponentBase::FreeHandle(OMX_HANDLETYPE hComponent)
     free(handle);
 
     appdata = NULL;
-    callbacks = NULL;
 
     delete cmdwork;
     delete bufferwork;
@@ -1146,7 +1146,10 @@ OMX_ERRORTYPE ComponentBase::CBaseSetCallbacks(
         return OMX_ErrorBadParameter;
 
     appdata = pAppData;
-    callbacks = pCallbacks;
+    callbacks.EventHandler=pCallbacks->EventHandler;
+    callbacks.EmptyBufferDone=pCallbacks->EmptyBufferDone;
+    callbacks.FillBufferDone=pCallbacks->FillBufferDone;
+
 
     return OMX_ErrorNone;
 }
@@ -1410,11 +1413,11 @@ notify_event:
         }
     }
 
-    callbacks->EventHandler(handle, appdata, event, data1, data2, NULL);
+    callbacks.EventHandler(handle, appdata, event, data1, data2, NULL);
 
     /* WaitForResources workaround */
     if (ret == OMX_ErrorNone && transition == OMX_StateWaitForResources)
-        callbacks->EventHandler(handle, appdata,
+        callbacks.EventHandler(handle, appdata,
                                 OMX_EventResourcesAcquired, 0, 0, NULL);
 }
 
@@ -1656,7 +1659,7 @@ notify_event:
         data2 = 0;
     }
 
-    callbacks->EventHandler(handle, appdata, event, data1, data2, NULL);
+    callbacks.EventHandler(handle, appdata, event, data1, data2, NULL);
 }
 
 void ComponentBase::FlushPort(OMX_U32 port_index, bool notify)
@@ -1682,7 +1685,7 @@ void ComponentBase::FlushPort(OMX_U32 port_index, bool notify)
     for (i = from_index; i <= to_index; i++) {
         ports[i]->FlushPort();
         if (notify)
-            callbacks->EventHandler(handle, appdata, OMX_EventCmdComplete,
+            callbacks.EventHandler(handle, appdata, OMX_EventCmdComplete,
                                     OMX_CommandFlush, i, NULL);
     }
     pthread_mutex_unlock(&ports_block);
@@ -1731,7 +1734,7 @@ void ComponentBase::TransStatePort(OMX_U32 port_index, OMX_U8 state)
             data1 = ret;
             data2 = 0;
         }
-        callbacks->EventHandler(handle, appdata, OMX_EventCmdComplete,
+        callbacks.EventHandler(handle, appdata, OMX_EventCmdComplete,
                                 data1, data2, NULL);
     }
     pthread_mutex_unlock(&ports_block);
@@ -1776,7 +1779,8 @@ OMX_ERRORTYPE ComponentBase::ApplyWorkingRole(void)
     if (!working_role)
         return OMX_ErrorBadParameter;
 
-    if (!callbacks || !appdata)
+    if (!callbacks.EventHandler || !callbacks.EmptyBufferDone
+		    || !callbacks.FillBufferDone || !appdata)
         return OMX_ErrorBadParameter;
 
     ret = AllocatePorts();
@@ -1788,7 +1792,7 @@ OMX_ERRORTYPE ComponentBase::ApplyWorkingRole(void)
     /* now we can access ports */
     for (i = 0; i < nr_ports; i++) {
         ports[i]->SetOwner(handle);
-        ports[i]->SetCallbacks(handle, callbacks, appdata);
+        ports[i]->SetCallbacks(handle, &callbacks, appdata);
     }
 
     omx_infoLog("%s: set working role %s:", GetName(), GetWorkingRole());
@@ -1905,7 +1909,7 @@ void ComponentBase::Work(void)
             }
         }
         else {
-            callbacks->EventHandler(handle, appdata, OMX_EventError, ret,
+            callbacks.EventHandler(handle, appdata, OMX_EventError, ret,
                                     0, NULL);
 
             for (i = 0; i < nr_ports; i++) {
