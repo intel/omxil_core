@@ -28,28 +28,37 @@
 #define omx_warnLog(...) LOGV(__VA_ARGS__);
 #define omx_debugLog(...) LOGV(__VA_ARGS__);
 #endif
-#else
-
-#define omx_errorLog(format, ...) do { \
-	fprintf(stderr, "omxil-core error: "format, ##__VA_ARGS__); \
-}while (0)
-
-#define omx_infoLog(format, ...) do { \
-	fprintf(stderr, "omxil-core info: "format, ##__VA_ARGS__); \
-}while (0)
-
-#define omx_verboseLog(format, ...) do { \
-	fprintf(stderr, "omxil-core verbose: "format, ##__VA_ARGS__); \
-}while (0)
-
-#define omx_warnLog(format, ...) do { \
-	fprintf(stderr, "omxil-core warning: "format, ##__VA_ARGS__); \
-}while (0)
-
-#define omx_debugLog(format, ...) do { \
-	fprintf(stderr, "omxil-core debug: "format, ##__VA_ARGS__); \
-}while (0)
-
 #endif //ANDROID
+
+#ifndef omx_errorLog
+#define omx_errorLog(format, ...) do { \
+	fprintf(stderr, "omxil-core error: "format"\n", ##__VA_ARGS__); \
+}while (0)
+#endif
+
+#ifndef omx_infoLog
+#define omx_infoLog(format, ...) do { \
+	fprintf(stderr, "omxil-core info: "format"\n", ##__VA_ARGS__); \
+}while (0)
+#endif
+
+#ifndef omx_verboseLog
+#define omx_verboseLog(format, ...) do { \
+	fprintf(stderr, "omxil-core verbose: "format"\n", ##__VA_ARGS__); \
+}while (0)
+#endif
+
+#ifndef omx_warnLog
+#define omx_warnLog(format, ...) do { \
+	fprintf(stderr, "omxil-core warning: "format"\n", ##__VA_ARGS__); \
+}while (0)
+#endif
+
+#ifndef omx_debugLog
+#define omx_debugLog(format, ...) do { \
+	fprintf(stderr, "omxil-core debug: "format"\n", ##__VA_ARGS__); \
+}while (0)
+#endif
+
 #endif//OMX_SYSDEPS_H_
 
