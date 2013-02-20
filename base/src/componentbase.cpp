@@ -1291,6 +1291,7 @@ void ComponentBase::CmdHandler(struct cmd_s *cmd)
     case OMX_CommandPortDisable: {
         OMX_U32 port_index = cmd->param1;
 	    ProcessorReleaseLock();
+            ProcessorEnableNativeBuffers();
         TransStatePort(port_index, PortBase::OMX_PortDisabled);
         break;
     }
@@ -2115,6 +2116,11 @@ OMX_ERRORTYPE ComponentBase::ProcessorUseNativeBuffer(OMX_U32 nPortIndex, OMX_BU
 }
 
 OMX_ERRORTYPE ComponentBase::ProcessorReleaseLock(void)
+{
+ return OMX_ErrorNone;
+}
+
+OMX_ERRORTYPE ComponentBase::ProcessorEnableNativeBuffers(void)
 {
  return OMX_ErrorNone;
 }

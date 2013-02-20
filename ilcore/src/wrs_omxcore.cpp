@@ -72,7 +72,7 @@ static struct list *construct_components(const char *config_file_name)
 
         omx_infoLog("found component library %s\n", library_name);
 
-        ret = cmodule->Load(MODULE_LAZY);
+        ret = cmodule->Load(MODULE_NOW);
         if (ret != OMX_ErrorNone)
             goto delete_cmodule;
 
@@ -146,9 +146,10 @@ OMX_API OMX_ERRORTYPE OMX_APIENTRY OMX_Deinit(void)
     omx_verboseLog("%s(): enter", __FUNCTION__);
 
     pthread_mutex_lock(&g_module_lock);
-    if (!g_nr_instances)
+    if (!g_nr_instances) {
         g_module_list = destruct_components(g_module_list);
-    else
+        g_initialized = 0;
+    } else
         ret = OMX_ErrorUndefined;
     pthread_mutex_unlock(&g_module_lock);
 

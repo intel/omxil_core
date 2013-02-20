@@ -464,6 +464,7 @@ private:
     /* invoked when buffer is to be filled */
     virtual  OMX_ERRORTYPE ProcessorPreFillBuffer(OMX_BUFFERHEADERTYPE* pBuffer);
 
+    virtual OMX_ERRORTYPE ProcessorEnableNativeBuffers(void);
     /* pass NativeBuffers to Lower levels at initialization only */
     virtual  OMX_ERRORTYPE ProcessorUseNativeBuffer(OMX_U32 nPortIndex, OMX_BUFFERHEADERTYPE* pBuffer);
 
