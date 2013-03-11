@@ -51,7 +51,9 @@ class CModule {
     /*
      * library loading / unloading
      */
-    OMX_ERRORTYPE Load(int flag);
+    OMX_ERRORTYPE Load(int flag, void *preload);
+    OMX_ERRORTYPE SetParser(void * parser_handle);
+    void * GetParser(void);
     OMX_U32 Unload(void);
 
     /* end of library loading / unloading */
@@ -95,6 +97,8 @@ class CModule {
     char lname[OMX_MAX_STRINGNAME_SIZE];
     /* utils::module */
     struct module *module;
+    /* preload: parser */
+    void * parser_handle;
 };
 
 #endif /* __CMODULE_H */

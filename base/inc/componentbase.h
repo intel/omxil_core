@@ -52,7 +52,7 @@ typedef struct param_struct {
     } param_struct_t;
 
 enum {
-  NUM_EXT_PARAMS = 6,  // number of parameter extensions we are supporting right now.
+  NUM_EXT_PARAMS = 7,  // number of parameter extensions we are supporting right now.
 };
 
 // Parameter Extension Array.
@@ -79,6 +79,10 @@ const param_struct_t PARAMEXT[NUM_EXT_PARAMS] = {
      },
      {"OMX.Intel.index.ThumbnailMode",
        static_cast<OMX_INDEXTYPE>(OMX_IndexParamGoogleThumbNail),
+       OMX_ErrorNone
+     },
+     {"OMX.Intel.index.useXDisplay",
+       static_cast<OMX_INDEXTYPE>(OMX_IndexParamIntelXDisplay),
        OMX_ErrorNone
      }
 };
@@ -448,7 +452,7 @@ private:
 
     /* processor callbacks */
     /* TransState */
-    virtual OMX_ERRORTYPE ProcessorInit(void);  /* Loaded to Idle */
+    virtual OMX_ERRORTYPE ProcessorInit(void * parser_handle);  /* Loaded to Idle */
     virtual OMX_ERRORTYPE ProcessorDeinit(void);/* Idle to Loaded */
     virtual OMX_ERRORTYPE ProcessorStart(void); /* Idle to Executing/Pause */
     virtual OMX_ERRORTYPE ProcessorStop(void);  /* Executing/Pause to Idle */

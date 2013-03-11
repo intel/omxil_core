@@ -29,36 +29,88 @@
 #include <cmodule.h>
 #include <componentbase.h>
 
+#define NUM_COMPONENTS 2
+typedef struct component_handle {
+
+    char * comp_name;
+    void * comp_handle;
+    char * parser_name;
+    void * parser_handle;
+
+}ComponentHandle, *ComponentHandlePtr;
+
 static unsigned int g_initialized = 0;
 static unsigned int g_nr_instances = 0;
+static struct list *preload_list;
 
 static struct list *g_module_list = NULL;
 static pthread_mutex_t g_module_lock = PTHREAD_MUTEX_INITIALIZER;
+
+static char *omx_components[NUM_COMPONENTS][2] = {
+    {"libOMXVideoDecoderAVC.so", "libmixvbp-h264.so"},
+    {NULL,NULL}
+};
+
+extern "C" void preload_components(void)
+{
+    /* this function is called by openMAX-IL client when libraries are to be
+     * loaded at initial stages.  Security features of the operating system require
+     * to load libraries upfront */
+    ComponentHandlePtr component_handle = (ComponentHandlePtr) malloc(sizeof(ComponentHandle));
+    int index;
+
+    for (index=0;omx_components[index][0];index++) {
+        component_handle->comp_name=omx_components[index][0];
+        component_handle->parser_name=omx_components[index][1];
+        struct list *entry;
+        OMX_ERRORTYPE ret;
+
+
+        /* skip libraries starting with # */
+        if (component_handle->comp_name[0] == '#')
+            continue;
+
+        component_handle->comp_handle = dlopen(component_handle->comp_name, RTLD_NOW);
+        if (!component_handle->comp_handle)
+            goto delete_comphandle;
+
+
+        component_handle->parser_handle = dlopen(component_handle->parser_name, RTLD_NOW);
+        if (!component_handle->parser_handle)
+            goto delete_comphandle;
+
+        entry = list_alloc(component_handle);
+        if (!entry)
+            goto unload_comphandle;
+        preload_list = __list_add_tail(preload_list, entry);
+
+        omx_infoLog("open component %s and parser %s", component_handle->comp_name, component_handle->parser_name);
+        continue;
+
+unload_comphandle:
+        dlclose(component_handle->comp_handle);
+delete_comphandle:
+        free(component_handle);
+    }
+}
 
 static struct list *construct_components(const char *config_file_name)
 {
     FILE *config_file;
     char library_name[OMX_MAX_STRINGNAME_SIZE];
     char config_file_path[256];
-    struct list *head = NULL;
+    int index=0;
+    struct list *head = NULL, *preload_entry;
+    ComponentHandlePtr component_handle;
 
-    strncpy(config_file_path, "/etc/", 256);
-    strncat(config_file_path, config_file_name, 256);
-    config_file = fopen(config_file_path, "r");
-    if (!config_file) {
-        strncpy(config_file_path, "./", 256);
-        strncat(config_file_path, config_file_name, 256);
-        config_file = fopen(config_file_path, "r");
-        if (!config_file) {
-            omx_errorLog("not found file %s\n", config_file_name);
-            return NULL;
-        }
-    }
-
-    while (fscanf(config_file, "%s", library_name) > 0) {
+    list_foreach(preload_list, preload_entry) {
         CModule *cmodule;
         struct list *entry;
         OMX_ERRORTYPE ret;
+
+        component_handle = (ComponentHandlePtr) preload_entry->data;
+        strncpy(library_name, component_handle->comp_name, OMX_MAX_STRINGNAME_SIZE);
+        omx_infoLog("components is %s at position %d", library_name, index);
 
         library_name[OMX_MAX_STRINGNAME_SIZE-1] = '\0';
 
@@ -70,9 +122,13 @@ static struct list *construct_components(const char *config_file_name)
         if (!cmodule)
             continue;
 
-        omx_infoLog("found component library %s\n", library_name);
+        omx_infoLog("found component library %s", library_name);
 
-        ret = cmodule->Load(MODULE_NOW);
+        ret = cmodule->Load(MODULE_NOW, component_handle->comp_handle);
+        if (ret != OMX_ErrorNone)
+            goto delete_cmodule;
+
+        ret = cmodule->SetParser(component_handle->parser_handle);
         if (ret != OMX_ErrorNone)
             goto delete_cmodule;
 
@@ -85,8 +141,8 @@ static struct list *construct_components(const char *config_file_name)
             goto unload_cmodule;
         head = __list_add_tail(head, entry);
 
-        cmodule->Unload();
-        omx_infoLog("module %s:%s added to component list\n",
+        // cmodule->Unload();
+        omx_infoLog("module %s:%s added to component list",
              cmodule->GetLibraryName(), cmodule->GetComponentName());
 
         continue;
@@ -97,7 +153,6 @@ static struct list *construct_components(const char *config_file_name)
         delete cmodule;
     }
 
-    fclose(config_file);
     return head;
 }
 
@@ -205,13 +260,6 @@ OMX_API OMX_ERRORTYPE OMX_APIENTRY OMX_GetHandle(
         cname = cmodule->GetComponentName();
         if (!strcmp(cComponentName, cname)) {
             ComponentBase *cbase = NULL;
-
-            ret = cmodule->Load(MODULE_NOW);
-            if (ret != OMX_ErrorNone) {
-                omx_errorLog("%s(): exit failure, cmodule->Load failed\n",
-                     __FUNCTION__);
-                goto unlock_list;
-            }
 
             ret = cmodule->InstantiateComponent(&cbase);
             if (ret != OMX_ErrorNone){

@@ -119,7 +119,7 @@ const char *module_error(void)
     return g_module_err;
 }
 
-struct module *module_open(const char *file, int flag)
+struct module *module_open(const char *file, int flag, void *preload)
 {
     struct module *new, *existing;
     void *handle;
@@ -147,13 +147,18 @@ struct module *module_open(const char *file, int flag)
     new->next = NULL;
 
     dlerror();
-    new->handle = dlopen(file, flag);
-    dlerr = dlerror();
-    if (dlerr) {
-        omx_errorLog("dlopen failed (%s)\n", dlerr);
-        module_set_error(dlerr);
-        pthread_mutex_unlock(&g_lock);
-        goto free_new;
+    if(preload) {
+        new->handle= preload;
+    }
+    else {
+        new->handle = dlopen(file, flag);
+        dlerr = dlerror();
+        if (dlerr) {
+            omx_errorLog("dlopen failed (%s)\n", dlerr);
+            module_set_error(dlerr);
+            pthread_mutex_unlock(&g_lock);
+            goto free_new;
+        }
     }
 
     existing = module_find_with_handle(g_module_head, new->handle);
@@ -267,7 +272,7 @@ void *module_symbol(struct module *module, const char *string)
         symbol = NULL;
     }
     else
-        omx_verboseLog("found symbol %s in module %s\n", string, module->name);
+        omx_verboseLog("found symbol %s in module %s", string, module->name);
 
     pthread_mutex_unlock(&g_lock);
     return symbol;

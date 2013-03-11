@@ -1470,7 +1470,7 @@ inline OMX_ERRORTYPE ComponentBase::TransStateToIdle(OMX_STATETYPE current)
     if (current == OMX_StateLoaded) {
         OMX_U32 i;
 
-        ret = ProcessorInit();
+        ret = ProcessorInit(cmodule->GetParser());
         if (ret != OMX_ErrorNone) {
             omx_errorLog("%s:%s: ProcessorInit() failed (ret : 0x%08x)\n",
                  GetName(), GetWorkingRole(), ret);
@@ -2071,7 +2071,7 @@ void ComponentBase::PostProcessBuffers(OMX_BUFFERHEADERTYPE **buffers,
 }
 
 /* processor default callbacks */
-OMX_ERRORTYPE ComponentBase::ProcessorInit(void)
+OMX_ERRORTYPE ComponentBase::ProcessorInit(void *parser_handle)
 {
     return OMX_ErrorNone;
 }
