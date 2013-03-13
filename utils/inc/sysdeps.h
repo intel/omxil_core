@@ -42,6 +42,7 @@
 }while (0)
 #endif
 
+#ifdef __ENABLE_DEBUG__
 #ifndef omx_verboseLog
 #define omx_verboseLog(format, ...) do { \
 	fprintf(stderr, "omxil-core verbose: "format"\n", ##__VA_ARGS__); \
@@ -59,6 +60,21 @@
 	fprintf(stderr, "omxil-core debug: "format"\n", ##__VA_ARGS__); \
 }while (0)
 #endif
+#else //__ENABLE_DEBUG__
+
+#ifndef omx_verboseLog
+#define omx_verboseLog(format, ...)
+#endif
+
+#ifndef omx_warnLog
+#define omx_warnLog(format, ...)
+#endif
+
+#ifndef omx_debugLog
+#define omx_debugLog(format, ...)
+#endif
+
+#endif //__ENABLE_DEBUG__
 
 #endif//OMX_SYSDEPS_H_
 

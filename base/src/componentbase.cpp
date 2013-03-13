@@ -1796,7 +1796,7 @@ OMX_ERRORTYPE ComponentBase::ApplyWorkingRole(void)
         ports[i]->SetCallbacks(handle, &callbacks, appdata);
     }
 
-    omx_infoLog("%s: set working role %s:", GetName(), GetWorkingRole());
+    omx_verboseLog("%s: set working role %s:", GetName(), GetWorkingRole());
     return OMX_ErrorNone;
 }
 

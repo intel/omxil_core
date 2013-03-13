@@ -110,7 +110,6 @@ static struct list *construct_components(const char *config_file_name)
 
         component_handle = (ComponentHandlePtr) preload_entry->data;
         strncpy(library_name, component_handle->comp_name, OMX_MAX_STRINGNAME_SIZE);
-        omx_infoLog("components is %s at position %d", library_name, index);
 
         library_name[OMX_MAX_STRINGNAME_SIZE-1] = '\0';
 
@@ -122,7 +121,7 @@ static struct list *construct_components(const char *config_file_name)
         if (!cmodule)
             continue;
 
-        omx_infoLog("found component library %s", library_name);
+        omx_verboseLog("found component library %s", library_name);
 
         ret = cmodule->Load(MODULE_NOW, component_handle->comp_handle);
         if (ret != OMX_ErrorNone)
@@ -142,7 +141,7 @@ static struct list *construct_components(const char *config_file_name)
         head = __list_add_tail(head, entry);
 
         // cmodule->Unload();
-        omx_infoLog("module %s:%s added to component list",
+        omx_verboseLog("module %s:%s added to component list",
              cmodule->GetLibraryName(), cmodule->GetComponentName());
 
         continue;
