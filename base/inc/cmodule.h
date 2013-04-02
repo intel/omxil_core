@@ -99,6 +99,8 @@ class CModule {
     struct module *module;
     /* preload: parser */
     void * parser_handle;
+    /* preload: using preload libraries*/
+    OMX_U32 preload_libraries;
 };
 
 #endif /* __CMODULE_H */

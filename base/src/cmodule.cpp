@@ -35,6 +35,7 @@ CModule::CModule(const OMX_STRING lname)
 
     roles = NULL;
     nr_roles = 0;
+    preload_libraries=0;
 
     memset(cname, 0, OMX_MAX_STRINGNAME_SIZE);
 
@@ -67,6 +68,9 @@ OMX_ERRORTYPE CModule::Load(int flag, void *preload)
 {
     struct module *m;
 
+    if (preload) {
+        preload_libraries=1;
+    }
     m = module_open(lname, flag, preload);
     if (!m) {
         omx_errorLog("module not founded (%s)", lname);
@@ -82,7 +86,7 @@ OMX_ERRORTYPE CModule::Load(int flag, void *preload)
         omx_errorLog("module %s symbol not founded (%s)",
              lname, WRS_OMXIL_CMODULE_SYMBOL_STRING);
 
-        module_close(m);
+        module_close(m, preload_libraries);
         return OMX_ErrorInvalidComponent;
     }
 
@@ -96,7 +100,7 @@ OMX_U32 CModule::Unload(void)
 {
     int ref_count;
 
-    ref_count = module_close(module);
+    ref_count = module_close(module, preload_libraries);
     if (!ref_count) {
         module = NULL;
         wrs_omxil_cmodule = NULL;

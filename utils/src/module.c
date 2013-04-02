@@ -213,7 +213,7 @@ free_new:
     return NULL;
 }
 
-int module_close(struct module *module)
+int module_close(struct module *module, unsigned int preload)
 {
     const char *dlerr;
     int ret = 0;
@@ -232,20 +232,24 @@ int module_close(struct module *module)
         if (module->exit)
             module->exit(module);
 
-        dlerror();
-        dlclose(module->handle);
-        dlerr = dlerror();
-        if (dlerr) {
-            module_set_error(dlerr);
-            ret = -1;
+        if (!preload) {
+            dlerror();
+            dlclose(module->handle);
+            dlerr = dlerror();
+            if (dlerr) {
+                module_set_error(dlerr);
+                ret = -1;
+            }
         }
 
         g_module_head = module_del_list(g_module_head, module);
 
         omx_verboseLog("module %s closed\n", module->name);
 
-        free(module->name);
-        free(module);
+        if (!preload) {
+            free(module->name);
+            free(module);
+        }
     }
 
     pthread_mutex_unlock(&g_lock);

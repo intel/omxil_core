@@ -171,12 +171,6 @@ static struct list *destruct_components(struct list *head)
         delete cmodule;
     }
 
-    list_foreach_safe(preload_list, entry, next) {
-        component_handle = (ComponentHandlePtr) entry->data;
-
-        preload_list = __list_delete(preload_list, entry);
-        delete component_handle;
-    }
     return head;
 }
 
