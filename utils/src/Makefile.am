@@ -19,7 +19,7 @@ libomxil_utils_source_priv_h = \
 	$(NULL)
 	
 libomxil_utils_ldflags = \
-	-version-info 0:2:0 \
+	-version-info 0:3:0 \
 	$(NULL)
 
 lib_LTLIBRARIES			= libomxil_utils.la

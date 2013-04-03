@@ -22,7 +22,7 @@ libOmxCore_source_priv_h = \
 	$(NULL)
 	
 libOmxCore_ldflags = \
-	-version-info 0:2:0 \
+	-version-info 0:3:0 \
 	-no-undefined \
 	$(NULL)
 

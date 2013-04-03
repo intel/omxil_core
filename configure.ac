@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.60])
-AC_INIT([omxil-core], [0.2.0], [daniel.charles at intel.com])
+AC_INIT([omxil-core], [0.3.0], [daniel.charles at intel.com])
 AC_CONFIG_SRCDIR([ilcore/inc/khronos/openmax/include/OMX_Index.h])
 AM_INIT_AUTOMAKE([foreign])
 AM_CONFIG_HEADER([config.h])
