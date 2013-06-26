@@ -51,17 +51,17 @@ static char *omx_components[NUM_COMPONENTS][2] = {
     {NULL,NULL}
 };
 
-extern "C" void preload_components(void)
+extern "C" bool preload_components(void)
 {
     /* this function is called by openMAX-IL client when libraries are to be
      * loaded at initial stages.  Security features of the operating system require
      * to load libraries upfront */
     ComponentHandlePtr component_handle;
     int index;
+    bool ret = true;
 
     for (index=0;omx_components[index][0];index++) {
         struct list *entry;
-        OMX_ERRORTYPE ret;
         component_handle = (ComponentHandlePtr) malloc(sizeof(ComponentHandle));
 
         strncpy(component_handle->comp_name, omx_components[index][0], OMX_MAX_STRINGNAME_SIZE);
@@ -74,20 +74,26 @@ extern "C" void preload_components(void)
             continue;
 
         component_handle->comp_handle = dlopen(component_handle->comp_name, RTLD_NOW);
-        if (!component_handle->comp_handle)
+        if (!component_handle->comp_handle) {
+            ret=false;
             goto delete_comphandle;
+        }
 
 
         if (component_handle->parser_name) {
             /* some components don't need a parser */
             component_handle->parser_handle = dlopen(component_handle->parser_name, RTLD_NOW);
-            if (!component_handle->parser_handle)
+            if (!component_handle->parser_handle) {
+                ret=false;
                 goto delete_comphandle;
+            }
         }
 
         entry = list_alloc(component_handle);
-        if (!entry)
+        if (!entry) {
+            ret=false;
             goto unload_comphandle;
+        }
         preload_list = __list_add_tail(preload_list, entry);
 
 	omx_infoLog("open component %s and parser %s", component_handle->comp_name,
@@ -100,6 +106,7 @@ unload_comphandle:
 delete_comphandle:
         free(component_handle);
     }
+    return ret;
 }
 
 static struct list *construct_components(const char *config_file_name)
