@@ -52,7 +52,7 @@ typedef struct param_struct {
     } param_struct_t;
 
 enum {
-  NUM_EXT_PARAMS = 7,  // number of parameter extensions we are supporting right now.
+  NUM_EXT_PARAMS = 8,  // number of parameter extensions we are supporting right now.
 };
 
 // Parameter Extension Array.
@@ -83,6 +83,10 @@ const param_struct_t PARAMEXT[NUM_EXT_PARAMS] = {
      },
      {"OMX.Intel.index.useXDisplay",
        static_cast<OMX_INDEXTYPE>(OMX_IndexParamIntelXDisplay),
+       OMX_ErrorNone
+     },
+     {"OMX.Intel.index.GlxPictures",
+       static_cast<OMX_INDEXTYPE>(OMX_IndexParamIntelGlxPictures),
        OMX_ErrorNone
      }
 };
