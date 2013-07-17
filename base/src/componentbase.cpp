@@ -2036,9 +2036,6 @@ inline void ComponentBase::FilterPostProcessBuffers(
                     }
                 }
             }
-            /* clear input buffer's EOS */
-            if (retain[i] != BUFFER_RETAIN_GETAGAIN)
-                buffers[i]->nFlags &= ~OMX_BUFFERFLAG_EOS;
         }
     }
 }

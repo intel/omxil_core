@@ -646,7 +646,10 @@ OMX_ERRORTYPE PortBase::ReturnThisBuffer(OMX_BUFFERHEADERTYPE *pBuffer)
         return OMX_ErrorBadParameter;
     }
 
-    if (pBuffer->nFlags & OMX_BUFFERFLAG_EOS) {
+    // Per spec 1.1.2 section 3.1.1.4.5 EventBufferFlag is to be sent
+    // only on output port
+
+    if (pBuffer->nFlags & OMX_BUFFERFLAG_EOS && direction == OMX_DirOutput) {
         omx_verboseLog("%s(): %s:%s:PortIndex %lu:pBuffer %p: "
              "Report OMX_EventBufferFlag (OMX_BUFFERFLAG_EOS)\n",
              __FUNCTION__, cbase->GetName(), cbase->GetWorkingRole(),
