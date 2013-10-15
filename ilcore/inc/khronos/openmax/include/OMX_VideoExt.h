@@ -125,6 +125,62 @@ typedef struct OMX_VIDEO_CONFIG_INTEL_AIR {
 
 } OMX_VIDEO_CONFIG_INTEL_AIR;
 
+/** Enum for standard video codingtype extensions */
+typedef enum OMX_VIDEO_CODINGEXTTYPE {
+    OMX_VIDEO_ExtCodingUnused = OMX_VIDEO_CodingKhronosExtensions,
+    OMX_VIDEO_CodingVP8,        /**< VP8/WebM */
+} OMX_VIDEO_CODINGEXTTYPE;
+
+/** VP8 profiles */
+typedef enum OMX_VIDEO_VP8PROFILETYPE {
+    OMX_VIDEO_VP8ProfileMain = 0x01,
+    OMX_VIDEO_VP8ProfileUnknown = 0x6EFFFFFF,
+    OMX_VIDEO_VP8ProfileMax = 0x7FFFFFFF
+} OMX_VIDEO_VP8PROFILETYPE;
+
+/** VP8 levels */
+typedef enum OMX_VIDEO_VP8LEVELTYPE {
+    OMX_VIDEO_VP8Level_Version0 = 0x01,
+    OMX_VIDEO_VP8Level_Version1 = 0x02,
+    OMX_VIDEO_VP8Level_Version2 = 0x04,
+    OMX_VIDEO_VP8Level_Version3 = 0x08,
+    OMX_VIDEO_VP8LevelUnknown = 0x6EFFFFFF,
+    OMX_VIDEO_VP8LevelMax = 0x7FFFFFFF
+} OMX_VIDEO_VP8LEVELTYPE;
+
+/** VP8 Param */
+typedef struct OMX_VIDEO_PARAM_VP8TYPE {
+    OMX_U32 nSize;
+    OMX_VERSIONTYPE nVersion;
+    OMX_U32 nPortIndex;
+    OMX_VIDEO_VP8PROFILETYPE eProfile;
+    OMX_VIDEO_VP8LEVELTYPE eLevel;
+    OMX_U32 nDCTPartitions;
+    OMX_BOOL bErrorResilientMode;
+} OMX_VIDEO_PARAM_VP8TYPE;
+
+/** Structure for configuring VP8 reference frames */
+typedef struct OMX_VIDEO_VP8REFERENCEFRAMETYPE {
+    OMX_U32 nSize;
+    OMX_VERSIONTYPE nVersion;
+    OMX_U32 nPortIndex;
+    OMX_BOOL bPreviousFrameRefresh;
+    OMX_BOOL bGoldenFrameRefresh;
+    OMX_BOOL bAlternateFrameRefresh;
+    OMX_BOOL bUsePreviousFrame;
+    OMX_BOOL bUseGoldenFrame;
+    OMX_BOOL bUseAlternateFrame;
+} OMX_VIDEO_VP8REFERENCEFRAMETYPE;
+
+/** Structure for querying VP8 reference frame type */
+typedef struct OMX_VIDEO_VP8REFERENCEFRAMEINFOTYPE {
+    OMX_U32 nSize;
+    OMX_VERSIONTYPE nVersion;
+    OMX_U32 nPortIndex;
+    OMX_BOOL bIsIntraFrame;
+    OMX_BOOL bIsGoldenOrAlternateFrame;
+} OMX_VIDEO_VP8REFERENCEFRAMEINFOTYPE;
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

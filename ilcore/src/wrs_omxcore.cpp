@@ -47,6 +47,7 @@ static pthread_mutex_t g_module_lock = PTHREAD_MUTEX_INITIALIZER;
 
 static char *omx_components[][2] = {
     {"libOMXVideoDecoderAVC.so", "libmixvbp-h264.so"},
+    {"libOMXVideoDecoderVP8.so", "libmixvbp-vp8.so"},
     {"libOMXVideoEncoderAVC.so", NULL},
     {NULL,NULL}
 };
@@ -151,7 +152,6 @@ static struct list *construct_components(const char *config_file_name)
             goto unload_cmodule;
         head = __list_add_tail(head, entry);
 
-        // cmodule->Unload();
         omx_verboseLog("module %s:%s added to component list",
              cmodule->GetLibraryName(), cmodule->GetComponentName());
 
@@ -349,7 +349,6 @@ OMX_API OMX_ERRORTYPE OMX_APIENTRY OMX_FreeHandle(
     cmodule = cbase->GetCModule();
     if (!cmodule)
         omx_errorLog("fatal error, %s does not have cmodule\n", cbase->GetName());
-
 
     if (cmodule && !preload_list)
         cmodule->Unload();
