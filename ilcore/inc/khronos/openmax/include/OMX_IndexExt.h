@@ -66,6 +66,9 @@ typedef enum OMX_INDEXEXTTYPE {
     OMX_IndexParamNalStreamFormatSupported,         /**< reference: OMX_NALSTREAMFORMATTYPE */
     OMX_IndexParamNalStreamFormat,                  /**< reference: OMX_NALSTREAMFORMATTYPE */
     OMX_IndexParamNalStreamFormatSelect,            /**< reference: OMX_NALSTREAMFORMATTYPE */
+    OMX_IndexParamVideoVp8,                         /**< reference: OMX_VIDEO_PARAM_VP8TYPE */
+    OMX_IndexConfigVideoVp8ReferenceFrame,          /**< reference: OMX_VIDEO_VP8REFERENCEFRAMETYPE */
+    OMX_IndexConfigVideoVp8ReferenceFrameType,      /**< reference: OMX_VIDEO_VP8REFERENCEFRAMEINFOTYPE */
     OMX_IndexParamVideoBytestream,                  /**< reference: OMX_VIDEO_PARAM_BYTESTREAMTYPE */
     OMX_IndexParamIntelBitrate,                     /**< reference: OMX_VIDEO_PARAM_INTEL_BITRATETYPE */
     OMX_IndexConfigIntelBitrate,                    /**< reference: OMX_VIDEO_CONFIG_INTEL_BITRATETYPE */

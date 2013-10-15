@@ -29,7 +29,7 @@
 #include <cmodule.h>
 #include <componentbase.h>
 
-#define NUM_COMPONENTS 2
+#define NUM_COMPONENTS 3
 typedef struct component_handle {
 
     char comp_name[OMX_MAX_STRINGNAME_SIZE];
@@ -45,9 +45,9 @@ static struct list *preload_list=NULL;
 
 static struct list *g_module_list = NULL;
 static pthread_mutex_t g_module_lock = PTHREAD_MUTEX_INITIALIZER;
-
 static char *omx_components[NUM_COMPONENTS][2] = {
     {"libOMXVideoDecoderAVC.so", "libmixvbp-h264.so"},
+    {"libOMXVideoDecoderVP8.so", "libmixvbp-vp8.so"},
     {NULL,NULL}
 };
 
@@ -151,7 +151,6 @@ static struct list *construct_components(const char *config_file_name)
             goto unload_cmodule;
         head = __list_add_tail(head, entry);
 
-        // cmodule->Unload();
         omx_verboseLog("module %s:%s added to component list",
              cmodule->GetLibraryName(), cmodule->GetComponentName());
 
@@ -349,7 +348,6 @@ OMX_API OMX_ERRORTYPE OMX_APIENTRY OMX_FreeHandle(
     cmodule = cbase->GetCModule();
     if (!cmodule)
         omx_errorLog("fatal error, %s does not have cmodule\n", cbase->GetName());
-
 
     if (cmodule && !preload_list)
         cmodule->Unload();
