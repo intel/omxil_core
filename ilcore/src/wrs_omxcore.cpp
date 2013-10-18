@@ -109,13 +109,53 @@ delete_comphandle:
     return ret;
 }
 
-static struct list *construct_components(const char *config_file_name)
+bool create_preload_list(void)
 {
-    FILE *config_file;
-    char config_file_path[256];
-    int index=0;
+    ComponentHandlePtr component_handle;
+    int index;
+    bool ret = true;
+
+    for (index=0;omx_components[index][0];index++) {
+        struct list *entry;
+        component_handle = (ComponentHandlePtr) malloc(sizeof(ComponentHandle));
+
+        strncpy(component_handle->comp_name, omx_components[index][0], OMX_MAX_STRINGNAME_SIZE);
+        component_handle->comp_handle = NULL;
+        component_handle->parser_handle = NULL;
+
+        /* skip libraries starting with # */
+        if (component_handle->comp_name[0] == '#')
+           continue;
+
+        entry = list_alloc(component_handle);
+        if (!entry) {
+           ret=false;
+           goto unload_comphandle;
+        }
+        preload_list = __list_add_tail(preload_list, entry);
+
+        omx_infoLog("Added component %s to list", component_handle->comp_name);
+        continue;
+
+unload_comphandle:
+        dlclose(component_handle->comp_handle);
+    }
+    return ret;
+}
+
+static struct list *construct_components(void)
+{
     struct list *head = NULL, *preload_entry;
     ComponentHandlePtr component_handle;
+
+    /* In Chromium OS, the OMX IL Client will call preload_components()
+     * so that the preload_list is already populated. In non-chrome case,
+     * we need to create the list here */
+    if (!preload_list) {
+       if (!create_preload_list()) {
+          omx_verboseLog("error: Preload list cannot be populated");
+       }
+    }
 
     list_foreach(preload_list, preload_entry) {
         CModule *cmodule;
@@ -173,6 +213,9 @@ static struct list *destruct_components(struct list *head)
     list_foreach_safe(head, entry, next) {
         CModule *cmodule = static_cast<CModule *>(entry->data);
 
+        omx_verboseLog("%s(): Unload component %s",
+                       __FUNCTION__, cmodule->GetComponentName());
+        cmodule->Unload();
         head = __list_delete(head, entry);
         delete cmodule;
     }
@@ -188,7 +231,7 @@ OMX_API OMX_ERRORTYPE OMX_APIENTRY OMX_Init(void)
 
     pthread_mutex_lock(&g_module_lock);
     if (!g_initialized) {
-        g_module_list = construct_components("wrs_omxil_components.list");
+        g_module_list = construct_components();
         if (!g_module_list) {
             pthread_mutex_unlock(&g_module_lock);
             omx_errorLog("%s(): exit failure, construct_components failed",
@@ -348,9 +391,6 @@ OMX_API OMX_ERRORTYPE OMX_APIENTRY OMX_FreeHandle(
     cmodule = cbase->GetCModule();
     if (!cmodule)
         omx_errorLog("fatal error, %s does not have cmodule\n", cbase->GetName());
-
-    if (cmodule && !preload_list)
-        cmodule->Unload();
 
     delete cbase;
 
