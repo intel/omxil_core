@@ -903,8 +903,12 @@ OMX_ERRORTYPE PortBase::TransState(OMX_U8 transition)
         portdefinition.bEnabled = OMX_TRUE;
     }
     else if(transition == OMX_PortDisabled) {
-        FlushPort();
-        WaitPortBufferCompletion();
+        /*need to flush only if port is not empty*/
+        if (nr_buffer_hdrs)
+        {
+           FlushPort();
+           WaitPortBufferCompletion();
+        }
         portdefinition.bEnabled = OMX_FALSE;
     }
     else {
