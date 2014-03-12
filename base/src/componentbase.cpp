@@ -2220,7 +2220,7 @@ OMX_ERRORTYPE ComponentBase::CheckTypeHeader(const OMX_PTR type, OMX_U32 size)
     if (*nsize != size)
         return OMX_ErrorBadParameter;
 
-    if (nversion->nVersion != OMX_SPEC_VERSION)
+    if (nversion->nVersion > OMX_SPEC_VERSION)
         return OMX_ErrorVersionMismatch;
 
     return OMX_ErrorNone;
