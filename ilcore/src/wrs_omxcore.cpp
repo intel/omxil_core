@@ -46,8 +46,13 @@ static struct list *g_module_list = NULL;
 static pthread_mutex_t g_module_lock = PTHREAD_MUTEX_INITIALIZER;
 
 static char *omx_components[][2] = {
+#if __USE_LIBYAMI__
+    {"libOMXVideoDecoderAVC.so", "libyami_decoder.so"},
+    {"libOMXVideoDecoderVP8.so", "libyami_decoder.so"},
+#else
     {"libOMXVideoDecoderAVC.so", "libmixvbp-h264.so"},
     {"libOMXVideoDecoderVP8.so", "libmixvbp-vp8.so"},
+#endif
     {"libOMXVideoEncoderAVC.so", NULL},
     {NULL,NULL}
 };

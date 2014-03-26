@@ -16,6 +16,17 @@ if test "$enable_omx_debug" = "yes"; then
 AC_DEFINE([__ENABLE_DEBUG__], [1], [Defined to 1 if extra debug symbols are compiled])
 fi
 
+AC_ARG_ENABLE(libyami,
+    AC_HELP_STRING([--enable-libyami],
+                   [use libyami @<:@default=no@:>@]),
+   [], [enable_libyami="no"])
+
+if test "$enable_libyami" = "yes"; then
+    AC_DEFINE([__USE_LIBYAMI__], [1], [use libyami])
+else
+    AC_DEFINE([__USE_LIBYAMI__], [0], [do not use libyami])
+fi
+
 AC_ARG_ENABLE(native_buffer,
     AC_HELP_STRING([--enable-native-buffer],
                    [use native buffer @<:@default=yes@:>@]),
