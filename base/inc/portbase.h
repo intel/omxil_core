@@ -104,6 +104,7 @@ public:
     OMX_ERRORTYPE FlushPort(void);
 
     bool IsEnabled(void);
+    bool IsCeased();
 
     OMX_DIRTYPE GetPortDirection(void);
     OMX_U32 GetPortBufferCount(void);
@@ -138,6 +139,8 @@ private:
      */
     OMX_STATETYPE GetOwnerState(void);
 
+    void SetPortSettingsChangedPending(bool isPending);
+
     /* end of component methods & helpers */
 
     /* buffer headers */
@@ -160,6 +163,7 @@ private:
     /* state */
     OMX_U8 state;
     pthread_mutex_t state_lock;
+    bool port_settings_changed_pending;
 
     /* parameter */
     OMX_PARAM_PORTDEFINITIONTYPE portdefinition;
