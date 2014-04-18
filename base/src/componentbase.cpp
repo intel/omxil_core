@@ -1932,7 +1932,7 @@ bool ComponentBase::IsAllBufferAvailable(void)
     for (i = 0; i < nr_ports; i++) {
         OMX_U32 length = 0;
 
-        if (ports[i]->IsEnabled())
+        if (!ports[i]->IsCeased())
             length = ports[i]->BufferQueueLength();
 
         if (length)

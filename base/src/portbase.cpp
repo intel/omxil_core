@@ -62,6 +62,7 @@ void PortBase::__PortBase(void)
     appdata = NULL;
 
     cbase = NULL;
+    port_settings_changed_pending = false;
 }
 
 PortBase::PortBase()
@@ -826,6 +827,15 @@ bool PortBase::IsEnabled(void)
     return enabled;
 }
 
+bool PortBase::IsCeased(void)
+{
+    bool ceased;
+    pthread_mutex_lock(&state_lock);
+    ceased = (port_settings_changed_pending || (state != OMX_PortEnabled));
+    pthread_mutex_unlock(&state_lock);
+    return ceased;
+}
+
 OMX_DIRTYPE PortBase::GetPortDirection(void)
 {
     return portdefinition.eDir;
@@ -901,6 +911,7 @@ OMX_ERRORTYPE PortBase::TransState(OMX_U8 transition)
     if (transition == OMX_PortEnabled) {
         WaitPortBufferCompletion();
         portdefinition.bEnabled = OMX_TRUE;
+        port_settings_changed_pending = false;
     }
     else if(transition == OMX_PortDisabled) {
         /*need to flush only if port is not empty*/
@@ -932,10 +943,19 @@ unlock:
     return ret;
 }
 
+
+void PortBase::SetPortSettingsChangedPending(bool isPeding)
+{
+    pthread_mutex_lock(&state_lock);
+    port_settings_changed_pending = isPeding;
+    pthread_mutex_unlock(&state_lock);
+}
+
 OMX_ERRORTYPE PortBase::ReportPortSettingsChanged(void)
 {
     OMX_ERRORTYPE ret;
 
+    SetPortSettingsChangedPending(true);
     ret = callbacks.EventHandler(owner, appdata,
                                   OMX_EventPortSettingsChanged,
                                   portdefinition.nPortIndex, OMX_IndexParamPortDefinition, NULL);
@@ -949,6 +969,7 @@ OMX_ERRORTYPE PortBase::ReportConfigOutputCrop(void)
 {
     OMX_ERRORTYPE ret;
 
+    SetPortSettingsChangedPending(true);
     ret = callbacks.EventHandler(owner, appdata,
             OMX_EventPortSettingsChanged,
             portdefinition.nPortIndex,
