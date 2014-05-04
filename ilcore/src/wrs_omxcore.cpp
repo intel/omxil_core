@@ -29,7 +29,6 @@
 #include <cmodule.h>
 #include <componentbase.h>
 
-#define NUM_COMPONENTS 3
 typedef struct component_handle {
 
     char comp_name[OMX_MAX_STRINGNAME_SIZE];
@@ -45,10 +44,11 @@ static struct list *preload_list=NULL;
 
 static struct list *g_module_list = NULL;
 static pthread_mutex_t g_module_lock = PTHREAD_MUTEX_INITIALIZER;
-static char *omx_components[NUM_COMPONENTS][2] = {
+static char *omx_components[][2] = {
 #if __USE_LIBYAMI__
     {"libOMXVideoDecoderAVC.so", "libyami_decoder.so"},
     {"libOMXVideoDecoderVP8.so", "libyami_decoder.so"},
+    {"libOMXVideoDecoderMJPEG.so", "libyami_decoder.so"},
 #else
     {"libOMXVideoDecoderAVC.so", "libmixvbp-h264.so"},
     {"libOMXVideoDecoderVP8.so", "libmixvbp-vp8.so"},
