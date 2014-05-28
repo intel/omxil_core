@@ -18,8 +18,8 @@ fi
 
 AC_ARG_ENABLE(libyami,
     AC_HELP_STRING([--enable-libyami],
-                   [use libyami @<:@default=no@:>@]),
-   [], [enable_libyami="no"])
+                   [use libyami @<:@default=yes@:>@]),
+   [], [enable_libyami="yes"])
 
 if test "$enable_libyami" = "yes"; then
     AC_DEFINE([__USE_LIBYAMI__], [1], [use libyami])
