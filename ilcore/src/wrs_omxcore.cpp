@@ -50,11 +50,12 @@ static char *omx_components[][2] = {
     {"libOMXVideoDecoderAVC.so", "libyami_decoder.so"},
     {"libOMXVideoDecoderVP8.so", "libyami_decoder.so"},
     {"libOMXVideoDecoderMJPEG.so", "libyami_decoder.so"},
+    {"libOMXVideoEncoderAVC.so", "libyami_encoder.so"},
 #else
     {"libOMXVideoDecoderAVC.so", "libmixvbp-h264.so"},
     {"libOMXVideoDecoderVP8.so", "libmixvbp-vp8.so"},
-#endif
     {"libOMXVideoEncoderAVC.so", NULL},
+#endif
     {NULL,NULL}
 };
 
