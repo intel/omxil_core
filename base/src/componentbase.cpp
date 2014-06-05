@@ -1287,8 +1287,10 @@ void ComponentBase::CmdHandler(struct cmd_s *cmd)
     }
     case OMX_CommandPortDisable: {
         OMX_U32 port_index = cmd->param1;
-	    ProcessorReleaseLock();
-            ProcessorEnableNativeBuffers();
+        ProcessorReleaseLock();
+#if __NATIVE_BUFFER_DEFAULT__
+        ProcessorEnableNativeBuffers();
+#endif
         TransStatePort(port_index, PortBase::OMX_PortDisabled);
         break;
     }
@@ -1930,7 +1932,7 @@ bool ComponentBase::IsAllBufferAvailable(void)
     for (i = 0; i < nr_ports; i++) {
         OMX_U32 length = 0;
 
-        if (ports[i]->IsEnabled())
+        if (!ports[i]->IsCeased())
             length = ports[i]->BufferQueueLength();
 
         if (length)
@@ -2220,7 +2222,7 @@ OMX_ERRORTYPE ComponentBase::CheckTypeHeader(const OMX_PTR type, OMX_U32 size)
     if (*nsize != size)
         return OMX_ErrorBadParameter;
 
-    if (nversion->nVersion != OMX_SPEC_VERSION)
+    if (nversion->nVersion > OMX_SPEC_VERSION)
         return OMX_ErrorVersionMismatch;
 
     return OMX_ErrorNone;

@@ -223,6 +223,11 @@ int module_close(struct module *module, unsigned int preload)
 
     pthread_mutex_lock(&g_lock);
 
+    if(module->ref_count==0) {
+        omx_errorLog("module %s decrease refcont (%d)------\n", module->name, module->ref_count);
+        return 0;
+    }
+
     module->ref_count--;
     ret = module->ref_count;
 

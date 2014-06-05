@@ -18,7 +18,7 @@
 
 #ifndef __COMPONENTBASE_H
 #define __COMPONENTBASE_H
-
+#include "config.h"
 #include <OMX_Core.h>
 #include <OMX_Component.h>
 #include <OMX_IndexExt.h>
@@ -526,7 +526,7 @@ private:
 #ifndef ANDROID
     const static OMX_U8 OMX_SPEC_VERSION_MAJOR = 1;
     const static OMX_U8 OMX_SPEC_VERSION_MINOR = 1;
-    const static OMX_U8 OMX_SPEC_VERSION_REVISION = 0;
+    const static OMX_U8 OMX_SPEC_VERSION_REVISION = 2;
     const static OMX_U8 OMX_SPEC_VERSION_STEP = 0;
 #else
     const static OMX_U8 OMX_SPEC_VERSION_MAJOR = 1;

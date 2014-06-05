@@ -8,4 +8,4 @@ Description: Intel OMX IL Core
 #TODO define a version
 Version: @OMXIL_VERSION@
 Libs: -L${libdir} -lomxil_base
-Cflags: -I${includedir}
+Cflags: -I${includedir} -I${includedir}/omx
