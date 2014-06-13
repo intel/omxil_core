@@ -21,6 +21,16 @@
  *
  */
 
+/**
+ * \mainpage OpenMax IL on IA
+ *
+ * \section intro Introduction
+ *  The OpenMAX IL (Integration Layer) API defines a standardized media
+ *  component interface to enable developers to integrate  with Audio, Video,
+ *  Imaging codecs implemented in hardware or software. This API guide
+ *  documents the implementation of OpenMax IL on Intel Architecture.
+ */
+
 /** OMX_VideoExt.h - OpenMax IL version 1.1.2
  * The OMX_VideoExt header file contains extensions to the
  * definitions used by both the application and the component to
