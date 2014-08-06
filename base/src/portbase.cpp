@@ -140,13 +140,17 @@ OMX_ERRORTYPE PortBase::SetCallbacks(OMX_HANDLETYPE hComponent,
 
 OMX_U32 PortBase::getFrameBufSize(OMX_COLOR_FORMATTYPE colorFormat, OMX_U32 width, OMX_U32 height)
 {
+    OMX_U32 uvWidth;
+    OMX_U32 uvHeight;
     switch (colorFormat) {
     case OMX_COLOR_FormatYCbYCr:
     case OMX_COLOR_FormatCbYCrY:
         return width * height * 2;
     case OMX_COLOR_FormatYUV420Planar:
     case OMX_COLOR_FormatYUV420SemiPlanar:
-        return (width * height * 3) >> 1;
+        uvWidth = (width+1)/2;
+        uvHeight = (height+1)/2;
+        return width * height + uvWidth * uvHeight * 2;
     default:
         omx_verboseLog("unsupport color format !");
         return -1;
