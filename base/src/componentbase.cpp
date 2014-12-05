@@ -1278,7 +1278,7 @@ void ComponentBase::CmdHandler(struct cmd_s *cmd)
     }
     case OMX_CommandFlush: {
         OMX_U32 port_index = cmd->param1;
-	ProcessorReleaseLock();
+        ProcessorReleaseLock();
         FlushPort(port_index, 1);
         pthread_mutex_lock(&ports_block);
         ProcessorFlush(port_index);
@@ -1287,7 +1287,6 @@ void ComponentBase::CmdHandler(struct cmd_s *cmd)
     }
     case OMX_CommandPortDisable: {
         OMX_U32 port_index = cmd->param1;
-        ProcessorReleaseLock();
 #if __NATIVE_BUFFER_DEFAULT__
         ProcessorEnableNativeBuffers();
 #endif
@@ -1296,7 +1295,6 @@ void ComponentBase::CmdHandler(struct cmd_s *cmd)
     }
     case OMX_CommandPortEnable: {
         OMX_U32 port_index = cmd->param1;
-	    ProcessorReleaseLock();
         TransStatePort(port_index, PortBase::OMX_PortEnabled);
         break;
     }
