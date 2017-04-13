@@ -141,7 +141,7 @@ OMX_ERRORTYPE PortBase::SetCallbacks(OMX_HANDLETYPE hComponent,
 OMX_U32 PortBase::getFrameBufSize(OMX_COLOR_FORMATTYPE colorFormat, OMX_U32 width, OMX_U32 height)
 {
     OMX_U32 uvWidth;
-    OMX_U32 uvHeight;
+    OMX_U32 uvHeight;  
     switch (colorFormat) {
     case OMX_COLOR_FormatYCbYCr:
     case OMX_COLOR_FormatCbYCrY:
